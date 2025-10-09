@@ -7,7 +7,7 @@ const slides = [
       'https://images.unsplash.com/photo-1486506574466-9ef0ef9c0968?auto=format&fit=crop&w=1600&q=80',
     title: 'Digital onboarding built for every MSSN Lagos camper.',
     description:
-      'Register in minutes, sync your chapter, and receive reminders that keep you ready for the Faith, Leadership & Service retreat.',
+      'Register in minutes and receive reminders that keep you ready for the Faith, Leadership & Service retreat.',
     ctaLabel: 'Start registration',
     ctaHref: 'https://mssnlagos.org/camp/register/new',
   },
@@ -18,8 +18,8 @@ const slides = [
     title: 'Mentorship labs that connect scholars, creatives, and civic leaders.',
     description:
       'Choose learning pods, access resource kits, and collaborate on impact projects that stretch beyond camp week.',
-    ctaLabel: 'See learning tracks',
-    ctaHref: '#tracks',
+    ctaLabel: 'See partner offers',
+    ctaHref: '#ads',
   },
   {
     id: 'service-day',
@@ -27,30 +27,30 @@ const slides = [
       'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80',
     title: 'Service day rallies that transform communities together.',
     description:
-      'Volunteer squads roll out medical outreach, campus cleanups, and tech clinics powered by coordinated logistics.',
-    ctaLabel: 'View service roster',
+      'Volunteer squads roll out outreach and tech clinics powered by coordinated logistics.',
+    ctaLabel: 'View offers',
     ctaHref: '#ads',
   },
 ]
 
 const quickActions = [
   {
-    id: 'new-camper',
-    title: 'New camper signup',
-    description: 'Create a profile, add guardians, and pay securely online.',
+    id: 'new-member',
+    title: 'New Member',
+    description: 'Create your profile and pay securely online.',
     href: 'https://mssnlagos.org/camp/register/new',
   },
   {
-    id: 'returning',
-    title: 'Returning member',
-    description: 'Retrieve your MSSN ID, update records, and reserve your bunk.',
+    id: 'existing-member',
+    title: 'Existing Member',
+    description: 'Retrieve MSSN ID, update records, reserve your bunk.',
     href: 'https://mssnlagos.org/camp/register/returning',
   },
   {
-    id: 'chapter-coach',
-    title: 'Chapter coach tools',
-    description: 'Upload bulk registrations, monitor slots, and download slips.',
-    href: 'https://camp.mssnlagos.net/coaches',
+    id: 'reprint-slip',
+    title: 'Reprint-slip',
+    description: 'Reprint your registration slip anytime.',
+    href: 'https://mssnlagos.org/camp/register/reprint',
   },
 ]
 
@@ -121,8 +121,8 @@ function HeroSlider() {
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
             Camp MSSN Lagos 2025
           </span>
-          <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
-          <p className="max-w-2xl text-lg text-white/80 lg:text-xl">{activeSlide.description}</p>
+          <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
+          <p className="max-w-2xl text-lg text-white/85 lg:text-xl">{activeSlide.description}</p>
           <div className="flex flex-wrap gap-4">
             <a
               href={activeSlide.ctaHref}
@@ -233,7 +233,7 @@ function AdsSection() {
   )
 }
 
-function HomePage() {
+export default function HomePage() {
   return (
     <div>
       <HeroSlider />
@@ -242,5 +242,3 @@ function HomePage() {
     </div>
   )
 }
-
-export default HomePage
