@@ -1,3 +1,5 @@
+@config '../tailwind.config.js';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +15,12 @@
   }
 
   body {
-    @apply min-h-screen bg-mssn-mist text-mssn-slate font-body antialiased;
+    min-height: 100vh;
+    background-color: theme('colors.mssn.mist');
+    color: theme('colors.mssn.slate');
+    font-family: theme('fontFamily.body');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1,
@@ -22,10 +29,13 @@
   h4,
   h5,
   h6 {
-    @apply font-display font-semibold text-mssn-slate;
+    font-family: theme('fontFamily.display');
+    font-weight: 600;
+    color: theme('colors.mssn.slate');
   }
 
   a {
-    @apply transition text-current;
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+    color: inherit;
   }
 }
