@@ -33,7 +33,7 @@ function SectionNav({ active, onJump }) {
     { id: 'membership', label: 'Membership' },
   ]
   return (
-    <nav className="sticky top-24 z-10 -mx-2 flex gap-2 overflow-x-auto px-2 py-2 backdrop-blur">
+    <nav className="sticky top-20 lg:top-24 z-10 -mx-2 flex gap-2 overflow-x-auto px-2 py-2 backdrop-blur">
       {sections.map((s) => (
         <button
           key={s.id}
