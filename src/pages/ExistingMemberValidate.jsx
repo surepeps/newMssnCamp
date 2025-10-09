@@ -23,7 +23,7 @@ export default function ExistingMemberValidate() {
       </div>
       <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-        <div className="p-8">
+        <div className="p-6 sm:p-8">
           <h1 className="text-2xl font-semibold text-mssn-slate">Existing Member Validation</h1>
           <p className="mt-2 text-sm text-mssn-slate/70">Enter your MSSN ID and Surname to continue.</p>
           <form id="validateForm" className="mt-6 grid gap-5" data-parsley-validate onSubmit={onSubmit} noValidate>
@@ -55,7 +55,7 @@ export default function ExistingMemberValidate() {
             </div>
             <button
               type="submit"
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white transition hover:translate-y-[-2px]"
+              className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white transition hover:translate-y-[-2px] sm:w-auto"
             >
               Validate & Continue
             </button>
