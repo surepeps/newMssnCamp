@@ -413,6 +413,8 @@ function Header({
 }
 
 function HeroSection({ slide, slides, onSelectSlide }) {
+  const activeIndex = slides.findIndex((item) => item.id === slide.id)
+
   return (
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
@@ -484,11 +486,11 @@ function HeroSection({ slide, slides, onSelectSlide }) {
                 key={item.id}
                 type="button"
                 onClick={() => onSelectSlide(index)}
-                className={`h-2 w-full rounded-full transition ${
-                  index === slides.indexOf(slide) ? 'bg-white' : 'bg-white/40'
+                className={`h-2 w-10 rounded-full transition ${
+                  index === activeIndex ? 'bg-white' : 'bg-white/40'
                 }`}
                 aria-label={`View slide ${index + 1}`}
-                aria-pressed={index === slides.indexOf(slide)}
+                aria-pressed={index === activeIndex}
               />
             ))}
           </div>
@@ -753,7 +755,7 @@ function SupportSection({ services }) {
             <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
               Self-Service
             </span>
-            <h2 id="self-service-heading" className="text-3xl انس font-semibold">
+            <h2 id="self-service-heading" className="text-3xl font-semibold">
               Manage your registration anytime, anywhere
             </h2>
             <p className="text-base text-mssn-slate/70">
