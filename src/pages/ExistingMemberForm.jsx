@@ -421,7 +421,7 @@ export default function ExistingMemberForm() {
                 </div>
 
                 <div className="pt-2">
-                  <button type="submit" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white transition hover:translate-y-[-2px]">
+                  <button type="submit" className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white transition hover:translate-y-[-2px] sm:w-auto">
                     Register & Pay
                   </button>
                 </div>
