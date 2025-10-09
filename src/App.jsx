@@ -1,345 +1,612 @@
 import { useEffect, useState } from 'react'
-import './App.css'
 
-const sliderContent = [
+const heroSlides = [
   {
-    id: 'arrival',
+    id: 'unity',
     image:
-      'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1400&q=80',
-    title: 'Welcome to MSSN Lagos Camp',
+      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1600&q=80',
+    kicker: 'Annual Faith & Leadership Retreat',
+    title: 'Reconnect. Recharge. Recommit.',
     description:
-      'Reunite with fellow believers, build lasting friendships, and strengthen your faith in a serene environment.',
-  },
-  {
-    id: 'lecture',
-    image:
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=80',
-    title: 'Gatherings that Inspire',
-    description:
-      'Experience transformative lectures, workshops, and spiritual sessions curated for both new and returning members.',
+      'Journey into seven transformative days of learning, devotion, and service with Muslim youths across Lagos.',
+    highlight: 'Registration for 2025 camp is now live',
   },
   {
     id: 'community',
     image:
-      'https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1400&q=80',
-    title: 'A Community that Cares',
+      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80',
+    kicker: 'Build lifelong bonds',
+    title: 'A vibrant community anchored in faith.',
     description:
-      'Stay connected with MSSN Lagos through digital tools that simplify registration, verification, and communication.',
+      'Engage with mentors, scholars, and peers through workshops, Qur’an circles, tech labs, and community outreach.',
+    highlight: 'Mentorship clusters for every participant',
   },
+  {
+    id: 'focus',
+    image:
+      'https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=1600&q=80',
+    kicker: 'Leadership in Action',
+    title: 'Shape the future of MSSN Lagos.',
+    description:
+      'Access exclusive advocacy sessions, leadership bootcamps, and professional coaching tailored for emerging leaders.',
+    highlight: 'Limited accelerator slots available',
+  },
+]
+
+const navigationLinks = [
+  { id: 'home', label: 'Home', href: '#home' },
+  { id: 'reprint', label: 'Re-print Slip', href: '#reprint' },
+  { id: 'lookup', label: 'Check MSSN ID', href: '#lookup' },
+  {
+    id: 'registration-menu',
+    label: 'Registration',
+    children: [
+      { id: 'register-existing', label: 'Existing Member', href: '#existing-member-registration' },
+      { id: 'register-new', label: 'New Member', href: '#new-member-registration' },
+    ],
+  },
+  { id: 'contact', label: 'Contact Us', href: '#contact' },
+  { id: 'advertise', label: 'Advertise With Us', href: '#advertise' },
 ]
 
 const quickActions = [
   {
-    id: 'register-new',
-    label: 'New Member',
-    description: 'First time at camp? Complete your registration in minutes.',
-    href: '#new-member-registration',
+    id: 'quick-new',
+    title: 'New Member Registration',
+    description: 'Complete onboarding, medical info, and accommodation preferences in one flow.',
+    href: 'https://mssnlagos.org/camp/register/new',
+    external: true,
   },
   {
-    id: 'register-existing',
-    label: 'Returning Member',
-    description: 'Update your details and secure your slot for this year.',
-    href: '#existing-member-registration',
+    id: 'quick-returning',
+    title: 'Returning Member Registration',
+    description: 'Verify MSSN ID, update your profile, and reserve your camp slot instantly.',
+    href: 'https://mssnlagos.org/camp/register/returning',
+    external: true,
   },
   {
-    id: 'verify-id',
-    label: 'Check MSSN ID',
-    description: 'Verify or retrieve your MSSN Lagos identification number.',
-    href: '#mssn-id-lookup',
+    id: 'quick-check',
+    title: 'Check MSSN ID',
+    description: 'Retrieve or validate your unique identification across MSSN Lagos programs.',
+    href: '#lookup',
+    external: false,
   },
 ]
 
-const sponsorSpots = [
+const impactStats = [
+  { id: 'campers', value: '3,200+', label: 'Campers registered in 2024' },
+  { id: 'facilitators', value: '120', label: 'Scholars, mentors & facilitators' },
+  { id: 'scholarships', value: '250', label: 'Scholarships awarded last camp' },
+  { id: 'chapters', value: '45', label: 'Participating local chapters' },
+]
+
+const featureHighlights = [
+  {
+    id: 'unified',
+    title: 'Unified digital onboarding',
+    description:
+      'Register, submit documents, select accommodation, and receive confirmation without paperwork or long queues.',
+  },
+  {
+    id: 'verification',
+    title: 'Real-time MSSN ID verification',
+    description:
+      'Protect community data with secure, instant validation layered with SMS and email confirmations.',
+  },
+  {
+    id: 'communication',
+    title: 'Camp-wide communication tools',
+    description:
+      'Broadcast updates, push reminders, and manage group messaging directly from the MSSN Lagos dashboard.',
+  },
+]
+
+const scheduleHighlights = [
+  {
+    id: 'leadership',
+    title: 'Leadership Labs & Professional Clinics',
+    description:
+      'Scale your influence with guided workshops covering public speaking, advocacy, civic engagement, and career mentorship.',
+    time: 'Morning & Afternoon Sessions',
+  },
+  {
+    id: 'faith',
+    title: 'Faith Circles & Qur’an Retreats',
+    description:
+      'Deepen spiritual connection through tafsir circles, tahajjud nights, and guided reflections tailored to every level.',
+    time: 'Daily Sunrise & Night Sessions',
+  },
+  {
+    id: 'wellness',
+    title: 'Wellness, Sports & Community Service',
+    description:
+      'Participate in sports tournaments, health screenings, community outreach, and empowerment clinics for all ages.',
+    time: 'Midday & Weekend Specials',
+  },
+]
+
+const supportServices = [
+  {
+    id: 'reprint-support',
+    title: 'Re-print slip',
+    description:
+      'Download or resend your registration slip anytime before camp check-in.',
+    href: 'https://mssnlagos.org/camp/reprint',
+  },
+  {
+    id: 'id-support',
+    title: 'MSSN ID lookup',
+    description:
+      'Recover or validate your MSSN Lagos identification with multi-step verification.',
+    href: 'https://mssnlagos.org/camp/mssn-id',
+  },
+]
+
+const sponsors = [
   {
     id: 'halal-bank',
     name: 'Halal Bank Nigeria',
-    message: 'Empowering ethical finance for the Muslim community.',
+    message: 'Partnering to unlock ethical finance and scholarships for Muslim youths.',
     link: 'https://example.com/halal-bank',
   },
   {
-    id: 'nourish',
+    id: 'nourish-foods',
     name: 'Nourish Foods',
-    message: 'Healthy meals served throughout camp week.',
+    message: 'Fueling every camper with healthy, balanced meals throughout camp week.',
     link: 'https://example.com/nourish-foods',
   },
   {
     id: 'technaija',
     name: 'TechNaija STEM',
-    message: 'Unlock scholarships for aspiring engineers in Lagos.',
+    message: 'Providing mentorship and innovation labs for aspiring engineers and creators.',
     link: 'https://example.com/technaija',
+  },
+]
+
+const faqs = [
+  {
+    id: 'payment',
+    question: 'What payment options are available for registration?',
+    answer:
+      'You can complete payment online via secure card channels or bank transfer. When paying offline, upload your receipt for instant verification.',
+  },
+  {
+    id: 'documents',
+    question: 'Which documents should I bring to camp?',
+    answer:
+      'Bring a valid MSSN ID (digital or printed), registration slip, guardian consent for minors, and any medical reports you shared during onboarding.',
+  },
+  {
+    id: 'accommodation',
+    question: 'How are accommodation preferences assigned?',
+    answer:
+      'Our portal lets you rank choices. Placements prioritize safety, age groups, and accessibility requests logged during registration.',
   },
 ]
 
 function App() {
   const [activeSlide, setActiveSlide] = useState(0)
-  const [navOpen, setNavOpen] = useState(false)
-  const [registrationOpen, setRegistrationOpen] = useState(false)
+  const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isRegistrationMenuOpen, setIsRegistrationMenuOpen] = useState(false)
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % sliderContent.length)
-    }, 6000)
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 7000)
 
     return () => window.clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    if (!navOpen) {
-      setRegistrationOpen(false)
+    if (!isNavOpen) {
+      setIsRegistrationMenuOpen(false)
     }
-  }, [navOpen])
+  }, [isNavOpen])
 
-  const toggleMobileNav = () => {
-    setNavOpen((prev) => !prev)
+  const currentSlide = heroSlides[activeSlide]
+
+  const closeMenus = () => {
+    setIsNavOpen(false)
+    setIsRegistrationMenuOpen(false)
   }
-
-  const toggleRegistrationMenu = () => {
-    setRegistrationOpen((prev) => !prev)
-  }
-
-  const handleNavigate = () => {
-    setNavOpen(false)
-    setRegistrationOpen(false)
-  }
-
-  const currentSlide = sliderContent[activeSlide]
 
   return (
-    <div className="site-wrapper">
-      <header className="site-header" id="home">
-        <div className="header-inner">
-          <a className="brand-anchor" href="#home" onClick={handleNavigate}>
-            <div className="brand-mark" aria-hidden="true">
+    <div className="flex min-h-screen flex-col bg-mssn-mist text-mssn-slate">
+      <header
+        id="home"
+        className="sticky top-0 z-50 border-b border-white/60 bg-white/90 shadow-sm backdrop-blur"
+      >
+        <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
+          <a
+            href="#home"
+            onClick={closeMenus}
+            className="group inline-flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-green/20 transition hover:bg-white"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-mssn-green to-mssn-greenDark text-sm font-bold text-white">
               MSSN
-            </div>
-            <div className="brand-text">
-              <span className="brand-name">MSSN Lagos Unit</span>
-              <span className="brand-tagline">Annual Camp Portal</span>
-            </div>
+            </span>
+            <span className="flex flex-col">
+              <span className="text-xs uppercase tracking-[0.2em] text-mssn-greenDark">
+                Lagos State Area Unit
+              </span>
+              <span className="text-base">Camp Experience Portal</span>
+            </span>
           </a>
-          <button
-            className="menu-toggle"
-            type="button"
-            aria-controls="primary-navigation"
-            aria-expanded={navOpen}
-            onClick={toggleMobileNav}
-          >
-            <span className="menu-toggle-bar" />
-            <span className="menu-toggle-bar" />
-            <span className="menu-toggle-bar" />
-            <span className="menu-toggle-label">Menu</span>
-          </button>
-          <nav
-            className={`site-navigation${navOpen ? ' is-open' : ''}`}
-            id="primary-navigation"
-          >
-            <ul className="navigation-list">
-              <li className="navigation-item">
-                <a className="navigation-link" href="#home" onClick={handleNavigate}>
-                  Home
-                </a>
-              </li>
-              <li className="navigation-item">
-                <a
-                  className="navigation-link"
-                  href="#reprint-slip"
-                  onClick={handleNavigate}
-                >
-                  Re-print Slip
-                </a>
-              </li>
-              <li className="navigation-item">
-                <a
-                  className="navigation-link"
-                  href="#mssn-id-lookup"
-                  onClick={handleNavigate}
-                >
-                  Check MSSN ID
-                </a>
-              </li>
-              <li className="navigation-item has-children">
-                <button
-                  className="navigation-link registration-toggle"
-                  type="button"
-                  aria-expanded={registrationOpen}
-                  onClick={toggleRegistrationMenu}
-                >
-                  Registration
-                </button>
-                <ul
-                  className={`sub-navigation${registrationOpen ? ' is-visible' : ''}`}
-                  role="menu"
-                >
-                  <li className="sub-navigation-item" role="none">
-                    <a
-                      className="sub-navigation-link"
-                      href="#existing-member-registration"
-                      role="menuitem"
-                      onClick={handleNavigate}
-                    >
-                      Existing Member
-                    </a>
-                  </li>
-                  <li className="sub-navigation-item" role="none">
-                    <a
-                      className="sub-navigation-link"
-                      href="#new-member-registration"
-                      role="menuitem"
-                      onClick={handleNavigate}
-                    >
-                      New Member
-                    </a>
-                  </li>
-                </ul>
-              </li>
-              <li className="navigation-item">
-                <a
-                  className="navigation-link"
-                  href="#contact"
-                  onClick={handleNavigate}
-                >
-                  Contact Us
-                </a>
-              </li>
-              <li className="navigation-item">
-                <a
-                  className="navigation-link"
-                  href="#advertise"
-                  onClick={handleNavigate}
-                >
-                  Advertise With Us
-                </a>
-              </li>
-            </ul>
+
+          <nav className="hidden items-center gap-8 text-sm font-semibold lg:flex">
+            {navigationLinks.map((item) => {
+              if (!item.children) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    onClick={closeMenus}
+                    className="hover:text-mssn-greenDark"
+                  >
+                    {item.label}
+                  </a>
+                )
+              }
+
+              return (
+                <div key={item.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsRegistrationMenuOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-4 py-2 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
+                    aria-haspopup="true"
+                    aria-expanded={isRegistrationMenuOpen}
+                  >
+                    {item.label}
+                    <span className="text-xs">▾</span>
+                  </button>
+                  <div
+                    className={`absolute left-0 top-full mt-3 min-w-[220px] rounded-2xl bg-white p-4 shadow-soft ring-1 ring-mssn-slate/10 transition duration-200 ${
+                      isRegistrationMenuOpen
+                        ? 'pointer-events-auto translate-y-0 opacity-100'
+                        : 'pointer-events-none -translate-y-2 opacity-0'
+                    }`}
+                  >
+                    {item.children.map((child) => (
+                      <a
+                        key={child.id}
+                        href={child.href}
+                        onClick={closeMenus}
+                        className="block rounded-xl px-4 py-2 text-sm text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark"
+                      >
+                        {child.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </nav>
+
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-mssn-slate/10 bg-white text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark lg:hidden"
+            aria-label="Toggle navigation"
+            aria-expanded={isNavOpen}
+            onClick={() => setIsNavOpen((prev) => !prev)}
+          >
+            <span className="text-lg">☰</span>
+          </button>
         </div>
+
+        <nav
+          className={`lg:hidden transition-all duration-300 ${
+            isNavOpen ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 pb-6">
+            {navigationLinks.map((item) => {
+              if (!item.children) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    onClick={closeMenus}
+                    className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10"
+                  >
+                    {item.label}
+                  </a>
+                )
+              }
+
+              return (
+                <div key={item.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-mssn-slate/10">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between text-sm font-semibold text-mssn-greenDark"
+                    onClick={() => setIsRegistrationMenuOpen((prev) => !prev)}
+                    aria-expanded={isRegistrationMenuOpen}
+                  >
+                    {item.label}
+                    <span className="text-xs">▾</span>
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-200 ${
+                      isRegistrationMenuOpen ? 'mt-3 max-h-40' : 'max-h-0'
+                    }`}
+                  >
+                    <div className="flex flex-col gap-2">
+                      {item.children.map((child) => (
+                        <a
+                          key={child.id}
+                          href={child.href}
+                          onClick={closeMenus}
+                          className="rounded-xl bg-mssn-mist px-4 py-2 text-sm text-mssn-slate"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </nav>
       </header>
 
-      <main className="site-main">
-        <section className="hero-section" aria-labelledby="hero-heading">
-          <div className="hero-slider" role="presentation">
+      <main className="flex-1">
+        <section className="relative overflow-hidden bg-mssn-night">
+          <div className="absolute inset-0">
             <img
-              className="hero-slide-image"
               src={currentSlide.image}
               alt={currentSlide.title}
+              className="h-full w-full object-cover"
             />
-            <div className="hero-gradient" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/80 to-mssn-green/45" />
           </div>
-          <div className="hero-overlay">
-            <h1 className="hero-heading" id="hero-heading">
-              MSSN Lagos Unit Camp Site
-            </h1>
-            <p className="hero-subheading">{currentSlide.description}</p>
-            <div className="hero-cta-group">
-              <a className="hero-primary-cta" href="#new-member-registration">
-                Register Now
-              </a>
-              <a className="hero-secondary-cta" href="#learn-more">
-                Learn about camp
-              </a>
+          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-24 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1 space-y-6 text-white">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-green">
+                {currentSlide.kicker}
+              </span>
+              <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+                {currentSlide.title}
+              </h1>
+              <p className="max-w-2xl text-lg text-white/80 lg:text-xl">
+                {currentSlide.description}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="#registration"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:translate-y-[-2px]"
+                >
+                  Register for camp
+                </a>
+                <a
+                  href="#camp-highlights"
+                  className="inline-flex items-center justify-center rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  Explore the experience
+                </a>
+              </div>
+              <div className="rounded-3xl border border-white/20 bg-white/10 p-4 text-sm text-white/75 backdrop-blur">
+                {currentSlide.highlight}
+              </div>
+              <div className="flex items-center gap-4">
+                {heroSlides.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => setActiveSlide(index)}
+                    className={`h-2 w-10 rounded-full transition ${
+                      index === activeSlide ? 'bg-white' : 'bg-white/40'
+                    }`}
+                    aria-label={`View slide ${index + 1}`}
+                    aria-pressed={index === activeSlide}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="slider-indicators" role="group" aria-label="Slide selector">
-            {sliderContent.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                className={`indicator-dot${index === activeSlide ? ' is-active' : ''}`}
-                aria-label={`Show slide ${index + 1}: ${slide.title}`}
-                aria-pressed={index === activeSlide}
-                onClick={() => setActiveSlide(index)}
-              />
-            ))}
-          </div>
-          <div className="quick-action-panel">
-            {quickActions.map((action) => (
-              <a key={action.id} className="quick-action-card" href={action.href}>
-                <span className="quick-action-label">{action.label}</span>
-                <span className="quick-action-description">{action.description}</span>
-              </a>
-            ))}
+            <div className="flex flex-1 flex-col gap-6">
+              <div className="rounded-4xl border border-white/10 bg-white/10 p-6 text-white/85 backdrop-blur">
+                <h2 className="text-xl font-semibold text-white">Why our camp matters</h2>
+                <p className="mt-3 text-sm text-white/70">
+                  MSSN Lagos is accelerating faith-driven leadership, digital literacy, and socio-economic empowerment through immersive experiences and community support.
+                </p>
+                <ul className="mt-6 space-y-3 text-sm">
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-mssn-green" aria-hidden="true" />
+                    <span>Personalized learning paths for every attendee.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-mssn-green" aria-hidden="true" />
+                    <span>Secure, paperless processing for registrations and verifications.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-mssn-green" aria-hidden="true" />
+                    <span>Dedicated mentorship, wellness, and service initiatives.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-4xl border border-white/10 bg-white/10 p-6 text-white/85 backdrop-blur">
+                <h2 className="text-xl font-semibold text-white">Key reminders</h2>
+                <ul className="mt-4 space-y-3 text-sm">
+                  <li>
+                    • Carry your MSSN slip (digital or printed) for entry.
+                  </li>
+                  <li>
+                    • Submit sponsorship assets before <strong>1st August</strong> for camp visibility.
+                  </li>
+                  <li>
+                    • Join the onboarding webinar once your registration is approved.
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="about-section" id="learn-more" aria-labelledby="about-heading">
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-eyebrow">Why MSSN Camp</span>
-              <h2 className="section-heading" id="about-heading">
-                Digitized experience built for our community
+        <div className="mx-auto -mt-24 w-full max-w-6xl px-6">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {quickActions.map((action) => (
+              <a
+                key={action.id}
+                href={action.href}
+                onClick={action.external ? undefined : closeMenus}
+                target={action.external ? '_blank' : undefined}
+                rel={action.external ? 'noreferrer' : undefined}
+                className="group rounded-4xl border border-mssn-slate/10 bg-white/95 p-6 shadow-soft transition hover:-translate-y-1 hover:border-mssn-green/40 hover:shadow-glow"
+              >
+                <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-mssn-greenDark">
+                  Quick Action
+                </span>
+                <h3 className="mt-4 text-xl font-semibold text-mssn-slate">{action.title}</h3>
+                <p className="mt-3 text-sm text-mssn-slate/70">{action.description}</p>
+                <span className="mt-6 inline-flex items-center gap-3 text-sm font-semibold text-mssn-greenDark">
+                  Continue
+                  <span aria-hidden="true">→</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <section
+          id="camp-highlights"
+          className="mx-auto mt-32 w-full max-w-6xl px-6"
+          aria-labelledby="camp-highlights-heading"
+        >
+          <div className="rounded-4xl bg-white/90 p-10 shadow-soft ring-1 ring-mssn-slate/10">
+            <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl space-y-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                  Impact
+                </span>
+                <h2 id="camp-highlights-heading" className="text-3xl font-semibold text-mssn-slate lg:text-4xl">
+                  Digitizing the MSSN Lagos camp journey end-to-end
+                </h2>
+                <p className="text-base text-mssn-slate/70">
+                  Our platform powers registration, verification, communication, and sponsorship experiences—reducing manual workloads while elevating camp impact.
+                </p>
+              </div>
+              <div className="grid flex-1 gap-4 sm:grid-cols-2">
+                {impactStats.map((stat) => (
+                  <div
+                    key={stat.id}
+                    className="rounded-3xl border border-mssn-slate/10 bg-mssn-mist p-5 text-center shadow-sm"
+                  >
+                    <span className="text-3xl font-semibold text-mssn-greenDark">{stat.value}</span>
+                    <p className="mt-2 text-sm text-mssn-slate/70">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto mt-24 w-full max-w-6xl px-6" aria-labelledby="features-heading">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-xl space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Platform Features
+                </span>
+              <h2 id="features-heading" className="text-3xl font-semibold lg:text-4xl">
+                Powerful tools for coordinators, registrants, and partners
               </h2>
-              <p className="section-introduction">
-                MSSN Lagos Unit Camp Site streamlines registrations, supports returning attendees, and strengthens partnerships with sponsors who share our values.
+              <p className="text-base text-mssn-slate/70">
+                MSSN Lagos Unit Camp Site streamlines onboarding, strengthens data accuracy, and increases visibility for sponsors through a secure ecosystem.
               </p>
             </div>
-            <div className="benefit-grid">
-              <article className="benefit-card">
-                <h3 className="benefit-title">Centralized Registration</h3>
-                <p className="benefit-description">
-                  Register new participants, update existing records, and keep track of every camper through one unified portal.
-                </p>
-              </article>
-              <article className="benefit-card">
-                <h3 className="benefit-title">Accurate Member Data</h3>
-                <p className="benefit-description">
-                  Built-in MSSN ID verification tools ensure every entry is legitimate, helping coordinators manage attendees with confidence.
-                </p>
-              </article>
-              <article className="benefit-card">
-                <h3 className="benefit-title">Sponsor Visibility</h3>
-                <p className="benefit-description">
-                  Dedicated advertisement space allows partners to reach thousands of engaged Muslim youths and professionals.
-                </p>
-              </article>
+            <div className="grid flex-1 gap-6 sm:grid-cols-2">
+              {featureHighlights.map((feature) => (
+                <article
+                  key={feature.id}
+                  className="rounded-4xl border border-mssn-slate/10 bg-white/95 p-6 shadow-soft transition hover:-translate-y-1 hover:border-mssn-green/30"
+                >
+                  <h3 className="text-xl font-semibold text-mssn-slate">{feature.title}</h3>
+                  <p className="mt-3 text-sm text-mssn-slate/70">{feature.description}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
         <section
-          className="registration-section"
           id="registration"
+          className="mt-24 bg-gradient-to-br from-mssn-green/12 via-white to-mssn-green/10"
           aria-labelledby="registration-heading"
         >
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-eyebrow">Registration</span>
-              <h2 className="section-heading" id="registration-heading">
-                Join or return to MSSN Lagos Camp
+          <div className="mx-auto w-full max-w-6xl px-6 py-24">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Registration Flows
+              </span>
+              <h2 id="registration-heading" className="mt-4 text-3xl font-semibold sm:text-4xl">
+                Join or return to MSSN Lagos camp in minutes
               </h2>
-              <p className="section-introduction">
-                Whether this is your first time or you are a returning member, the camp portal makes onboarding seamless.
+              <p className="mt-4 text-base text-mssn-slate/70">
+                Whether you are a first-timer or returning member, the portal guides you through smart, secure steps tailored to your journey.
               </p>
             </div>
-            <div className="registration-grid">
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
               <article
-                className="registration-card"
                 id="new-member-registration"
-                aria-labelledby="new-member-title"
+                aria-labelledby="new-member-heading"
+                className="flex h-full flex-col justify-between rounded-4xl border border-mssn-green/20 bg-white/95 p-8 shadow-soft"
               >
-                <div className="registration-status">New members</div>
-                <h3 className="registration-title" id="new-member-title">
-                  Create your camp profile
-                </h3>
-                <p className="registration-description">
-                  Submit your personal information, emergency contacts, and accommodation preferences. Receive a confirmation email instantly.
-                </p>
-                <a className="registration-link" href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer">
+                <div className="space-y-6">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-mssn-greenDark">
+                    New Members
+                  </span>
+                  <div>
+                    <h3 id="new-member-heading" className="text-2xl font-semibold text-mssn-slate">
+                      Create your first camp profile
+                    </h3>
+                    <p className="mt-3 text-sm text-mssn-slate/70">
+                      Submit personal details, guardians, medical notes, and accommodation preferences. Receive onboarding resources immediately.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-sm text-mssn-slate/70">
+                    <li>• Digital identity creation and biometric-ready QR codes.</li>
+                    <li>• Instant confirmation emails and SMS alerts.</li>
+                    <li>• Access to pre-camp webinars and mentorship channels.</li>
+                  </ul>
+                </div>
+                <a
+                  href="https://mssnlagos.org/camp/register/new"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-8 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:translate-y-[-2px]"
+                >
                   Start new member registration
                 </a>
               </article>
+
               <article
-                className="registration-card"
                 id="existing-member-registration"
-                aria-labelledby="existing-member-title"
+                aria-labelledby="existing-member-heading"
+                className="flex h-full flex-col justify-between rounded-4xl border border-mssn-green/20 bg-white/95 p-8 shadow-soft"
               >
-                <div className="registration-status">Returning members</div>
-                <h3 className="registration-title" id="existing-member-title">
-                  Update your previous record
-                </h3>
-                <p className="registration-description">
-                  Log in with your MSSN ID, review your stored data, and confirm your attendance without repeating the full form.
-                </p>
-                <a className="registration-link" href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer">
+                <div className="space-y-6">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-mssn-greenDark">
+                    Returning Members
+                  </span>
+                  <div>
+                    <h3 id="existing-member-heading" className="text-2xl font-semibold text-mssn-slate">
+                      Update your previous record
+                    </h3>
+                    <p className="mt-3 text-sm text-mssn-slate/70">
+                      Log in with your MSSN ID, review stored details, and confirm your slot without repeating the full process.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-sm text-mssn-slate/70">
+                    <li>• Pre-filled data with secure biometric confirmation.</li>
+                    <li>• Ability to add dependents or group registrations.</li>
+                    <li>• Export history reports for your local chapter.</li>
+                  </ul>
+                </div>
+                <a
+                  href="https://mssnlagos.org/camp/register/returning"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-8 inline-flex items-center justify-center rounded-full border border-mssn-green/40 bg-white px-6 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/10"
+                >
                   Continue as existing member
                 </a>
               </article>
@@ -348,151 +615,267 @@ function App() {
         </section>
 
         <section
-          className="support-section"
-          id="reprint-slip"
-          aria-labelledby="support-heading"
+          id="reprint"
+          className="mx-auto mt-24 w-full max-w-6xl px-6"
+          aria-labelledby="self-service-heading"
         >
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-eyebrow">Self-Service</span>
-              <h2 className="section-heading" id="support-heading">
-                Manage your registration anytime
-              </h2>
-              <p className="section-introduction">
-                Tools built to keep you informed and prepared before camp begins.
-              </p>
-            </div>
-            <div className="support-grid">
-              <article className="support-card" aria-labelledby="reprint-title">
-                <h3 className="support-title" id="reprint-title">
-                  Re-print slip
-                </h3>
-                <p className="support-description">
-                  Access your registration slip, download it as PDF, or send it to your email. Helpful reminders keep you ready for check-in.
+          <div className="rounded-4xl bg-white/95 p-8 shadow-soft ring-1 ring-mssn-slate/10">
+            <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-xl space-y-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                  Self-Service
+                </span>
+                <h2 id="self-service-heading" className="text-3xl font-semibold">
+                  Manage your registration anytime, anywhere
+                </h2>
+                <p className="text-base text-mssn-slate/70">
+                  Reprint slips, validate IDs, or share details with coordinators. Everything happens instantly across secure MSSN infrastructure.
                 </p>
-                <a className="support-link" href="https://mssnlagos.org/camp/reprint" target="_blank" rel="noreferrer">
-                  Reprint my slip
-                </a>
-              </article>
-              <article
-                className="support-card"
-                id="mssn-id-lookup"
-                aria-labelledby="id-lookup-title"
-              >
-                <h3 className="support-title" id="id-lookup-title">
-                  MSSN ID lookup
-                </h3>
-                <p className="support-description">
-                  Validate your identification number or retrieve it using your registered email and phone number.
-                </p>
-                <a className="support-link" href="https://mssnlagos.org/camp/mssn-id" target="_blank" rel="noreferrer">
-                  Check my MSSN ID
-                </a>
-              </article>
+              </div>
+              <div id="lookup" className="grid flex-1 gap-6 sm:grid-cols-2">
+                {supportServices.map((service) => (
+                  <article
+                    key={service.id}
+                    className="flex h-full flex-col justify-between rounded-3xl border border-mssn-slate/10 bg-mssn-mist p-6"
+                  >
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-mssn-slate">{service.title}</h3>
+                      <p className="text-sm text-mssn-slate/70">{service.description}</p>
+                    </div>
+                    <a
+                      href={service.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-mssn-greenDark"
+                    >
+                      Access service
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        <section
-          className="advertisement-section"
-          id="advertise"
-          aria-labelledby="advertisement-heading"
-        >
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-eyebrow">Sponsors & Partners</span>
-              <h2 className="section-heading" id="advertisement-heading">
-                Amplify your message during camp
+        <section className="mx-auto mt-24 w-full max-w-6xl px-6" aria-labelledby="schedule-heading">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Camp Blueprint
+              </span>
+              <h2 id="schedule-heading" className="text-3xl font-semibold lg:text-4xl">
+                Curated sessions for spiritual depth, leadership, and wellness
               </h2>
-              <p className="section-introduction">
-                Reach a dedicated audience before, during, and after camp. Showcase your services where they matter most.
+              <p className="text-base text-mssn-slate/70">
+                Every day at camp is designed to balance devotion, knowledge, fellowship, and impact. Discover a preview of what awaits.
               </p>
+              <a
+                href="https://mssnlagos.org"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-mssn-slate px-5 py-3 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
+              >
+                View detailed schedule
+                <span aria-hidden="true">↗</span>
+              </a>
             </div>
-            <div className="sponsor-grid">
-              {sponsorSpots.map((sponsor) => (
+            <div className="space-y-4">
+              {scheduleHighlights.map((item) => (
                 <article
-                  key={sponsor.id}
-                  className="sponsor-card"
-                  aria-label={`${sponsor.name} advertisement`}
+                  key={item.id}
+                  className="rounded-4xl border border-mssn-slate/10 bg-white/95 p-6 shadow-soft"
                 >
-                  <h3 className="sponsor-name">{sponsor.name}</h3>
-                  <p className="sponsor-message">{sponsor.message}</p>
-                  <a className="sponsor-link" href={sponsor.link} target="_blank" rel="noreferrer">
-                    View partner profile
-                  </a>
+                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-mssn-greenDark">
+                    <span>{item.time}</span>
+                    <span>Camp Feature</span>
+                  </div>
+                  <h3 className="mt-3 text-xl font-semibold text-mssn-slate">{item.title}</h3>
+                  <p className="mt-3 text-sm text-mssn-slate/70">{item.description}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="contact-section" id="contact" aria-labelledby="contact-heading">
-          <div className="section-container">
-            <div className="contact-grid">
-              <div className="contact-column">
-                <span className="section-eyebrow">Stay Connected</span>
-                <h2 className="section-heading" id="contact-heading">
-                  Contact the MSSN Lagos team
+        <section
+          id="advertise"
+          className="mt-24 bg-gradient-to-br from-mssn-night via-mssn-green/30 to-mssn-night"
+          aria-labelledby="sponsors-heading"
+        >
+          <div className="mx-auto w-full max-w-6xl px-6 py-24 text-white">
+            <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+              <div className="space-y-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white">
+                  Sponsors & Partners
+                </span>
+                <h2 id="sponsors-heading" className="text-3xl font-semibold sm:text-4xl">
+                  Amplify your message before, during, and after camp
                 </h2>
-                <p className="section-introduction">
-                  Have questions about the upcoming camp, sponsorships, or volunteering? Reach out and we will respond within 24 hours.
+                <p className="text-base text-white/75">
+                  Showcase your products, scholarships, or services to thousands of Muslim youths, professionals, and leaders. Gain visibility through the portal, livestreams, and on-ground activations.
                 </p>
-                <ul className="contact-list">
-                  <li className="contact-item">
-                    <span className="contact-label">Email</span>
-                    <a className="contact-link" href="mailto:camp@mssnlagos.org">
-                      camp@mssnlagos.org
-                    </a>
-                  </li>
-                  <li className="contact-item">
-                    <span className="contact-label">Phone</span>
-                    <a className="contact-link" href="tel:+2348130001122">
-                      +234 813 000 1122
-                    </a>
-                  </li>
-                  <li className="contact-item">
-                    <span className="contact-label">Office</span>
-                    <span className="contact-detail">
-                      MSSN Lagos Secretariat, 10 Community Way, Yaba, Lagos.
-                    </span>
-                  </li>
-                </ul>
+                <a
+                  href="mailto:partners@mssnlagos.org"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-mssn-slate transition hover:bg-mssn-green hover:text-white"
+                >
+                  Request media kit
+                  <span aria-hidden="true">→</span>
+                </a>
               </div>
-              <form className="newsletter-form" aria-label="Subscribe to MSSN camp newsletter">
-                <span className="newsletter-heading">Subscribe for updates</span>
-                <label className="newsletter-label" htmlFor="newsletter-email">
-                  Receive camp reminders, packing checklists, and announcements directly in your inbox.
-                </label>
-                <input
-                  className="newsletter-input"
-                  type="email"
-                  id="newsletter-email"
-                  name="email"
-                  placeholder="Enter your email address"
-                  required
-                />
-                <button className="newsletter-submit" type="submit">
-                  Join the mailing list
-                </button>
-              </form>
+              <div className="grid gap-6">
+                {sponsors.map((sponsor) => (
+                  <article
+                    key={sponsor.id}
+                    className="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur"
+                  >
+                    <h3 className="text-lg font-semibold text-white">{sponsor.name}</h3>
+                    <p className="mt-2 text-sm text-white/75">{sponsor.message}</p>
+                    <a
+                      href={sponsor.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-mssn-green"
+                    >
+                      View partner profile
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </article>
+                ))}
+              </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto mt-24 w-full max-w-6xl px-6" aria-labelledby="faq-heading">
+          <div className="rounded-4xl bg-white/95 p-8 shadow-soft ring-1 ring-mssn-slate/10">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                FAQs
+              </span>
+              <h2 id="faq-heading" className="mt-4 text-3xl font-semibold sm:text-4xl">
+                Answers to common questions
+              </h2>
+              <p className="mt-4 text-base text-mssn-slate/70">
+                Get prepared before camp begins. Reach out to the MSSN Lagos team for any clarifications beyond these highlights.
+              </p>
+            </div>
+            <div className="mx-auto mt-10 max-w-3xl space-y-4">
+              {faqs.map((faq) => (
+                <details
+                  key={faq.id}
+                  className="group rounded-3xl border border-mssn-slate/10 bg-mssn-mist/80 p-5"
+                >
+                  <summary className="flex cursor-pointer items-center justify-between text-left text-sm font-semibold text-mssn-slate">
+                    {faq.question}
+                    <span className="ml-4 text-mssn-greenDark transition group-open:rotate-90">➔</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-mssn-slate/70">{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="contact"
+          className="mx-auto mt-24 w-full max-w-6xl px-6"
+          aria-labelledby="contact-heading"
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Stay Connected
+              </span>
+              <h2 id="contact-heading" className="text-3xl font-semibold lg:text-4xl">
+                Contact the MSSN Lagos team
+              </h2>
+              <p className="text-base text-mssn-slate/70">
+                Need help with registration, sponsorships, or volunteering? Send us a message and we will respond within 24 hours.
+              </p>
+              <ul className="space-y-3 text-sm text-mssn-slate/80">
+                <li>
+                  <span className="font-semibold text-mssn-greenDark">Email:</span>{' '}
+                  <a className="underline decoration-mssn-green/40 underline-offset-4" href="mailto:camp@mssnlagos.org">
+                    camp@mssnlagos.org
+                  </a>
+                </li>
+                <li>
+                  <span className="font-semibold text-mssn-greenDark">Phone:</span>{' '}
+                  <a className="underline decoration-mssn-green/40 underline-offset-4" href="tel:+2348130001122">
+                    +234 813 000 1122
+                  </a>
+                </li>
+                <li>
+                  <span className="font-semibold text-mssn-greenDark">Office:</span> MSSN Lagos Secretariat, 10 Community Way, Yaba, Lagos.
+                </li>
+              </ul>
+            </div>
+            <form
+              className="rounded-4xl border border-mssn-slate/10 bg-white/95 p-8 shadow-soft"
+              aria-label="Subscribe to MSSN camp newsletter"
+            >
+              <span className="text-sm font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Newsletter
+              </span>
+              <h3 className="mt-3 text-2xl font-semibold text-mssn-slate">
+                Receive camp announcements, packing lists, and scholarship alerts
+              </h3>
+              <label className="mt-6 block text-sm font-medium text-mssn-slate" htmlFor="newsletter-email">
+                Email address
+              </label>
+              <input
+                className="mt-2 w-full rounded-2xl border border-mssn-slate/20 bg-mssn-mist px-4 py-3 text-sm text-mssn-slate outline-none transition focus:border-mssn-green focus:ring-2 focus:ring-mssn-green/40"
+                type="email"
+                id="newsletter-email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+              <button
+                type="submit"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:translate-y-[-2px]"
+              >
+                Join the mailing list
+              </button>
+              <p className="mt-3 text-xs text-mssn-slate/60">
+                We respect your inbox. Expect essential camp updates only.
+              </p>
+            </form>
           </div>
         </section>
       </main>
 
-      <footer className="site-footer" aria-label="Footer">
-        <div className="section-container footer-container">
-          <div className="footer-brand">
-            <div className="footer-mark" aria-hidden="true">
-              MSSN
+      <footer className="mt-24 bg-mssn-night">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 text-white/80">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-3xl bg-gradient-to-br from-mssn-green to-mssn-greenDark text-sm font-bold text-white">
+                MSSN
+              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-white">
+                  Muslim Students’ Society of Nigeria, Lagos State Area Unit
+                </span>
+                <span className="text-xs text-white/70">
+                  Building faith, knowledge, and unity across campuses
+                </span>
+              </div>
             </div>
-            <div className="footer-text">
-              <span className="footer-name">MSSN Lagos State Area Unit</span>
-              <span className="footer-tagline">Building faith, knowledge, and unity</span>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <a href="#registration" className="underline decoration-mssn-green/40 underline-offset-4">
+                Register now
+              </a>
+              <a href="#reprint" className="underline decoration-mssn-green/40 underline-offset-4">
+                Re-print slip
+              </a>
+              <a href="#contact" className="underline decoration-mssn-green/40 underline-offset-4">
+                Contact support
+              </a>
             </div>
           </div>
-          <p className="footer-copy">
-            &copy; {new Date().getFullYear()} Muslim Students’ Society of Nigeria, Lagos State Area Unit. All rights reserved.
+          <p className="text-xs text-white/60">
+            &copy; {new Date().getFullYear()} MSSN Lagos State Area Unit. All rights reserved.
           </p>
         </div>
       </footer>
