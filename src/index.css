@@ -1,9 +1,10 @@
 @config '../tailwind.config.js';
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
-@import "tailwindcss";
-@source "../index.html";
-@source "./**/*.{js,jsx,ts,tsx}";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
