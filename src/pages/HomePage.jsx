@@ -44,7 +44,7 @@ const quickActions = [
     id: 'existing-member',
     title: 'Existing Member',
     description: 'Retrieve MSSN ID, update records, reserve your bunk.',
-    href: 'https://mssnlagos.org/camp/register/returning',
+    href: '#/existing/validate',
   },
   {
     id: 'reprint-slip',
