@@ -1,13 +1,5 @@
 import { useMemo, useState } from 'react'
 
-const navigationLinks = [
-  { id: 'home', label: 'Home', href: '/' },
-  { id: 'tracks', label: 'Camp Tracks', href: '#tracks' },
-  { id: 'support', label: 'Support', href: '#support' },
-  { id: 'partners', label: 'Partners', href: '#ads' },
-  { id: 'faq', label: 'FAQs', href: '#faq' },
-]
-
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
@@ -25,25 +17,19 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
             <span className="text-base">Camp Experience Portal</span>
           </span>
         </a>
-        <nav className="hidden items-center gap-6 text-sm font-semibold lg:flex">
-          {navigationLinks.map((link) => (
-            <a
-              key={link.id}
-              href={link.href}
-              className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark"
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
-            href="https://mssnlagos.org/camp/register/new"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:translate-y-[-2px]"
-          >
-            Register now
-            <span aria-hidden="true">→</span>
-          </a>
+        <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
+          <a href="/" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Home</a>
+          <a href="#quick-actions" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Re-print Slip</a>
+          <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Check MSSN ID</a>
+          <div className="group relative">
+            <button type="button" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Registration ▾</button>
+            <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 opacity-0 shadow-soft transition group-hover:visible group-hover:opacity-100">
+              <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+              <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
+            </div>
+          </div>
+          <a href="mailto:camp@mssnlagos.org" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
+          <a href="#ads" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Advertise With Us</a>
         </nav>
         <button
           type="button"
@@ -57,30 +43,20 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
       </div>
       <nav
         className={`lg:hidden transition-all duration-300 ${
-          isNavOpen ? 'max-h-[640px] opacity-100' : 'max-h-0 opacity-0'
+          isNavOpen ? 'max-h-[720px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pb-6">
-          {navigationLinks.map((link) => (
-            <a
-              key={link.id}
-              href={link.href}
-              onClick={onCloseNav}
-              className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10"
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
-            href="https://mssnlagos.org/camp/register/new"
-            target="_blank"
-            rel="noreferrer"
-            onClick={onCloseNav}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-mssn-green to-mssn-greenDark px-5 py-3 text-sm font-semibold text-white shadow-glow"
-          >
-            Register now
-            <span aria-hidden="true">→</span>
-          </a>
+          <a href="/" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
+          <a href="#quick-actions" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Re-print Slip</a>
+          <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
+          <div className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-mssn-slate/10">
+            <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
+            <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+            <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
+          </div>
+          <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>
+          <a href="#ads" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Advertise With Us</a>
         </div>
       </nav>
     </header>
