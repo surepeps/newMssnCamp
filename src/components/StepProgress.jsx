@@ -1,7 +1,7 @@
 export default function StepProgress({ steps, current }) {
   return (
-    <div className="w-full">
-      <ol className="relative flex items-center justify-between gap-3">
+    <div className="w-full overflow-x-auto">
+      <ol className="relative flex items-center gap-4 px-1 sm:justify-between">
         {steps.map((label, idx) => {
           const done = idx < current
           const active = idx === current
