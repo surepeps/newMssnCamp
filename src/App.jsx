@@ -323,7 +323,7 @@ function App() {
                 <p className="registration-description">
                   Submit your personal information, emergency contacts, and accommodation preferences. Receive a confirmation email instantly.
                 </p>
-                <a className="registration-link" href="#">
+                <a className="registration-link" href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer">
                   Start new member registration
                 </a>
               </article>
@@ -339,7 +339,7 @@ function App() {
                 <p className="registration-description">
                   Log in with your MSSN ID, review your stored data, and confirm your attendance without repeating the full form.
                 </p>
-                <a className="registration-link" href="#">
+                <a className="registration-link" href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer">
                   Continue as existing member
                 </a>
               </article>
@@ -370,7 +370,7 @@ function App() {
                 <p className="support-description">
                   Access your registration slip, download it as PDF, or send it to your email. Helpful reminders keep you ready for check-in.
                 </p>
-                <a className="support-link" href="#">
+                <a className="support-link" href="https://mssnlagos.org/camp/reprint" target="_blank" rel="noreferrer">
                   Reprint my slip
                 </a>
               </article>
@@ -385,7 +385,7 @@ function App() {
                 <p className="support-description">
                   Validate your identification number or retrieve it using your registered email and phone number.
                 </p>
-                <a className="support-link" href="#">
+                <a className="support-link" href="https://mssnlagos.org/camp/mssn-id" target="_blank" rel="noreferrer">
                   Check my MSSN ID
                 </a>
               </article>
