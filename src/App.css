@@ -402,6 +402,10 @@ body {
   padding: 6.5rem 0;
 }
 
+.about-section {
+  margin-top: 7rem;
+}
+
 .benefit-grid,
 .registration-grid,
 .support-grid,
@@ -796,6 +800,10 @@ body {
   .advertisement-section,
   .contact-section {
     padding: 5.5rem 0;
+  }
+
+  .about-section {
+    margin-top: 9rem;
   }
 }
 
