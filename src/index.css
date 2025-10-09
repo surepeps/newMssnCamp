@@ -1,27 +1,31 @@
-* {
-  box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f6f8f3;
-  color: #1a2a2f;
-}
+@layer base {
+  :root {
+    color: theme('colors.mssn.slate');
+    background-color: theme('colors.mssn.mist');
+  }
 
-body {
-  min-height: 100vh;
-}
+  html {
+    scroll-behavior: smooth;
+  }
 
-a {
-  color: inherit;
-}
+  body {
+    @apply min-h-screen bg-mssn-mist text-mssn-slate font-body antialiased;
+  }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-semibold text-mssn-slate;
+  }
+
+  a {
+    @apply transition text-current;
+  }
 }
