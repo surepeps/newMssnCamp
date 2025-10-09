@@ -21,7 +21,7 @@ export default {
         soft: '0 18px 45px rgba(15, 29, 31, 0.12)',
       },
       borderRadius: {
-        4xl: '2rem',
+        '4xl': '2rem',
       },
       backgroundImage: {
         'radial-glow':
