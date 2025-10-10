@@ -85,7 +85,8 @@ function AsyncSelect({
   multiple = false,
   disabled = false,
   fetchPage,
-  onBlur
+  onBlur,
+  invalid = false,
 }) {
   const containerRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -162,7 +163,7 @@ function AsyncSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`w-full rounded-xl border px-4 py-3 text-left text-sm shadow-sm transition ${disabled ? 'cursor-not-allowed border-mssn-slate/10 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/20 bg-white text-mssn-slate hover:border-mssn-green/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/25'}`}
+        className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 hover:border-mssn-green/40 focus:border-mssn-green focus:ring-mssn-green/25'} ${disabled ? 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50' : 'bg-white text-mssn-slate'}`}
       >
         {selectedLabels.length ? (
           multiple ? (
@@ -235,7 +236,10 @@ function FieldShell({ label, required, error, htmlFor, children, className }) {
 function TextField({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-field`
-  const baseClass = `w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`
+  const val = formik.values[name]
+  const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
+  const invalid = (required && isEmpty(val)) || (!!error)
+  const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
 
   return (
     <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
@@ -249,6 +253,7 @@ function TextField({ formik, name, label, type = 'text', required = false, place
           onBlur={formik.handleBlur}
           placeholder={placeholder}
           className={`${baseClass} resize-none`}
+          required={required}
         />
       ) : (
         <input
@@ -261,6 +266,7 @@ function TextField({ formik, name, label, type = 'text', required = false, place
           placeholder={placeholder}
           className={baseClass}
           min={type === 'number' ? '1' : undefined}
+          required={required}
         />
       )}
     </FieldShell>
@@ -270,6 +276,8 @@ function TextField({ formik, name, label, type = 'text', required = false, place
 function SelectField({ formik, name, label, options, required = false, placeholder = 'Select...', className }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-select`
+  const value = formik.values[name]
+  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
   return (
     <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
       <select
@@ -278,7 +286,8 @@ function SelectField({ formik, name, label, options, required = false, placehold
         value={formik.values[name]}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        className={`w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+        required={required}
+        className={`w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`}
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
@@ -293,6 +302,9 @@ function SelectField({ formik, name, label, options, required = false, placehold
 
 function FormikAsyncSelect({ formik, name, label, required = false, className, ...props }) {
   const error = formik.touched[name] && formik.errors[name]
+  const val = formik.values[name]
+  const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
+  const invalid = (required && isEmpty) || (!!error)
   return (
     <FieldShell label={label} required={required} error={error} className={className}>
       <AsyncSelect
@@ -300,6 +312,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
         value={formik.values[name]}
         onChange={(val) => formik.setFieldValue(name, val)}
         onBlur={() => formik.setFieldTouched(name, true)}
+        invalid={invalid}
       />
     </FieldShell>
   )
@@ -430,7 +443,7 @@ function RegistrationForm({ category }) {
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{config.label}</h1>
             </div>
-            <a href="#/new" className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
+            <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
               Change category
             </a>
           </div>
@@ -582,9 +595,9 @@ export default function NewMember({ category }) {
             </div>
           </div>
           <div className="mt-5 grid gap-6 lg:grid-cols-3">
-            <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { window.location.hash = '#/new/secondary' }} />
-            <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { window.location.hash = '#/new/undergraduate' }} />
-            <CategoryCard id="others" title="Others" description="For non-students and general participants." onClick={() => { window.location.hash = '#/new/others' }} />
+            <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { navigate('/new/secondary') }} />
+            <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { navigate('/new/undergraduate') }} />
+            <CategoryCard id="others" title="Others" description="For non-students and general participants." onClick={() => { navigate('/new/others') }} />
           </div>
         </div>
       </section>
