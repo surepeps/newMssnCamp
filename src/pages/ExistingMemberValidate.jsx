@@ -31,8 +31,9 @@ export default function ExistingMemberValidate() {
         body: JSON.stringify(payload),
       })
       if (!res?.success || !res?.delegate?.details) {
-        setError('Record not found. Check details and try again.')
-        toast.error('Record not found. Check details and try again.')
+        const msg = res?.message || 'Record not found. Check details and try again.'
+        setError(msg)
+        toast.error(msg)
       } else {
         setDelegate(res.delegate)
         localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
