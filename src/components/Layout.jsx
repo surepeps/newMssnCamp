@@ -23,8 +23,9 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Check MSSN ID</a>
           <div className="group relative">
             <button type="button" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Registration ▾</button>
-            <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 opacity-0 shadow-soft transition group-hover:visible group-hover:opacity-100">
-              <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+            <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
+              <a href="#/registration" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
+              <a href="#/existing/validate" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
               <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
             </div>
           </div>
@@ -50,9 +51,10 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           <a href="/" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
           <a href="#quick-actions" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Re-print Slip</a>
           <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
-          <div className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-mssn-slate/10">
+          <div className="rounded-2xl bg-white p-2 ring-1 ring-mssn-slate/10">
             <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
-            <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+            <a href="#/registration" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
+            <a href="#/existing/validate" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
             <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
           </div>
           <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>
@@ -98,8 +100,12 @@ function Footer() {
   )
 }
 
+import { useSettings } from '../context/SettingsContext.jsx'
+import FullPageLoader from './FullPageLoader.jsx'
+
 function Layout({ children }) {
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const { loading } = useSettings()
 
   const toggleNav = () => setIsNavOpen((prev) => !prev)
   const closeNav = () => setIsNavOpen(false)
@@ -109,6 +115,7 @@ function Layout({ children }) {
       <Header isNavOpen={isNavOpen} onToggleNav={toggleNav} onCloseNav={closeNav} />
       <main className="flex-1">{children}</main>
       <Footer />
+      {loading && <FullPageLoader />}
     </div>
   )
 }
