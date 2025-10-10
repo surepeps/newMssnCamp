@@ -465,6 +465,8 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       return input === undefined || input === null ? undefined : input
     }
 
+    const categoryApi = category === 'undergraduate' ? 'UNDERGRADUATE' : category === 'secondary' ? 'SECONDARY' : 'OTHERS'
+
     const payload = {
       surname: values.surname.trim(),
       firstname: values.firstname.trim(),
@@ -479,7 +481,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       marital_status: normalize(values.marital_status) || 'Single',
       state_of_origin: normalize(values.state_of_origin),
       ailments: (normalize(values.ailments) || []).join(','),
-      pin_category: category
+      pin_category: categoryApi
     }
 
     if (config.showSchool) {
