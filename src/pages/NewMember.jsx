@@ -307,7 +307,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
 
 function SectionCard({ title, description, columns = 'sm:grid-cols-2', children }) {
   return (
-    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 shadow-soft sm:p-8">
+    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
         {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
@@ -445,7 +445,7 @@ function RegistrationForm({ category }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white shadow-glow">
+      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
