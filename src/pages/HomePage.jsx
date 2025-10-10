@@ -123,7 +123,7 @@ function HeroSlider() {
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-24 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex-1 space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
-            Camp MSSN Lagos 2025
+            {campTitle}
           </span>
           <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
           <p className="max-w-2xl text-lg text-white/85 lg:text-xl">{activeSlide.description}</p>
