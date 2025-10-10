@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { fetchStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
+import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -162,7 +162,7 @@ function AsyncSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm shadow-sm transition ${disabled ? 'cursor-not-allowed border-mssn-slate/10 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/20 bg-white text-mssn-slate hover:border-mssn-green/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/25'}`}
+        className={`w-full rounded-xl border px-4 py-3 text-left text-sm shadow-sm transition ${disabled ? 'cursor-not-allowed border-mssn-slate/10 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/20 bg-white text-mssn-slate hover:border-mssn-green/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/25'}`}
       >
         {selectedLabels.length ? (
           multiple ? (
@@ -179,7 +179,7 @@ function AsyncSelect({
         )}
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white shadow-glow">
+        <div className="absolute z-50 mt-2 w-full overflow-visible rounded-xl border border-mssn-slate/10 bg-white">
           <div className="p-2">
             <input
               value={search}
@@ -235,7 +235,7 @@ function FieldShell({ label, required, error, htmlFor, children, className }) {
 function TextField({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-field`
-  const baseClass = `w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`
+  const baseClass = `w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`
 
   return (
     <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
@@ -278,7 +278,7 @@ function SelectField({ formik, name, label, options, required = false, placehold
         value={formik.values[name]}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        className={`w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+        className={`w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
@@ -347,31 +347,8 @@ function buildValidationSchema(config) {
 
 function RegistrationForm({ category }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
-  const [stateOptions, setStateOptions] = useState([])
 
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const states = await fetchStates()
-      if (mounted) setStateOptions(states)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  const stateFetcher = useCallback(
-    ({ page, search }) => {
-      const pageSize = 25
-      const query = (search || '').toLowerCase()
-      const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes(query))
-      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-      const start = (page - 1) * pageSize
-      const items = filtered.slice(start, start + pageSize)
-      return Promise.resolve({ items, page, totalPages })
-    },
-    [stateOptions]
-  )
+  const maritalOptions = category === 'secondary' ? ['Single'] : MARITAL_OPTIONS
 
   const initialValues = useMemo(
     () => ({
@@ -445,7 +422,7 @@ function RegistrationForm({ category }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white">
+      <div className="rounded-4xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
@@ -522,7 +499,7 @@ function RegistrationForm({ category }) {
                     formik={formik}
                     name="marital_status"
                     label="Marital Status"
-                    options={MARITAL_OPTIONS}
+                    options={maritalOptions}
                     placeholder="Select status"
                   />
                   <FormikAsyncSelect
@@ -530,7 +507,7 @@ function RegistrationForm({ category }) {
                     name="state_of_origin"
                     label="State of Origin"
                     placeholder="Select state..."
-                    fetchPage={stateFetcher}
+                    fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
                   />
                 </SectionCard>
 
