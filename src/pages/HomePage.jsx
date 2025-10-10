@@ -252,7 +252,6 @@ export default function HomePage() {
   return (
     <div>
       <HeroSlider />
-      <RegistrationGateCard />
       <div className="mx-auto w-full max-w-6xl px-6">
         <div className="-mt-10 lg:-mt-14">
           <CampSettingsPanel />
