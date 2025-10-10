@@ -6,6 +6,7 @@ import ExistingMemberForm from './pages/ExistingMemberForm.jsx'
 import RegistrationGate from './pages/RegistrationGate.jsx'
 import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
+import { Toaster } from 'sonner'
 
 function usePathRoute() {
   const getLocation = () => `${window.location.pathname}${window.location.search}` || '/'
@@ -71,6 +72,7 @@ function App() {
     <Layout>
       <RegistrationBoundary />
       <Router />
+      <Toaster richColors position="top-center" closeButton />
     </Layout>
   )
 }

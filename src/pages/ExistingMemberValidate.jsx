@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { navigate } from '../utils/navigation.js'
 import StepProgress from '../components/StepProgress.jsx'
+import { RegistrationForm } from './NewMember.jsx'
 import { fetchJSON } from '../services/api.js'
+import { toast } from 'sonner'
 
 export default function ExistingMemberValidate() {
   const [mssnId, setMssnId] = useState('')
@@ -20,6 +22,7 @@ export default function ExistingMemberValidate() {
     setLoading(true)
     setError('')
     setDelegate(null)
+    const t = toast.loading('Verifying details…')
     try {
       const payload = { mssn_id: mssnId.trim(), surname: surname.trim() }
       const res = await fetchJSON('/registration/fetch', {
@@ -28,22 +31,85 @@ export default function ExistingMemberValidate() {
         body: JSON.stringify(payload),
       })
       if (!res?.success || !res?.delegate?.details) {
-        setError('Record not found. Check details and try again.')
+        const msg = res?.message || 'Record not found. Check details and try again.'
+        setError(msg)
+        toast.error(msg)
       } else {
         setDelegate(res.delegate)
         localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
+        toast.success('Record found. You can now update your details.')
       }
     } catch (err) {
-      setError('Unable to verify at the moment. Please try again later.')
+      const msg = err?.message || 'Unable to verify at the moment. Please try again later.'
+      setError(msg)
     } finally {
+      toast.dismiss(t)
       setLoading(false)
     }
+  }
+
+  const categorySlug = (() => {
+    const d = delegate?.details
+    if (!d) return null
+    const baseCat = String(d.pin_category || d.pin_cat || '').toUpperCase()
+    let slug = baseCat === 'SECONDARY' ? 'secondary' : baseCat === 'UNDERGRADUATE' ? 'undergraduate' : 'others'
+    if (baseCat === 'TFL') slug = 'secondary'
+    const toCat = delegate?.upgraded && delegate.upgrade_details?.[0]?.to?.pin_category
+    if (toCat) {
+      const t = String(toCat).toUpperCase()
+      slug = t === 'SECONDARY' ? 'secondary' : t === 'UNDERGRADUATE' ? 'undergraduate' : 'others'
+    }
+    return slug
+  })()
+
+  const prefillValues = (() => {
+    const d = delegate?.details
+    if (!d) return null
+    const sex = d.sex ? (String(d.sex).toLowerCase().startsWith('m') ? 'Male' : 'Female') : ''
+    const ailments = Array.isArray(d.ailments)
+      ? d.ailments
+      : (typeof d.ailments === 'string'
+          ? d.ailments.split(',').map((s) => s.trim()).filter((s) => s && s.toLowerCase() !== 'none')
+          : [])
+    return {
+      surname: d.surname || '',
+      firstname: d.firstname || '',
+      othername: d.othername || '',
+      sex,
+      date_of_birth: d.date_of_birth || '',
+      area_council: d.area_council || '',
+      branch: d.branch || '',
+      email: d.email || '',
+      tel_no: d.tel_no || '',
+      resident_address: d.resident_address || '',
+      marital_status: d.marital_status || '',
+      state_of_origin: d.state_of_origin || '',
+      school: d.school || '',
+      class_level: d.class_level || '',
+      ailments,
+      course: d.course || '',
+      next_of_kin: d.next_of_kin || '',
+      next_of_kin_tel: d.next_of_kin_tel || '',
+      discipline: d.discipline || '',
+      workplace: d.workplace || ''
+    }
+  })()
+
+  const handleExistingSubmit = (values, helpers) => {
+    const payload = { ...values, mssn_id: delegate?.details?.mssn_id || delegate?.details?.mssnId || '' }
+    try {
+      const prev = JSON.parse(localStorage.getItem('existing_member_updates') || '[]')
+      localStorage.setItem('existing_member_updates', JSON.stringify([...prev, payload]))
+    } catch {}
+    helpers.setSubmitting(false)
+    toast.success('Details updated. Redirecting to payment…')
+    navigate('/registration')
   }
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-12">
       <div className="mb-6">
-        <StepProgress steps={["Validate", "Edit", "Pay"]} current={0} />
+        <StepProgress steps={["Validate", "Edit", "Pay"]} current={delegate?.details ? 1 : 0} />
       </div>
       <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
@@ -93,38 +159,30 @@ export default function ExistingMemberValidate() {
           </div>
 
           {delegate?.details ? (
-            <div className="mt-6 space-y-4">
-              <div className="rounded-2xl border border-mssn-slate/10 bg-white p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-mssn-slate">Record found</div>
-                    <div className="text-xs text-mssn-slate/70">{delegate.details.surname} {delegate.details.firstname} • {delegate.details.mssn_id || delegate.details.mssnId || 'N/A'}</div>
-                  </div>
-                  <button type="button" onClick={() => navigate(`/existing/edit?mssnId=${encodeURIComponent(delegate.details.mssn_id || delegate.details.mssnId || '')}&surname=${encodeURIComponent(delegate.details.surname || '')}`)} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">
-                    Continue to Edit
-                  </button>
-                </div>
-                <dl className="mt-4 grid gap-2 text-xs text-mssn-slate/80 sm:grid-cols-2">
-                  <div className="rounded-xl bg-mssn-mist/60 p-2"><dt className="font-semibold text-mssn-slate/70">Category</dt><dd>{delegate.details.pin_category || delegate.details.pin_cat || '—'}</dd></div>
-                  <div className="rounded-xl bg-mssn-mist/60 p-2"><dt className="font-semibold text-mssn-slate/70">School</dt><dd>{delegate.details.school || '—'}</dd></div>
-                  <div className="rounded-xl bg-mssn-mist/60 p-2"><dt className="font-semibold text-mssn-slate/70">Class Level</dt><dd>{delegate.details.class_level || '—'}</dd></div>
-                  <div className="rounded-xl bg-mssn-mist/60 p-2"><dt className="font-semibold text-mssn-slate/70">Course</dt><dd>{delegate.details.course || '—'}</dd></div>
-                </dl>
+            <div className="mt-6">
+              <div className="mb-4 rounded-2xl border border-mssn-green/30 bg-mssn-green/10 p-3 text-sm text-mssn-slate">
+                <span className="font-semibold">Record found:</span> {delegate.details.surname} {delegate.details.firstname} • {delegate.details.mssn_id || delegate.details.mssnId || 'N/A'}
               </div>
-              {delegate.upgraded && delegate.upgrade_details?.length ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                  <div className="font-semibold">Upgrade required</div>
-                  <ul className="mt-2 list-inside list-disc text-xs">
-                    {delegate.upgrade_details.map((u, i) => (
-                      <li key={i}>From {u.from?.pin_category || '—'} {u.from?.class_level || ''} to {u.to?.pin_category || '—'} {u.to?.class_level || ''}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+              <RegistrationForm
+                category={categorySlug || 'others'}
+                prefillValues={prefillValues || {}}
+                submitLabel="Update & Pay"
+                enableDraft={false}
+                onSubmit={handleExistingSubmit}
+              />
             </div>
           ) : null}
         </div>
       </div>
+    {loading && (
+      <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/40">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
+          <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
+          <p className="mt-1 text-sm text-mssn-slate/70">Verifying your details. Please wait…</p>
+        </div>
+      </div>
+    )}
     </section>
   )
 }

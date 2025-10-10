@@ -3,6 +3,8 @@ import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses } from '../services/dataProvider.js'
+import { fetchJSON } from '../services/api.js'
+import { toast } from 'sonner'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -399,7 +401,7 @@ function DraftSaver({ formik, category }) {
   return null
 }
 
-function RegistrationForm({ category }) {
+export function RegistrationForm({ category, prefillValues, submitLabel, enableDraft = true, onSubmit: onSubmitOverride }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
 
   const maritalOptions = category === 'secondary' ? ['Single'] : MARITAL_OPTIONS
@@ -439,16 +441,21 @@ function RegistrationForm({ category }) {
       if (raw) {
         const draft = JSON.parse(raw)
         if (draft && draft.category === category && draft.values && typeof draft.values === 'object') {
-          return { ...base, ...draft.values }
+          const merged = { ...base, ...draft.values }
+          return prefillValues && typeof prefillValues === 'object' ? { ...merged, ...prefillValues } : merged
         }
       }
     } catch {}
-    return base
-  }, [category])
+    return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
+  }, [category, prefillValues])
 
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
-  const handleSubmit = (values, helpers) => {
+  const handleSubmit = async (values, helpers) => {
+    if (typeof onSubmitOverride === 'function') {
+      onSubmitOverride(values, helpers, { category })
+      return
+    }
     const normalize = (input) => {
       if (Array.isArray(input)) return input.filter(Boolean)
       if (typeof input === 'string') {
@@ -457,6 +464,8 @@ function RegistrationForm({ category }) {
       }
       return input === undefined || input === null ? undefined : input
     }
+
+    const categoryApi = category === 'undergraduate' ? 'UNDERGRADUATE' : category === 'secondary' ? 'SECONDARY' : 'OTHERS'
 
     const payload = {
       surname: values.surname.trim(),
@@ -472,7 +481,7 @@ function RegistrationForm({ category }) {
       marital_status: normalize(values.marital_status) || 'Single',
       state_of_origin: normalize(values.state_of_origin),
       ailments: (normalize(values.ailments) || []).join(','),
-      pin_category: category
+      pin_category: categoryApi
     }
 
     if (config.showSchool) {
@@ -499,14 +508,30 @@ function RegistrationForm({ category }) {
       if (payload[key] === undefined) delete payload[key]
     })
 
+    const t = toast.loading('Submitting registration…')
     try {
-      const prev = JSON.parse(localStorage.getItem('new_member_submissions') || '[]')
-      localStorage.setItem('new_member_submissions', JSON.stringify([...prev, payload]))
-      localStorage.removeItem(DRAFT_KEY)
-    } catch {}
-
-    helpers.setSubmitting(false)
-    window.location.hash = '#/registration'
+      const res = await fetchJSON('/registration/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = res?.data || {}
+      const message = data.message || res?.message || 'Registered successfully'
+      const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+      const discount = data.discount_applied ? ' • discount applied' : ''
+      toast.success(`${message}${priceInfo}${discount}`)
+      try { localStorage.removeItem(DRAFT_KEY) } catch {}
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url
+      } else {
+        navigate('/registration')
+      }
+    } catch (err) {
+      // Error toast handled globally in fetchJSON
+    } finally {
+      toast.dismiss(t)
+      helpers.setSubmitting(false)
+    }
   }
 
   return (
@@ -663,7 +688,7 @@ function RegistrationForm({ category }) {
                     disabled={!formik.isValid || formik.isSubmitting}
                     className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
                   >
-                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Payment'}
+                    {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
                   </button>
                   <a
                     href="#/"
@@ -673,7 +698,7 @@ function RegistrationForm({ category }) {
                     Cancel
                   </a>
                 </div>
-                <DraftSaver formik={formik} category={category} />
+                {enableDraft !== false ? <DraftSaver formik={formik} category={category} /> : null}
               </Form>
             )}
           </Formik>

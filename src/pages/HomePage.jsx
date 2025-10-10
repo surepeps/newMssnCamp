@@ -24,8 +24,8 @@ const slides = [
     title: 'Mentorship labs that connect scholars, creatives, and civic leaders.',
     description:
       'Choose learning pods, access resource kits, and collaborate on impact projects that stretch beyond camp week.',
-    ctaLabel: 'See partner offers',
-    ctaHref: '#ads',
+    ctaLabel: 'Quick actions',
+    ctaHref: '#quick-actions',
   },
   {
     id: 'service-day',
@@ -34,8 +34,8 @@ const slides = [
     title: 'Service day rallies that transform communities together.',
     description:
       'Volunteer squads roll out outreach and tech clinics powered by coordinated logistics.',
-    ctaLabel: 'View offers',
-    ctaHref: '#ads',
+    ctaLabel: 'Quick actions',
+    ctaHref: '#quick-actions',
   },
 ]
 
@@ -617,7 +617,6 @@ export default function HomePage() {
         </div>
       </div>
       <PricingDiscounts />
-      <AdsSection />
     </div>
   )
 }
