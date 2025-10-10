@@ -169,7 +169,7 @@ function QuickActionsBar() {
   return (
     <section
       id="quick-actions"
-      className="relative z-20 mx-auto -mt-6 sm:-mt-12 lg:-mt-16 w-full max-w-6xl px-6"
+      className="relative z-20 mx-auto mt-6 w-full max-w-6xl px-6"
       aria-label="Quick actions"
     >
       <div className="rounded-4xl bg-white/95 p-6 shadow-glow ring-1 ring-mssn-slate/10">
