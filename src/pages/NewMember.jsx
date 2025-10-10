@@ -1,7 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fetchAilments, fetchCouncils, fetchBranches, fetchStates, fetchSchoolsSecondary, fetchClassLevels, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
+import { fetchStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
+
+const CATEGORY_CONFIG = {
+  secondary: {
+    label: 'Secondary',
+    schoolIdentifier: 'S',
+    classIdentifier: 'S',
+    showSchool: true,
+    showClassLevel: true,
+    schoolPlaceholder: 'Select school...',
+    classPlaceholder: 'Select class level...'
+  },
+  undergraduate: {
+    label: 'Undergraduate',
+    schoolIdentifier: 'U',
+    classIdentifier: 'U',
+    showSchool: true,
+    showClassLevel: true,
+    schoolPlaceholder: 'Select institution...',
+    classPlaceholder: 'Select level...'
+  },
+  others: {
+    label: 'Others',
+    schoolIdentifier: 'O',
+    classIdentifier: 'O',
+    showSchool: false,
+    showClassLevel: false,
+    schoolPlaceholder: '',
+    classPlaceholder: ''
+  }
+}
 
 function CategoryCard({ id, title, description, onClick }) {
   return (
@@ -44,7 +74,7 @@ function AsyncSelect({
   multiple = false,
   disabled = false,
   fetchPage,
-  displayValue,
+  displayValue
 }) {
   const containerRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -62,9 +92,11 @@ function AsyncSelect({
       return (value || []).map((v) => map.get(String(v)) || String(v))
     } else {
       const found = items.find((it) => String(it.value) === String(value))
-      return found ? [found.label] : value ? [String(value)] : []
+      if (found) return [found.label]
+      if (displayValue) return [displayValue]
+      return value ? [String(value)] : []
     }
-  }, [items, value, multiple])
+  }, [items, value, multiple, displayValue])
 
   const load = async (reset = false) => {
     if (loading || disabled) return
@@ -171,7 +203,8 @@ function AsyncSelect({
   )
 }
 
-function SecondaryForm() {
+function RegistrationForm({ category }) {
+  const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
   const [surname, setSurname] = useState('')
   const [firstname, setFirstname] = useState('')
   const [othername, setOthername] = useState('')
@@ -187,8 +220,8 @@ function SecondaryForm() {
   const [school, setSchool] = useState('')
   const [classLevel, setClassLevel] = useState('')
   const [ailments, setAilments] = useState([])
-
   const [stateOptions, setStateOptions] = useState([])
+  const displayLabel = config.label
 
   useEffect(() => {
     ;(async () => {
@@ -222,10 +255,15 @@ function SecondaryForm() {
       resident_address: address || undefined,
       marital_status: maritalStatus || 'Single',
       state_of_origin: stateOrigin || undefined,
-      school: school || undefined,
-      class_level: classLevel || undefined,
       ailments: ailments.join(','),
-      pin_category: 'secondary',
+      pin_category: category
+    }
+
+    if (config.showSchool) {
+      payload.school = school || undefined
+    }
+    if (config.showClassLevel) {
+      payload.class_level = classLevel || undefined
     }
 
     try {
@@ -237,36 +275,36 @@ function SecondaryForm() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 py-10">
-      <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
-        <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-        <form onSubmit={onSubmit} className="p-6 sm:p-8">
-          <div className="flex items-baseline justify-between">
+    <section className="mx-auto w-full max-w-5xl px-6 py-10">
+      <div className="rounded-3xl border border-mssn-slate/10 bg-white shadow-soft">
+        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+        <form onSubmit={onSubmit} className="p-6 sm:p-8 lg:p-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
-              <h1 className="text-2xl font-semibold capitalize text-mssn-slate">secondary</h1>
+              <h1 className="text-2xl font-semibold capitalize text-mssn-slate">{displayLabel}</h1>
             </div>
             <a href="#/new" className="text-sm text-mssn-greenDark">Change</a>
           </div>
 
-          <input type="hidden" name="pin_category" value="secondary" />
+          <input type="hidden" name="pin_category" value={category} />
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <Label required>Surname</Label>
-              <input name="surname" value={surname} onChange={(e)=>setSurname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="surname" value={surname} onChange={(e) => setSurname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
             <label className="block">
               <Label required>Firstname</Label>
-              <input name="firstname" value={firstname} onChange={(e)=>setFirstname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="firstname" value={firstname} onChange={(e) => setFirstname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
             <label className="block">
               <Label>Othername</Label>
-              <input name="othername" value={othername} onChange={(e)=>setOthername(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="othername" value={othername} onChange={(e) => setOthername(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
             <label className="block">
               <Label required>Sex</Label>
-              <select name="sex" value={sex} onChange={(e)=>setSex(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+              <select name="sex" value={sex} onChange={(e) => setSex(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
                 <option value="">Select...</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -275,7 +313,7 @@ function SecondaryForm() {
 
             <label className="block">
               <Label required>Date of Birth (Age)</Label>
-              <input name="date_of_birth" type="number" min="1" value={age} onChange={(e)=>setAge(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="date_of_birth" type="number" min="1" value={age} onChange={(e) => setAge(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
 
             <label className="block">
@@ -301,16 +339,16 @@ function SecondaryForm() {
 
             <label className="block">
               <Label>Email</Label>
-              <input name="email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
             <label className="block">
               <Label>Phone Number</Label>
-              <input name="tel_no" value={tel} onChange={(e)=>setTel(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="tel_no" value={tel} onChange={(e) => setTel(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
 
             <label className="block sm:col-span-2">
               <Label>Resident Address</Label>
-              <input name="resident_address" value={address} onChange={(e)=>setAddress(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+              <input name="resident_address" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
             </label>
 
             <label className="block">
@@ -321,7 +359,7 @@ function SecondaryForm() {
                 placeholder="Single"
                 fetchPage={({ page, search }) => {
                   const all = [{ value: 'Single', label: 'Single' }]
-                  const filtered = all.filter((o) => o.label.toLowerCase().includes((search||'').toLowerCase()))
+                  const filtered = all.filter((o) => o.label.toLowerCase().includes((search || '').toLowerCase()))
                   return Promise.resolve({ items: filtered, page: 1, totalPages: 1 })
                 }}
               />
@@ -335,7 +373,7 @@ function SecondaryForm() {
                 placeholder="Select state..."
                 fetchPage={({ page, search }) => {
                   const pageSize = 25
-                  const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes((search||'').toLowerCase()))
+                  const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes((search || '').toLowerCase()))
                   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
                   const start = (page - 1) * pageSize
                   const items = filtered.slice(start, start + pageSize)
@@ -344,27 +382,31 @@ function SecondaryForm() {
               />
             </label>
 
-            <label className="block sm:col-span-2">
-              <Label>School</Label>
-              <AsyncSelect
-                value={school}
-                onChange={setSchool}
-                placeholder="Select school..."
-                fetchPage={({ page, search }) => querySchools({ identifier: 'S', page, limit: 20, search })}
-              />
-            </label>
+            {config.showSchool && (
+              <label className="block sm:col-span-2">
+                <Label>School</Label>
+                <AsyncSelect
+                  value={school}
+                  onChange={setSchool}
+                  placeholder={config.schoolPlaceholder}
+                  fetchPage={({ page, search }) => querySchools({ identifier: config.schoolIdentifier, page, limit: 20, search })}
+                />
+              </label>
+            )}
 
-            <label className="block">
-              <Label>Class Level</Label>
-              <AsyncSelect
-                value={classLevel}
-                onChange={setClassLevel}
-                placeholder="Select class level..."
-                fetchPage={({ page, search }) => queryClassLevels({ identifier: 'S', page, limit: 20, search })}
-              />
-            </label>
+            {config.showClassLevel && (
+              <label className="block">
+                <Label>Class Level</Label>
+                <AsyncSelect
+                  value={classLevel}
+                  onChange={setClassLevel}
+                  placeholder={config.classPlaceholder}
+                  fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
+                />
+              </label>
+            )}
 
-            <label className="block sm:col-span-2">
+            <label className={`block ${config.showClassLevel ? 'sm:col-span-2' : 'sm:col-span-2'}`}>
               <Label>Ailments</Label>
               <AsyncSelect
                 value={ailments}
@@ -376,7 +418,7 @@ function SecondaryForm() {
             </label>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="submit"
               disabled={!requiredOK}
@@ -413,15 +455,5 @@ export default function NewMember({ category }) {
     )
   }
 
-  if (category === 'secondary') {
-    return <SecondaryForm />
-  }
-
-  return (
-    <section className="mx-auto w-full max-w-3xl px-6 py-10">
-      <div className="rounded-3xl border border-mssn-slate/10 bg-mssn-mist/60 p-6 text-sm text-mssn-slate/70">
-        The Undergraduate and Others forms are not configured yet.
-      </div>
-    </section>
-  )
+  return <RegistrationForm category={category} />
 }
