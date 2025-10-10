@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
