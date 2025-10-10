@@ -126,7 +126,6 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
             </div>
           </div>
           <a href="mailto:camp@mssnlagos.org" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
-          <a href="#ads" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Advertise With Us</a>
         </nav>
         <button
           type="button"
@@ -154,7 +153,6 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
             <a href="/new" onClick={createRouteHandler('/new')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
           </div>
           <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>
-          <a href="#ads" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Advertise With Us</a>
         </div>
       </nav>
     </header>
@@ -178,9 +176,6 @@ function Footer() {
           <div className="grid gap-3 text-xs sm:grid-cols-2 sm:gap-4">
             <a href="#support" className="underline decoration-mssn-green/40 underline-offset-4">
               Visit support hub
-            </a>
-            <a href="#ads" className="underline decoration-mssn-green/40 underline-offset-4">
-              Explore sponsor offers
             </a>
             <a href="mailto:camp@mssnlagos.org" className="underline decoration-mssn-green/40 underline-offset-4">
               camp@mssnlagos.org
