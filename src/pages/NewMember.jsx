@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { fetchAilments, fetchCouncils, fetchBranches, fetchStates, fetchSchoolsSecondary, fetchClassLevels } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -21,108 +22,99 @@ function CategoryCard({ id, title, description, onClick }) {
   )
 }
 
-function Field({ label, type = 'text', name, value, onChange, required, placeholder, options }) {
-  if (type === 'select') {
-    return (
-      <label className="block">
-        <span className="text-xs text-mssn-slate/60">{label}{required ? ' *' : ''}</span>
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm text-mssn-slate focus:outline-none focus:ring-2 focus:ring-mssn-green/40"
-        >
-          <option value="">Select...</option>
-          {options?.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </label>
-    )
-  }
-  return (
-    <label className="block">
-      <span className="text-xs text-mssn-slate/60">{label}{required ? ' *' : ''}</span>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        required={required}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm text-mssn-slate placeholder:text-mssn-slate/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/40"
-      />
-    </label>
-  )
+function Label({ children, required }) {
+  return <span className="text-xs text-mssn-slate/60">{children}{required ? ' *' : ''}</span>
 }
 
-function useCategoryConfig(category) {
-  return useMemo(() => {
-    const base = [
-      { name: 'full_name', label: 'Full Name', required: true },
-      { name: 'gender', label: 'Gender', type: 'select', required: true, options: [
-        { value: 'male', label: 'Male' },
-        { value: 'female', label: 'Female' },
-      ]},
-      { name: 'phone', label: 'Phone Number', required: true, placeholder: '08012345678' },
-      { name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'you@example.com' },
-    ]
+function SecondaryForm() {
+  const [surname, setSurname] = useState('')
+  const [firstname, setFirstname] = useState('')
+  const [othername, setOthername] = useState('')
+  const [sex, setSex] = useState('')
+  const [age, setAge] = useState('')
+  const [areaCouncil, setAreaCouncil] = useState('')
+  const [branch, setBranch] = useState('')
+  const [email, setEmail] = useState('')
+  const [tel, setTel] = useState('')
+  const [address, setAddress] = useState('')
+  const [maritalStatus, setMaritalStatus] = useState('')
+  const [stateOrigin, setStateOrigin] = useState('')
+  const [school, setSchool] = useState('')
+  const [classLevel, setClassLevel] = useState('')
+  const [ailments, setAilments] = useState([])
 
-    if (category === 'secondary') {
-      return [
-        ...base,
-        { name: 'date_of_birth', label: 'Date of Birth', type: 'date', required: true },
-        { name: 'school_name', label: 'School Name', required: true },
-        { name: 'level', label: 'Level', type: 'select', required: true, options: [
-          { value: 'jss1', label: 'JSS 1' }, { value: 'jss2', label: 'JSS 2' }, { value: 'jss3', label: 'JSS 3' },
-          { value: 'ss1', label: 'SS 1' }, { value: 'ss2', label: 'SS 2' }, { value: 'ss3', label: 'SS 3' },
-        ] },
-        { name: 'guardian_name', label: 'Parent/Guardian Name', required: true },
-        { name: 'guardian_phone', label: 'Parent/Guardian Phone', required: true },
-      ]
-    }
+  const [councilOptions, setCouncilOptions] = useState([])
+  const [branchOptions, setBranchOptions] = useState([])
+  const [stateOptions, setStateOptions] = useState([])
+  const [schoolOptions, setSchoolOptions] = useState([])
+  const [classLevelOptions, setClassLevelOptions] = useState([])
+  const [ailmentOptions, setAilmentOptions] = useState([])
 
-    if (category === 'undergraduate') {
-      return [
-        ...base,
-        { name: 'institution', label: 'Institution', required: true },
-        { name: 'department', label: 'Department', required: true },
-        { name: 'level', label: 'Level', type: 'select', required: true, options: [
-          { value: '100', label: '100' }, { value: '200', label: '200' }, { value: '300', label: '300' }, { value: '400', label: '400' }, { value: '500', label: '500' },
-        ] },
-        { name: 'matric_no', label: 'Matric No.', required: true },
-      ]
-    }
+  useEffect(() => {
+    ;(async () => {
+      const [councils, states, schools, classes, ailmentsRes] = await Promise.all([
+        fetchCouncils({ page: 1, limit: 200 }),
+        fetchStates(),
+        fetchSchoolsSecondary(),
+        fetchClassLevels('Secondary'),
+        fetchAilments({ page: 1, limit: 100 }),
+      ])
+      setCouncilOptions(councils)
+      setStateOptions(states)
+      setSchoolOptions(schools)
+      setClassLevelOptions(classes)
+      setAilmentOptions(ailmentsRes)
+    })()
+  }, [])
 
-    return [
-      ...base,
-      { name: 'occupation', label: 'Occupation', required: true },
-      { name: 'organization', label: 'Organization', required: false },
-    ]
-  }, [category])
-}
+  useEffect(() => {
+    ;(async () => {
+      setBranch('')
+      if (!areaCouncil) {
+        setBranchOptions([])
+        return
+      }
+      const branches = await fetchBranches(areaCouncil)
+      setBranchOptions(branches)
+    })()
+  }, [areaCouncil])
 
-function CategoryForm({ category }) {
-  const fields = useCategoryConfig(category)
-  const [values, setValues] = useState(() => Object.fromEntries(fields.map(f => [f.name, ''])))
-  const [submitted, setSubmitted] = useState(false)
+  const requiredOK =
+    surname.trim() && firstname.trim() && sex && areaCouncil && branch && String(age).trim()
 
-  const onChange = (e) => {
-    const { name, value } = e.target
-    setValues((v) => ({ ...v, [name]: value }))
-  }
-
-  const isValid = fields.every(f => !f.required || String(values[f.name] || '').trim().length > 0)
   const onSubmit = (e) => {
     e.preventDefault()
-    if (!isValid) return
-    const payload = { category, ...values, created_at: new Date().toISOString() }
+    const form = e.currentTarget
+    if (!form.checkValidity()) {
+      form.reportValidity()
+      return
+    }
+    if (!requiredOK) return
+
+    const payload = {
+      surname,
+      firstname,
+      othername,
+      sex,
+      date_of_birth: String(age).trim(),
+      area_council: areaCouncil,
+      branch,
+      email: email || undefined,
+      tel_no: tel || undefined,
+      resident_address: address || undefined,
+      marital_status: maritalStatus || 'Single',
+      state_of_origin: stateOrigin || undefined,
+      school: school || undefined,
+      class_level: classLevel || undefined,
+      ailments: ailments.join(','),
+      pin_category: 'secondary',
+    }
+
     try {
       const prev = JSON.parse(localStorage.getItem('new_member_submissions') || '[]')
       localStorage.setItem('new_member_submissions', JSON.stringify([...prev, payload]))
     } catch {}
-    setSubmitted(true)
+
     window.location.hash = '#/registration'
   }
 
@@ -134,30 +126,133 @@ function CategoryForm({ category }) {
           <div className="flex items-baseline justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
-              <h1 className="text-2xl font-semibold capitalize text-mssn-slate">{category}</h1>
+              <h1 className="text-2xl font-semibold capitalize text-mssn-slate">secondary</h1>
             </div>
             <a href="#/new" className="text-sm text-mssn-greenDark">Change</a>
           </div>
+
+          <input type="hidden" name="pin_category" value="secondary" />
+
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {fields.map((f) => (
-              <div key={f.name} className={f.type === 'email' || f.name === 'school_name' || f.name === 'institution' || f.name === 'department' || f.name === 'occupation' || f.name === 'organization' ? 'sm:col-span-2' : ''}>
-                <Field {...f} value={values[f.name]} onChange={onChange} />
-              </div>
-            ))}
+            <label className="block">
+              <Label required>Surname</Label>
+              <input name="surname" value={surname} onChange={(e)=>setSurname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="block">
+              <Label required>Firstname</Label>
+              <input name="firstname" value={firstname} onChange={(e)=>setFirstname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="block">
+              <Label>Othername</Label>
+              <input name="othername" value={othername} onChange={(e)=>setOthername(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="block">
+              <Label required>Sex</Label>
+              <select name="sex" value={sex} onChange={(e)=>setSex(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <Label required>Date of Birth (Age)</Label>
+              <input name="date_of_birth" type="number" min="1" value={age} onChange={(e)=>setAge(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+
+            <label className="block">
+              <Label required>Area Council</Label>
+              <select name="area_council" value={areaCouncil} onChange={(e)=>setAreaCouncil(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                {councilOptions.map((c)=> (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <Label required>Branch</Label>
+              <select name="branch" value={branch} onChange={(e)=>setBranch(e.target.value)} required disabled={!branchOptions.length} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-mssn-mist">
+                <option value="">{branchOptions.length ? 'Select...' : 'Select area council first'}</option>
+                {branchOptions.map((b)=> (
+                  <option key={b.value} value={b.value}>{b.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <Label>Email</Label>
+              <input name="email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="block">
+              <Label>Phone Number</Label>
+              <input name="tel_no" value={tel} onChange={(e)=>setTel(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+
+            <label className="block sm:col-span-2">
+              <Label>Resident Address</Label>
+              <input name="resident_address" value={address} onChange={(e)=>setAddress(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
+            </label>
+
+            <label className="block">
+              <Label>Marital Status</Label>
+              <select name="marital_status" value={maritalStatus} onChange={(e)=>setMaritalStatus(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                <option value="Single">Single</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <Label>State of Origin</Label>
+              <select name="state_of_origin" value={stateOrigin} onChange={(e)=>setStateOrigin(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                {stateOptions.map((s)=> (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <Label>School</Label>
+              <select name="school" value={school} onChange={(e)=>setSchool(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-mssn-mist" disabled={!schoolOptions.length}>
+                <option value="">{schoolOptions.length ? 'Select...' : 'No schools available'}</option>
+                {schoolOptions.map((s)=> (
+                  <option key={s.value ?? s} value={s.value ?? s}>{s.label ?? s}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <Label>Class Level</Label>
+              <select name="class_level" value={classLevel} onChange={(e)=>setClassLevel(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                {classLevelOptions.map((c)=> (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <Label>Ailments</Label>
+              <select name="ailments" multiple value={ailments} onChange={(e)=> setAilments(Array.from(e.target.selectedOptions).map(o=>String(o.value)))} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm min-h-28">
+                {ailmentOptions.map((a)=> (
+                  <option key={a.value} value={a.value}>{a.label}</option>
+                ))}
+              </select>
+              <div className="mt-1 text-[11px] text-mssn-slate/60">Hold Ctrl/Cmd to select multiple.</div>
+            </label>
           </div>
+
           <div className="mt-6 flex gap-3">
             <button
               type="submit"
-              disabled={!isValid}
-              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition ${isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'}`}
+              disabled={!requiredOK}
+              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition ${requiredOK ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'}`}
             >
               Continue to Registration
             </button>
             <a href="#/" className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 px-6 py-3 text-sm font-semibold text-mssn-slate">Cancel</a>
           </div>
-          {submitted && (
-            <p className="mt-3 text-xs text-mssn-slate/60">Your details have been saved for this session.</p>
-          )}
         </form>
       </div>
     </section>
@@ -185,5 +280,15 @@ export default function NewMember({ category }) {
     )
   }
 
-  return <CategoryForm category={category} />
+  if (category === 'secondary') {
+    return <SecondaryForm />
+  }
+
+  return (
+    <section className="mx-auto w-full max-w-3xl px-6 py-10">
+      <div className="rounded-3xl border border-mssn-slate/10 bg-mssn-mist/60 p-6 text-sm text-mssn-slate/70">
+        The Undergraduate and Others forms are not configured yet.
+      </div>
+    </section>
+  )
 }
