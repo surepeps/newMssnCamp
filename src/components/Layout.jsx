@@ -1,15 +1,91 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { isModifiedEvent, navigate } from '../utils/navigation.js'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
+  const registrationRef = useRef(null)
+  const closeTimeoutRef = useRef(null)
+
+  const clearCloseTimeout = () => {
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }
+
+  const openRegistration = () => {
+    clearCloseTimeout()
+    setIsRegistrationOpen(true)
+  }
+
+  const scheduleCloseRegistration = () => {
+    clearCloseTimeout()
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsRegistrationOpen(false)
+      closeTimeoutRef.current = null
+    }, 150)
+  }
+
+  const handleButtonClick = () => {
+    if (isRegistrationOpen) {
+      setIsRegistrationOpen(false)
+    } else {
+      openRegistration()
+    }
+  }
+
+  const handleMenuBlur = (event) => {
+    if (!registrationRef.current?.contains(event.relatedTarget)) {
+      scheduleCloseRegistration()
+    }
+  }
+
+  const handleButtonKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setIsRegistrationOpen(false)
+      return
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleButtonClick()
+    }
+  }
+
+  const shouldHandleLink = (event) => {
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return false
+    }
+    if (event.currentTarget instanceof HTMLAnchorElement && event.currentTarget.target === '_blank') {
+      return false
+    }
+    return true
+  }
+
+  const createRouteHandler = (path, { replace = false, closeNav = true } = {}) => (event) => {
+    if (!shouldHandleLink(event)) {
+      return
+    }
+    event.preventDefault()
+    setIsRegistrationOpen(false)
+    if (closeNav) {
+      onCloseNav()
+    }
+    navigate(path, { replace })
+  }
+
+  useEffect(() => () => clearCloseTimeout(), [])
+
   return (
     <header className="sticky top-0 z-40 border-b border-mssn-slate/10 bg-white/80 backdrop-blur">
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
         <a
           href="/"
           className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/20 transition hover:bg-white"
-          onClick={onCloseNav}
+          onClick={createRouteHandler('/')}
         >
           <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover shadow-soft ring-1 ring-white/40" />
           <span className="flex flex-col text-left">
@@ -18,14 +94,34 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           </span>
         </a>
         <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
-          <a href="/" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Home</a>
+          <a href="/" onClick={createRouteHandler('/')} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Home</a>
           <a href="#quick-actions" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Re-print Slip</a>
           <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Check MSSN ID</a>
-          <div className="group relative">
-            <button type="button" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Registration ▾</button>
-            <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
-              <a href="#/registration" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
-              <a href="#/existing/validate" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+          <div
+            ref={registrationRef}
+            className="relative"
+            onMouseEnter={openRegistration}
+            onMouseLeave={scheduleCloseRegistration}
+            onFocus={openRegistration}
+            onBlur={handleMenuBlur}
+          >
+            <button
+              type="button"
+              className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark"
+              aria-haspopup="true"
+              aria-expanded={isRegistrationOpen}
+              onClick={handleButtonClick}
+              onKeyDown={handleButtonKeyDown}
+            >
+              Registration ▾
+            </button>
+            <div
+              className={`absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 shadow-soft transition duration-200 ${
+                isRegistrationOpen ? 'visible translate-y-1 opacity-100' : 'invisible -translate-y-1 opacity-0 pointer-events-none'
+              }`}
+            >
+              <a href="/registration" onClick={createRouteHandler('/registration', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
+              <a href="/existing/validate" onClick={createRouteHandler('/existing/validate', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
               <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
             </div>
           </div>
@@ -48,13 +144,13 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
         }`}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pb-6">
-          <a href="/" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
+          <a href="/" onClick={createRouteHandler('/')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
           <a href="#quick-actions" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Re-print Slip</a>
           <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
           <div className="rounded-2xl bg-white p-2 ring-1 ring-mssn-slate/10">
             <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
-            <a href="#/registration" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
-            <a href="#/existing/validate" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
+            <a href="/registration" onClick={createRouteHandler('/registration')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
+            <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
             <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
           </div>
           <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>

@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { useMemo } from 'react'
+import { isModifiedEvent, navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { isValidDate, isRegistrationOpen } from '../utils/registration.js'
 
@@ -41,6 +43,17 @@ export default function RegistrationGateCard() {
   const open = isRegistrationOpen(camp)
   const status = open ? 'open' : startValid && new Date() < new Date(camp.registration_start) ? 'upcoming' : 'closed'
 
+  const handleExistingMemberClick = (event) => {
+    if (!open) {
+      return
+    }
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return
+    }
+    event.preventDefault()
+    navigate('/existing/validate')
+  }
+
   return (
     <section className="relative z-20 mx-auto -mt-6 sm:-mt-12 lg:-mt-16 w-full max-w-6xl px-6" aria-label="Registration gate">
       <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 p-6">
@@ -66,8 +79,9 @@ export default function RegistrationGateCard() {
           </div>
           <div className="mt-4 flex gap-3 sm:mt-0">
             <a
-              href={open ? '#/existing/validate' : undefined}
+              href={open ? '/existing/validate' : undefined}
               aria-disabled={!open}
+              onClick={handleExistingMemberClick}
               className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold transition ${
                 open ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'
               }`}

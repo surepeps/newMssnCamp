@@ -7,49 +7,61 @@ import RegistrationGate from './pages/RegistrationGate.jsx'
 import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
 
-function useHashRoute() {
-  const [hash, setHash] = useState(window.location.hash || '#/')
+function usePathRoute() {
+  const getLocation = () => `${window.location.pathname}${window.location.search}` || '/'
+  const [location, setLocation] = useState(getLocation())
+
   useEffect(() => {
-    const onChange = () => setHash(window.location.hash || '#/')
-    window.addEventListener('hashchange', onChange)
-    return () => window.removeEventListener('hashchange', onChange)
+    const handlePopState = () => {
+      setLocation(getLocation())
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
-  return hash
+
+  return location
 }
 
 function matchPath(pattern, path) {
   const names = []
-  const regex = new RegExp('^' + pattern
-    .replace(/[#.]/g, (m) => `\\${m}`)
-    .replace(/\//g, '\\/')
-    .replace(/:([A-Za-z0-9_]+)/g, (_, name) => { names.push(name); return '([^/]+)'; }) + '$')
-  const m = path.match(regex)
-  if (!m) return null
+  const regexParts = pattern.split('/').map((segment) => {
+    if (segment.startsWith(':')) {
+      names.push(segment.slice(1))
+      return '([^/]+)'
+    }
+    return segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  })
+  const regex = new RegExp(`^${regexParts.join('/')}$`)
+  const match = path.match(regex)
+  if (!match) return null
   const params = {}
-  names.forEach((n, i) => { params[n] = decodeURIComponent(m[i + 1]) })
+  names.forEach((name, index) => {
+    params[name] = decodeURIComponent(match[index + 1])
+  })
   return params
 }
 
 function Router() {
-  const hash = useHashRoute()
-  const path = hash.split('?')[0]
+  const location = usePathRoute()
+  const path = (location.split('?')[0] || '/') || '/'
 
-  // Route table with simple dynamic segments
   const routes = [
-    { pattern: '#/new/:category', render: ({ params }) => <NewMember category={params.category} /> },
-    { pattern: '#/new', render: () => <NewMember /> },
+    { pattern: '/new/:category', render: ({ params }) => <NewMember category={params.category} /> },
+    { pattern: '/new', render: () => <NewMember /> },
     {
-      pattern: '#/existing/:action',
+      pattern: '/existing/:action',
       render: ({ params }) => (params.action === 'edit' ? <ExistingMemberForm /> : <ExistingMemberValidate />),
     },
-    { pattern: '#/registration/:section', render: () => <RegistrationGate /> },
-    { pattern: '#/registration', render: () => <RegistrationGate /> },
-    { pattern: '#/', render: () => <HomePage /> },
+    { pattern: '/registration/:section', render: () => <RegistrationGate /> },
+    { pattern: '/registration', render: () => <RegistrationGate /> },
+    { pattern: '/', render: () => <HomePage /> },
   ]
 
-  for (const r of routes) {
-    const params = matchPath(r.pattern, path)
-    if (params) return r.render({ params })
+  for (const route of routes) {
+    const params = matchPath(route.pattern, path)
+    if (params) {
+      return route.render({ params })
+    }
   }
   return <HomePage />
 }

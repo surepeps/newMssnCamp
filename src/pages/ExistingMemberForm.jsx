@@ -16,7 +16,7 @@ import {
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
 
 function useQuery() {
-  return useMemo(() => new URLSearchParams(window.location.hash.split('?')[1] || ''), [])
+  return useMemo(() => new URLSearchParams(window.location.search), [])
 }
 
 function HiddenInput({ name, value }) {
