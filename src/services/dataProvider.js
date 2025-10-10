@@ -9,6 +9,7 @@ const cacheStore = {
   schools: new Map(),
   classLevels: new Map(),
   states: new Map(),
+  courses: new Map(),
 }
 
 const inflight = {
@@ -17,6 +18,7 @@ const inflight = {
   schools: new Map(),
   classLevels: new Map(),
   states: new Map(),
+  courses: new Map(),
 }
 
 function pruneCache(cache) {
@@ -158,8 +160,25 @@ export async function fetchMaritalStatuses() {
   return [{ value: 'Single', label: 'Single' }]
 }
 
-export async function fetchCourses() {
-  return []
+export async function queryCourses({ page = 1, limit = 20, search = '' } = {}) {
+  const normalizedPage = Number(page) || 1
+  const normalizedLimit = Number(limit) || 20
+  const rawSearch = (search || '').trim()
+  const key = buildCacheKey('courses', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
+
+  return cachedResponse('courses', cacheStore.courses, key, async () => {
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    if (rawSearch) params.set('course_name', rawSearch)
+    const res = await fetchJSON(`/basic-needs/courses?${params.toString()}`)
+    const records = res?.data?.records || []
+    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+    return { items: records.map((r) => ({ value: r.course_id, label: r.course_name })), page: pg.page, totalPages: pg.totalPages }
+  })
+}
+
+export async function fetchCourses({ page = 1, limit = 200, search = '' } = {}) {
+  const { items } = await queryCourses({ page, limit, search })
+  return items
 }
 
 export async function fetchHighestQualifications() {

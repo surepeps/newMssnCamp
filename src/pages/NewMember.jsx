@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
+import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -27,16 +27,18 @@ const CATEGORY_CONFIG = {
   },
   others: {
     label: 'Others',
-    schoolIdentifier: 'O',
+    schoolIdentifier: 'U',
     classIdentifier: 'O',
-    showSchool: false,
-    showClassLevel: false,
-    schoolPlaceholder: '',
-    classPlaceholder: ''
+    showSchool: true,
+    showClassLevel: true,
+    schoolPlaceholder: 'Select institution...',
+    classPlaceholder: 'Select level...'
   }
 }
 
 const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
+
+const DRAFT_KEY = 'new_member_draft'
 
 function CategoryCard({ id, title, description, onClick }) {
   return (
@@ -164,7 +166,7 @@ function AsyncSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 hover:border-mssn-green/40 focus:border-mssn-green focus:ring-mssn-green/25'} ${disabled ? 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50' : 'bg-white text-mssn-slate'}`}
+        className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 hover:border-mssn-green/40 focus:border-mssn-green focus:ring-mssn-green/25'} ${disabled ? 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50' : 'bg-white text-mssn-slate'}`}
       >
         {selectedLabels.length ? (
           multiple ? (
@@ -321,7 +323,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
 
 function SectionCard({ title, description, columns = 'sm:grid-cols-2', children }) {
   return (
-    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
+    <div className="rounded-3xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
         {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
@@ -353,24 +355,48 @@ function buildValidationSchema(config, extras = {}) {
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
-    school: config.showSchool ? Yup.string().required('Required') : optionalString.nullable(),
-    class_level: config.showClassLevel ? Yup.string().required('Required') : optionalString.nullable(),
+    school: optionalString.nullable(),
+    class_level: optionalString.nullable(),
     ailments: Yup.array().of(Yup.string()),
   }
   if (extras.showEmergency) {
-    shape.next_of_kin = Yup.string().trim().required('Required')
-    shape.next_of_kin_tel = Yup.string().trim().required('Required')
+    shape.next_of_kin = optionalString.nullable()
+    shape.next_of_kin_tel = optionalString.nullable()
   }
   if (extras.showCourse) {
-    shape.course = Yup.string().trim().required('Required')
+    shape.course = optionalString.nullable()
   }
   if (extras.showDiscipline) {
-    shape.discipline = Yup.string().trim().required('Required')
+    shape.discipline = optionalString.nullable()
   }
   if (extras.showWorkplace) {
     shape.workplace = optionalString.nullable()
   }
   return Yup.object(shape)
+}
+
+function DraftSaver({ formik, category }) {
+  const debounced = useDebouncedValue(formik.values, 400)
+  useEffect(() => {
+    try {
+      const values = debounced || {}
+      const hasAny = Object.keys(values).some((k) => {
+        const v = values[k]
+        if (v == null) return false
+        if (Array.isArray(v)) return v.length > 0
+        if (typeof v === 'number') return String(v).trim() !== ''
+        if (typeof v === 'string') return v.trim().length > 0
+        return !!v
+      })
+      if (hasAny) {
+        const payload = { category, values, updatedAt: Date.now() }
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+      } else {
+        localStorage.removeItem(DRAFT_KEY)
+      }
+    } catch {}
+  }, [debounced, category])
+  return null
 }
 
 function RegistrationForm({ category }) {
@@ -385,8 +411,8 @@ function RegistrationForm({ category }) {
   const showWorkplace = isUG || isOthers
   const showEmergency = isUG || isOthers
 
-  const initialValues = useMemo(
-    () => ({
+  const initialValues = useMemo(() => {
+    const base = {
       surname: '',
       firstname: '',
       othername: '',
@@ -407,9 +433,18 @@ function RegistrationForm({ category }) {
       next_of_kin_tel: '',
       discipline: '',
       workplace: ''
-    }),
-    [category]
-  )
+    }
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const draft = JSON.parse(raw)
+        if (draft && draft.category === category && draft.values && typeof draft.values === 'object') {
+          return { ...base, ...draft.values }
+        }
+      }
+    } catch {}
+    return base
+  }, [category])
 
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
@@ -467,6 +502,7 @@ function RegistrationForm({ category }) {
     try {
       const prev = JSON.parse(localStorage.getItem('new_member_submissions') || '[]')
       localStorage.setItem('new_member_submissions', JSON.stringify([...prev, payload]))
+      localStorage.removeItem(DRAFT_KEY)
     } catch {}
 
     helpers.setSubmitting(false)
@@ -475,7 +511,7 @@ function RegistrationForm({ category }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="rounded-4xl border border-mssn-slate/10 bg-white">
+      <div className="rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
@@ -585,10 +621,16 @@ function RegistrationForm({ category }) {
                       />
                     ) : null}
                     {showCourse ? (
-                      <TextField formik={formik} name="course" label="Course" required placeholder="Enter course" />
+                      <FormikAsyncSelect
+                        formik={formik}
+                        name="course"
+                        label="Course"
+                        placeholder="Select course..."
+                        fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                      />
                     ) : null}
                     {showDiscipline ? (
-                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" required placeholder="Enter discipline or occupation" />
+                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
                     ) : null}
                     {showWorkplace ? (
                       <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
@@ -598,8 +640,8 @@ function RegistrationForm({ category }) {
 
                 {showEmergency ? (
                   <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
-                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" required placeholder="Enter next of kin" />
-                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" required placeholder="Enter phone number" />
+                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
                   </SectionCard>
                 ) : null}
 
@@ -619,17 +661,19 @@ function RegistrationForm({ category }) {
                   <button
                     type="submit"
                     disabled={!formik.isValid || formik.isSubmitting}
-                    className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                    className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
                   >
-                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Registration'}
+                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Payment'}
                   </button>
                   <a
                     href="#/"
-                    className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                    onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
+                    className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
                   >
                     Cancel
                   </a>
                 </div>
+                <DraftSaver formik={formik} category={category} />
               </Form>
             )}
           </Formik>
@@ -640,7 +684,17 @@ function RegistrationForm({ category }) {
 }
 
 export default function NewMember({ category }) {
+  const [draft, setDraft] = useState(null)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (raw) setDraft(JSON.parse(raw))
+    } catch {}
+  }, [])
+
   if (!category || !CATEGORIES.includes(category)) {
+    const resumeCategory = draft?.category && CATEGORIES.includes(draft.category) ? draft.category : null
+    const resumeName = draft?.values?.surname || draft?.values?.firstname ? `${draft?.values?.surname ?? ''} ${draft?.values?.firstname ?? ''}`.trim() : null
     return (
       <section className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="rounded-4xl bg-white p-6 ring-1 ring-mssn-slate/10">
@@ -650,6 +704,24 @@ export default function NewMember({ category }) {
               <h2 className="mt-2 text-2xl font-semibold text-mssn-slate">Select your category</h2>
             </div>
           </div>
+          {resumeCategory ? (
+            <div className="mt-5 rounded-3xl border border-mssn-green/30 bg-mssn-green/10 p-4 text-sm text-mssn-slate">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold">You have a pending registration</p>
+                  <p className="text-mssn-slate/70">{resumeName ? `${resumeName} • ` : ''}{CATEGORY_CONFIG[resumeCategory].label}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => navigate(`/new/${resumeCategory}`)} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-white">
+                    Continue
+                  </button>
+                  <button type="button" onClick={() => { try { localStorage.removeItem(DRAFT_KEY) } catch {} setDraft(null) }} className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-rose-700">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="mt-5 grid gap-6 lg:grid-cols-3">
             <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { navigate('/new/secondary') }} />
             <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { navigate('/new/undergraduate') }} />
