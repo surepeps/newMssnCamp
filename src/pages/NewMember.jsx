@@ -323,7 +323,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
 
 function SectionCard({ title, description, columns = 'sm:grid-cols-2', children }) {
   return (
-    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
+    <div className="rounded-3xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
         {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
