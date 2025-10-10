@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { isModifiedEvent, navigate } from '../utils/navigation.js'
+import { useSettings } from '../context/SettingsContext.jsx'
+import FullPageLoader from './FullPageLoader.jsx'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
@@ -195,9 +195,6 @@ function Footer() {
     </footer>
   )
 }
-
-import { useSettings } from '../context/SettingsContext.jsx'
-import FullPageLoader from './FullPageLoader.jsx'
 
 function Layout({ children }) {
   const [isNavOpen, setIsNavOpen] = useState(false)

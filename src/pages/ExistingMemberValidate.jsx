@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useState } from 'react'
 import { navigate } from '../utils/navigation.js'
 import StepProgress from '../components/StepProgress.jsx'
 
