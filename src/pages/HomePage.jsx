@@ -130,6 +130,17 @@ function HeroSlider() {
 }
 
 function QuickActionsBar() {
+  const handleActionClick = (href) => (event) => {
+    if (href.startsWith('http')) {
+      return
+    }
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return
+    }
+    event.preventDefault()
+    navigate(href)
+  }
+
   return (
     <section
       id="quick-actions"
@@ -144,6 +155,7 @@ function QuickActionsBar() {
               href={action.href}
               target={action.href.startsWith('http') ? '_blank' : undefined}
               rel={action.href.startsWith('http') ? 'noreferrer' : undefined}
+              onClick={handleActionClick(action.href)}
               className="group flex h-full flex-col justify-between rounded-3xl border border-mssn-slate/10 bg-mssn-mist p-6 transition hover:-translate-y-1 hover:border-mssn-green/40"
             >
               <div className="space-y-3">
