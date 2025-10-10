@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useSettings } from '../context/SettingsContext.jsx'
+import CampSettingsPanel from '../components/CampSettingsPanel.jsx'
 
 const slides = [
   {
