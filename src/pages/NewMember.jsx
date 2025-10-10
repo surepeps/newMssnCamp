@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { fetchStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
+import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -85,11 +86,13 @@ function AsyncSelect({
   multiple = false,
   disabled = false,
   fetchPage,
-  onBlur
+  onBlur,
+  invalid = false,
 }) {
   const containerRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
   const [items, setItems] = useState([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -109,7 +112,7 @@ function AsyncSelect({
     setLoading(true)
     try {
       const targetPage = reset ? 1 : page + (items.length ? 1 : 0)
-      const res = await fetchPage({ page: targetPage, search: search.trim() })
+      const res = await fetchPage({ page: targetPage, search: debouncedSearch.trim() })
       const newItems = res.items || []
       setItems((prev) => (reset ? newItems : [...prev, ...newItems]))
       setPage(res.page || targetPage)
@@ -127,7 +130,7 @@ function AsyncSelect({
       load(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, search])
+  }, [open, debouncedSearch])
 
   useEffect(() => {
     if (prevOpen.current && !open) {
@@ -161,7 +164,7 @@ function AsyncSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm shadow-sm transition ${disabled ? 'cursor-not-allowed border-mssn-slate/10 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/20 bg-white text-mssn-slate hover:border-mssn-green/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/25'}`}
+        className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 hover:border-mssn-green/40 focus:border-mssn-green focus:ring-mssn-green/25'} ${disabled ? 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50' : 'bg-white text-mssn-slate'}`}
       >
         {selectedLabels.length ? (
           multiple ? (
@@ -178,7 +181,7 @@ function AsyncSelect({
         )}
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white shadow-glow">
+        <div className="absolute z-50 mt-2 w-full overflow-visible rounded-xl border border-mssn-slate/10 bg-white">
           <div className="p-2">
             <input
               value={search}
@@ -234,7 +237,10 @@ function FieldShell({ label, required, error, htmlFor, children, className }) {
 function TextField({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-field`
-  const baseClass = `w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`
+  const val = formik.values[name]
+  const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
+  const invalid = (required && isEmpty(val)) || (!!error)
+  const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
 
   return (
     <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
@@ -248,6 +254,7 @@ function TextField({ formik, name, label, type = 'text', required = false, place
           onBlur={formik.handleBlur}
           placeholder={placeholder}
           className={`${baseClass} resize-none`}
+          required={required}
         />
       ) : (
         <input
@@ -260,6 +267,7 @@ function TextField({ formik, name, label, type = 'text', required = false, place
           placeholder={placeholder}
           className={baseClass}
           min={type === 'number' ? '1' : undefined}
+          required={required}
         />
       )}
     </FieldShell>
@@ -269,6 +277,8 @@ function TextField({ formik, name, label, type = 'text', required = false, place
 function SelectField({ formik, name, label, options, required = false, placeholder = 'Select...', className }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-select`
+  const value = formik.values[name]
+  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
   return (
     <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
       <select
@@ -277,7 +287,8 @@ function SelectField({ formik, name, label, options, required = false, placehold
         value={formik.values[name]}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        className={`w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+        required={required}
+        className={`w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`}
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
@@ -292,6 +303,9 @@ function SelectField({ formik, name, label, options, required = false, placehold
 
 function FormikAsyncSelect({ formik, name, label, required = false, className, ...props }) {
   const error = formik.touched[name] && formik.errors[name]
+  const val = formik.values[name]
+  const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
+  const invalid = (required && isEmpty) || (!!error)
   return (
     <FieldShell label={label} required={required} error={error} className={className}>
       <AsyncSelect
@@ -299,6 +313,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
         value={formik.values[name]}
         onChange={(val) => formik.setFieldValue(name, val)}
         onBlur={() => formik.setFieldTouched(name, true)}
+        invalid={invalid}
       />
     </FieldShell>
   )
@@ -306,7 +321,7 @@ function FormikAsyncSelect({ formik, name, label, required = false, className, .
 
 function SectionCard({ title, description, columns = 'sm:grid-cols-2', children }) {
   return (
-    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 shadow-soft sm:p-8">
+    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
         {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
@@ -318,14 +333,14 @@ function SectionCard({ title, description, columns = 'sm:grid-cols-2', children 
   )
 }
 
-function buildValidationSchema(config) {
+function buildValidationSchema(config, extras = {}) {
   const optionalString = Yup.string().transform((value) => {
     if (typeof value !== 'string') return value
     const trimmed = value.trim()
     return trimmed.length ? trimmed : null
   })
 
-  return Yup.object({
+  const shape = {
     surname: Yup.string().trim().required('Required'),
     firstname: Yup.string().trim().required('Required'),
     othername: optionalString.nullable(),
@@ -340,37 +355,35 @@ function buildValidationSchema(config) {
     state_of_origin: optionalString.nullable(),
     school: config.showSchool ? Yup.string().required('Required') : optionalString.nullable(),
     class_level: config.showClassLevel ? Yup.string().required('Required') : optionalString.nullable(),
-    ailments: Yup.array().of(Yup.string())
-  })
+    ailments: Yup.array().of(Yup.string()),
+  }
+  if (extras.showEmergency) {
+    shape.next_of_kin = Yup.string().trim().required('Required')
+    shape.next_of_kin_tel = Yup.string().trim().required('Required')
+  }
+  if (extras.showCourse) {
+    shape.course = Yup.string().trim().required('Required')
+  }
+  if (extras.showDiscipline) {
+    shape.discipline = Yup.string().trim().required('Required')
+  }
+  if (extras.showWorkplace) {
+    shape.workplace = optionalString.nullable()
+  }
+  return Yup.object(shape)
 }
 
 function RegistrationForm({ category }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
-  const [stateOptions, setStateOptions] = useState([])
 
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const states = await fetchStates()
-      if (mounted) setStateOptions(states)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
+  const maritalOptions = category === 'secondary' ? ['Single'] : MARITAL_OPTIONS
 
-  const stateFetcher = useCallback(
-    ({ page, search }) => {
-      const pageSize = 25
-      const query = (search || '').toLowerCase()
-      const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes(query))
-      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-      const start = (page - 1) * pageSize
-      const items = filtered.slice(start, start + pageSize)
-      return Promise.resolve({ items, page, totalPages })
-    },
-    [stateOptions]
-  )
+  const isUG = category === 'undergraduate'
+  const isOthers = category === 'others'
+  const showCourse = isUG || isOthers
+  const showDiscipline = isUG || isOthers
+  const showWorkplace = isUG || isOthers
+  const showEmergency = isUG || isOthers
 
   const initialValues = useMemo(
     () => ({
@@ -388,12 +401,17 @@ function RegistrationForm({ category }) {
       state_of_origin: '',
       school: '',
       class_level: '',
-      ailments: []
+      ailments: [],
+      course: '',
+      next_of_kin: '',
+      next_of_kin_tel: '',
+      discipline: '',
+      workplace: ''
     }),
     [category]
   )
 
-  const validationSchema = useMemo(() => buildValidationSchema(config), [config])
+  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
   const handleSubmit = (values, helpers) => {
     const normalize = (input) => {
@@ -428,6 +446,19 @@ function RegistrationForm({ category }) {
     if (config.showClassLevel) {
       payload.class_level = normalize(values.class_level)
     }
+    if (showEmergency) {
+      payload.next_of_kin = normalize(values.next_of_kin)
+      payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
+    }
+    if (showCourse) {
+      payload.course = normalize(values.course)
+    }
+    if (showDiscipline) {
+      payload.discipline = normalize(values.discipline)
+    }
+    if (showWorkplace) {
+      payload.workplace = normalize(values.workplace)
+    }
 
     Object.keys(payload).forEach((key) => {
       if (payload[key] === undefined) delete payload[key]
@@ -444,7 +475,7 @@ function RegistrationForm({ category }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white shadow-glow">
+      <div className="rounded-4xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
@@ -452,7 +483,7 @@ function RegistrationForm({ category }) {
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{config.label}</h1>
             </div>
-            <a href="#/new" className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
+            <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
               Change category
             </a>
           </div>
@@ -471,7 +502,6 @@ function RegistrationForm({ category }) {
                 <SectionCard title="Personal details" description="Tell us a little about who you are.">
                   <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
                   <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                   <SelectField
                     formik={formik}
                     name="sex"
@@ -488,6 +518,7 @@ function RegistrationForm({ category }) {
                     required
                     placeholder="Enter age"
                   />
+                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                 </SectionCard>
 
                 <SectionCard title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
@@ -521,7 +552,7 @@ function RegistrationForm({ category }) {
                     formik={formik}
                     name="marital_status"
                     label="Marital Status"
-                    options={MARITAL_OPTIONS}
+                    options={maritalOptions}
                     placeholder="Select status"
                   />
                   <FormikAsyncSelect
@@ -529,12 +560,12 @@ function RegistrationForm({ category }) {
                     name="state_of_origin"
                     label="State of Origin"
                     placeholder="Select state..."
-                    fetchPage={stateFetcher}
+                    fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
                   />
                 </SectionCard>
 
-                {config.showSchool || config.showClassLevel ? (
-                  <SectionCard title="Education" description="Share your current institution details.">
+                {(config.showSchool || config.showClassLevel || showCourse || showDiscipline || showWorkplace) ? (
+                  <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
                     {config.showSchool ? (
                       <FormikAsyncSelect
                         formik={formik}
@@ -553,6 +584,22 @@ function RegistrationForm({ category }) {
                         fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
                       />
                     ) : null}
+                    {showCourse ? (
+                      <TextField formik={formik} name="course" label="Course" required placeholder="Enter course" />
+                    ) : null}
+                    {showDiscipline ? (
+                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" required placeholder="Enter discipline or occupation" />
+                    ) : null}
+                    {showWorkplace ? (
+                      <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                    ) : null}
+                  </SectionCard>
+                ) : null}
+
+                {showEmergency ? (
+                  <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" required placeholder="Enter next of kin" />
+                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" required placeholder="Enter phone number" />
                   </SectionCard>
                 ) : null}
 
@@ -604,9 +651,9 @@ export default function NewMember({ category }) {
             </div>
           </div>
           <div className="mt-5 grid gap-6 lg:grid-cols-3">
-            <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { window.location.hash = '#/new/secondary' }} />
-            <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { window.location.hash = '#/new/undergraduate' }} />
-            <CategoryCard id="others" title="Others" description="For non-students and general participants." onClick={() => { window.location.hash = '#/new/others' }} />
+            <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { navigate('/new/secondary') }} />
+            <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { navigate('/new/undergraduate') }} />
+            <CategoryCard id="others" title="Others" description="For non-students and general participants." onClick={() => { navigate('/new/others') }} />
           </div>
         </div>
       </section>

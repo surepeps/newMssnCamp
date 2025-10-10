@@ -116,10 +116,14 @@ export default function RegistrationGate() {
               Existing Member
             </a>
             <a
-              href={open ? 'https://mssnlagos.org/camp/register/new' : undefined}
-              target={open ? '_blank' : undefined}
-              rel={open ? 'noreferrer' : undefined}
+              href={open ? '/new' : undefined}
               aria-disabled={!open}
+              onClick={(event) => {
+                if (!open) return
+                if (event.defaultPrevented || event.button !== 0) return
+                event.preventDefault()
+                navigate('/new')
+              }}
               className={`inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition sm:w-auto ${
                 open ? 'border border-mssn-green/30 text-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'
               }`}

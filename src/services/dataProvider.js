@@ -1,30 +1,69 @@
 import { fetchJSON } from './api.js'
 
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const MAX_CACHE_ENTRIES = 300
+
 const cacheStore = {
-  ailments: new Map(),
+  ailments: new Map(), // key -> { data, expiresAt }
   councils: new Map(),
   schools: new Map(),
-  classLevels: new Map()
+  classLevels: new Map(),
+  states: new Map(),
+}
+
+const inflight = {
+  ailments: new Map(), // key -> Promise
+  councils: new Map(),
+  schools: new Map(),
+  classLevels: new Map(),
+  states: new Map(),
+}
+
+function pruneCache(cache) {
+  const now = Date.now()
+  // Remove expired
+  for (const [k, v] of cache.entries()) {
+    if (!v || typeof v.expiresAt !== 'number' || v.expiresAt <= now) {
+      cache.delete(k)
+    }
+  }
+  // Bound size
+  if (cache.size > MAX_CACHE_ENTRIES) {
+    const removeCount = cache.size - MAX_CACHE_ENTRIES
+    let i = 0
+    for (const key of cache.keys()) {
+      cache.delete(key)
+      i += 1
+      if (i >= removeCount) break
+    }
+  }
 }
 
 function buildCacheKey(namespace, params) {
   return `${namespace}:${JSON.stringify(params)}`
 }
 
-async function cachedResponse(cache, key, loader) {
-  if (cache.has(key)) {
-    return cache.get(key)
+async function cachedResponse(namespace, cache, key, loader) {
+  pruneCache(cache)
+  const now = Date.now()
+  const cached = cache.get(key)
+  if (cached && cached.expiresAt > now) {
+    return cached.data
   }
-  const pending = loader()
-  cache.set(key, pending)
-  try {
-    const result = await pending
-    cache.set(key, result)
+  const inflightMap = inflight[namespace]
+  if (inflightMap.has(key)) {
+    return inflightMap.get(key)
+  }
+  const pending = loader().then((result) => {
+    cache.set(key, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
+    inflightMap.delete(key)
     return result
-  } catch (error) {
-    cache.delete(key)
-    throw error
-  }
+  }).catch((err) => {
+    inflightMap.delete(key)
+    throw err
+  })
+  inflightMap.set(key, pending)
+  return pending
 }
 
 // Generic helpers returning { items, page, totalPages }
@@ -34,7 +73,7 @@ export async function queryAilments({ page = 1, limit = 20, search = '' } = {}) 
   const rawSearch = (search || '').trim()
   const key = buildCacheKey('ailments', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
-  return cachedResponse(cacheStore.ailments, key, async () => {
+  return cachedResponse('ailments', cacheStore.ailments, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('ailment_name', rawSearch)
     const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
@@ -50,7 +89,7 @@ export async function queryCouncils({ page = 1, limit = 20, search = '' } = {}) 
   const rawSearch = (search || '').trim()
   const key = buildCacheKey('councils', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
-  return cachedResponse(cacheStore.councils, key, async () => {
+  return cachedResponse('councils', cacheStore.councils, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('councilName', rawSearch)
     const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
@@ -66,7 +105,7 @@ export async function querySchools({ identifier = 'S', page = 1, limit = 20, sea
   const rawSearch = (search || '').trim()
   const key = buildCacheKey('schools', { identifier, page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
-  return cachedResponse(cacheStore.schools, key, async () => {
+  return cachedResponse('schools', cacheStore.schools, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), school_identifier: identifier })
     if (rawSearch) params.set('school_name', rawSearch)
     const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
@@ -82,13 +121,29 @@ export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20,
   const rawSearch = (search || '').trim()
   const key = buildCacheKey('class-levels', { identifier, page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
-  return cachedResponse(cacheStore.classLevels, key, async () => {
+  return cachedResponse('classLevels', cacheStore.classLevels, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), class_identifier: identifier })
     if (rawSearch) params.set('class_name', rawSearch)
     const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
     const records = res?.data?.records || []
     const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
     return { items: records.map((r) => ({ value: r.class_id, label: r.class_name })), page: pg.page, totalPages: pg.totalPages }
+  })
+}
+
+export async function queryStates({ page = 1, limit = 20, search = '' } = {}) {
+  const normalizedPage = Number(page) || 1
+  const normalizedLimit = Number(limit) || 20
+  const rawSearch = (search || '').trim()
+  const key = buildCacheKey('states', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
+
+  return cachedResponse('states', cacheStore.states, key, async () => {
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    if (rawSearch) params.set('state', rawSearch)
+    const res = await fetchJSON(`/basic-needs/states?${params.toString()}`)
+    const records = res?.data?.records || []
+    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+    return { items: records.map((r) => ({ value: r.state_id, label: r.state })), page: pg.page, totalPages: pg.totalPages }
   })
 }
 
