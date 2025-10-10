@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { navigate, isModifiedEvent } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
 
@@ -40,13 +41,13 @@ const quickActions = [
     id: 'new-member',
     title: 'New Member',
     description: 'Create your profile and pay securely online.',
-    href: '#/new',
+    href: '/new',
   },
   {
     id: 'existing-member',
     title: 'Existing Member',
     description: 'Retrieve MSSN ID, update records, reserve your bunk.',
-    href: '#/existing/validate',
+    href: '/existing/validate',
   },
   {
     id: 'reprint-slip',
