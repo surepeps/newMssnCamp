@@ -406,7 +406,7 @@ function RegistrationForm({ category }) {
               </label>
             )}
 
-            <label className={`block ${config.showClassLevel ? 'sm:col-span-2' : 'sm:col-span-2'}`}>
+            <label className="block sm:col-span-2">
               <Label>Ailments</Label>
               <AsyncSelect
                 value={ailments}
