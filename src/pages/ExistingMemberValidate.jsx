@@ -125,6 +125,15 @@ export default function ExistingMemberValidate() {
           ) : null}
         </div>
       </div>
+    {loading && (
+      <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/40">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
+          <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
+          <p className="mt-1 text-sm text-mssn-slate/70">Verifying your details. Please wait…</p>
+        </div>
+      </div>
+    )}
     </section>
   )
 }
