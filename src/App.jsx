@@ -5,6 +5,7 @@ import ExistingMemberValidate from './pages/ExistingMemberValidate.jsx'
 import ExistingMemberForm from './pages/ExistingMemberForm.jsx'
 import RegistrationGate from './pages/RegistrationGate.jsx'
 import RegistrationBoundary from './components/RegistrationBoundary.jsx'
+import NewMember from './pages/NewMember.jsx'
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/')
@@ -35,6 +36,8 @@ function Router() {
 
   // Route table with simple dynamic segments
   const routes = [
+    { pattern: '#/new/:category', render: ({ params }) => <NewMember category={params.category} /> },
+    { pattern: '#/new', render: () => <NewMember /> },
     {
       pattern: '#/existing/:action',
       render: ({ params }) => (params.action === 'edit' ? <ExistingMemberForm /> : <ExistingMemberValidate />),

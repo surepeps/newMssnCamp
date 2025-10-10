@@ -40,7 +40,7 @@ const quickActions = [
     id: 'new-member',
     title: 'New Member',
     description: 'Create your profile and pay securely online.',
-    href: 'https://mssnlagos.org/camp/register/new',
+    href: '#/new',
   },
   {
     id: 'existing-member',
