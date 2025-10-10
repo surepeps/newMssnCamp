@@ -663,7 +663,7 @@ function RegistrationForm({ category }) {
                     disabled={!formik.isValid || formik.isSubmitting}
                     className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
                   >
-                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Registration'}
+                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Payment'}
                   </button>
                   <a
                     href="#/"
