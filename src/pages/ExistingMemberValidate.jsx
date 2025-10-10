@@ -40,7 +40,8 @@ export default function ExistingMemberValidate() {
         toast.success('Record found. You can now update your details.')
       }
     } catch (err) {
-      setError('Unable to verify at the moment. Please try again later.')
+      const msg = err?.message || 'Unable to verify at the moment. Please try again later.'
+      setError(msg)
     } finally {
       toast.dismiss(t)
       setLoading(false)
