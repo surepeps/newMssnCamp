@@ -116,7 +116,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
               Registration ▾
             </button>
             <div
-              className={`absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white p-2 shadow-soft transition duration-200 ${
+              className={`absolute left-0 top-full z-50 mt-2 w-56 overflow-visible rounded-2xl border border-mssn-slate/10 bg-white p-2 shadow-soft transition duration-200 ${
                 isRegistrationOpen ? 'visible translate-y-1 opacity-100' : 'invisible -translate-y-1 opacity-0 pointer-events-none'
               }`}
             >
