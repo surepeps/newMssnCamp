@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
 import CampSettingsPanel from '../components/CampSettingsPanel.jsx'
+import RegistrationGateCard from '../components/RegistrationGateCard.jsx'
 
 const slides = [
   {
@@ -104,7 +105,8 @@ function HeroSlider() {
   const { settings } = useSettings()
   const [activeIndex, setActiveIndex] = useState(0)
   const activeSlide = slides[activeIndex]
-  const campTitle = settings?.current_camp?.camp_title || 'Camp MSSN Lagos'
+  const camp = settings?.current_camp
+  const campTitle = camp?.camp_title || 'Camp MSSN Lagos'
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -126,7 +128,15 @@ function HeroSlider() {
             {campTitle}
           </span>
           <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
-          <p className="max-w-2xl text-lg text-white/85 lg:text-xl">{activeSlide.description}</p>
+          {camp?.camp_theme && (
+            <p className="max-w-2xl text-lg text-white/90 lg:text-xl">{camp.camp_theme}</p>
+          )}
+          {camp?.camp_date && (
+            <p className="text-sm text-white/80">{camp.camp_date}</p>
+          )}
+          {!camp && (
+            <p className="max-w-2xl text-lg text-white/85 lg:text-xl">{activeSlide.description}</p>
+          )}
           <div className="flex flex-wrap gap-4">
             <a
               href={activeSlide.ctaHref}
@@ -154,22 +164,8 @@ function HeroSlider() {
 }
 
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
-import { isRegistrationOpen } from '../utils/registration.js'
 
 function QuickActionsBar() {
-  const { settings, loading } = useSettings()
-  const open = isRegistrationOpen(settings?.current_camp)
-  if (loading) return null
-  if (!open) {
-    return (
-      <section className="relative z-20 mx-auto -mt-6 sm:-mt-12 lg:-mt-16 w-full max-w-6xl px-6">
-        <div className="rounded-4xl border border-mssn-slate/10 bg-white/95 p-6">
-          <h2 className="text-lg font-semibold text-mssn-slate">Registration has ended</h2>
-          <p className="mt-1 text-sm text-mssn-slate/70">The registration window is currently closed.</p>
-        </div>
-      </section>
-    )
-  }
   return (
     <section
       id="quick-actions"
@@ -257,6 +253,7 @@ export default function HomePage() {
   return (
     <div>
       <HeroSlider />
+      <RegistrationGateCard />
       <div className="mx-auto w-full max-w-6xl px-6">
         <div className="-mt-10 lg:-mt-14">
           <CampSettingsPanel />
