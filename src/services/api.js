@@ -1,3 +1,5 @@
+import { toast } from 'sonner'
+
 const BASE_URL = 'https://demo-api.mssnlagos.net/api/public'
 
 async function fetchJSON(path, options = {}) {
@@ -7,9 +9,14 @@ async function fetchJSON(path, options = {}) {
     const res = await fetch(`${BASE_URL}${path}`, { ...options, signal: controller.signal })
     if (!res.ok) {
       const text = await res.text()
-      throw new Error(`HTTP ${res.status}: ${text}`)
+      const message = text || `Request failed with status ${res.status}`
+      throw new Error(message)
     }
     return await res.json()
+  } catch (err) {
+    const msg = err?.message || 'Network error'
+    toast.error(msg.length > 300 ? msg.slice(0, 300) + '…' : msg)
+    throw err
   } finally {
     clearTimeout(timeout)
   }
