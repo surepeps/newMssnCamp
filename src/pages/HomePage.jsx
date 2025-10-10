@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
-import CampSettingsPanel from '../components/CampSettingsPanel.jsx'
-import RegistrationGateCard from '../components/RegistrationGateCard.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
 
 const slides = [
@@ -252,7 +250,6 @@ export default function HomePage() {
   return (
     <div>
       <HeroSlider />
-      <RegistrationGateCard />
       <QuickActionsBar />
       <PricingDiscounts />
       <AdsSection />
