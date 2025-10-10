@@ -102,61 +102,27 @@ function SlideControls({ activeIndex, onSelect }) {
 
 function HeroSlider() {
   const { settings } = useSettings()
-  const [activeIndex, setActiveIndex] = useState(0)
-  const activeSlide = slides[activeIndex]
   const camp = settings?.current_camp
   const campTitle = camp?.camp_title || 'Camp MSSN Lagos'
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % slides.length)
-    }, 7000)
-
-    return () => window.clearInterval(timer)
-  }, [])
+  const bgImage = 'https://images.unsplash.com/photo-1486506574466-9ef0ef9c0968?auto=format&fit=crop&w=1600&q=80'
 
   return (
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
-        <img src={activeSlide.image} alt={activeSlide.title} className="h-full w-full object-cover" />
+        <img src={bgImage} alt={campTitle} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-24 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex-1 space-y-6">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
-            {campTitle}
-          </span>
-          <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
-          {camp?.camp_theme && (
-            <p className="max-w-2xl text-lg text-white/90 lg:text-xl">{camp.camp_theme}</p>
-          )}
-          {camp?.camp_date && (
-            <p className="text-sm text-white/80">{camp.camp_date}</p>
-          )}
-          {!camp && (
-            <p className="max-w-2xl text-lg text-white/85 lg:text-xl">{activeSlide.description}</p>
-          )}
-          <div className="flex flex-wrap gap-4">
-            <a
-              href={activeSlide.ctaHref}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-mssn-green to-mssn-greenDark px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:translate-y-[-2px]"
-            >
-              {activeSlide.ctaLabel}
-            </a>
-            <a
-              href="#ads"
-              className="inline-flex items-center justify-center rounded-full border border-white/70 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-            >
-              View partner offers
-            </a>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col items-start gap-6">
-          <p className="rounded-4xl border border-white/20 bg-white/10 p-6 text-sm text-white/75 backdrop-blur">
-            Camp week blends worship, high-impact learning, and service projects. The portal keeps you synced on schedules, roommates, and resources every step of the way.
-          </p>
-          <SlideControls activeIndex={activeIndex} onSelect={setActiveIndex} />
-        </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-24">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
+          {camp?.camp_code || 'CAMP'}
+        </span>
+        <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{campTitle}</h1>
+        {camp?.camp_theme && (
+          <p className="max-w-2xl text-lg text-white/90 lg:text-xl">{camp.camp_theme}</p>
+        )}
+        {camp?.camp_date && (
+          <p className="text-sm text-white/80">{camp.camp_date}</p>
+        )}
       </div>
     </section>
   )
