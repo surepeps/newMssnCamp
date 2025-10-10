@@ -76,6 +76,7 @@ function CategoryHints({ rules }) {
 export default function ExistingMemberForm() {
   const query = useQuery()
   const [category, setCategory] = useState('')
+  const [delegate, setDelegate] = useState(null)
   const [states, setStates] = useState([])
   const [maritalStatuses, setMaritalStatuses] = useState([])
   const [courses, setCourses] = useState([])
