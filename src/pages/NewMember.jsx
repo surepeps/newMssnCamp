@@ -3,6 +3,8 @@ import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses } from '../services/dataProvider.js'
+import { fetchJSON } from '../services/api.js'
+import { toast } from 'sonner'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -449,7 +451,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
-  const handleSubmit = (values, helpers) => {
+  const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
       onSubmitOverride(values, helpers, { category })
       return
@@ -504,14 +506,30 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       if (payload[key] === undefined) delete payload[key]
     })
 
+    const t = toast.loading('Submitting registration…')
     try {
-      const prev = JSON.parse(localStorage.getItem('new_member_submissions') || '[]')
-      localStorage.setItem('new_member_submissions', JSON.stringify([...prev, payload]))
-      localStorage.removeItem(DRAFT_KEY)
-    } catch {}
-
-    helpers.setSubmitting(false)
-    window.location.hash = '#/registration'
+      const res = await fetchJSON('/registration/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = res?.data || {}
+      const message = data.message || res?.message || 'Registered successfully'
+      const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+      const discount = data.discount_applied ? ' • discount applied' : ''
+      toast.success(`${message}${priceInfo}${discount}`)
+      try { localStorage.removeItem(DRAFT_KEY) } catch {}
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url
+      } else {
+        navigate('/registration')
+      }
+    } catch (err) {
+      // Error toast handled globally in fetchJSON
+    } finally {
+      toast.dismiss(t)
+      helpers.setSubmitting(false)
+    }
   }
 
   return (
