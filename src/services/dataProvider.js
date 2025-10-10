@@ -119,7 +119,7 @@ export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20,
   const rawSearch = (search || '').trim()
   const key = buildCacheKey('class-levels', { identifier, page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
-  return cachedResponse('class-levels', cacheStore.classLevels, key, async () => {
+  return cachedResponse('classLevels', cacheStore.classLevels, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), class_identifier: identifier })
     if (rawSearch) params.set('class_name', rawSearch)
     const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
