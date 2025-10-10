@@ -98,8 +98,12 @@ function Footer() {
   )
 }
 
+import { useSettings } from '../context/SettingsContext.jsx'
+import FullPageLoader from './FullPageLoader.jsx'
+
 function Layout({ children }) {
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const { loading } = useSettings()
 
   const toggleNav = () => setIsNavOpen((prev) => !prev)
   const closeNav = () => setIsNavOpen(false)
@@ -109,6 +113,7 @@ function Layout({ children }) {
       <Header isNavOpen={isNavOpen} onToggleNav={toggleNav} onCloseNav={closeNav} />
       <main className="flex-1">{children}</main>
       <Footer />
+      {loading && <FullPageLoader />}
     </div>
   )
 }

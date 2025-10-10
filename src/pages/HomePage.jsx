@@ -153,7 +153,23 @@ function HeroSlider() {
   )
 }
 
+import PricingDiscounts from '../components/PricingDiscounts.jsx'
+import { isRegistrationOpen } from '../utils/registration.js'
+
 function QuickActionsBar() {
+  const { settings, loading } = useSettings()
+  const open = isRegistrationOpen(settings?.current_camp)
+  if (loading) return null
+  if (!open) {
+    return (
+      <section className="relative z-20 mx-auto -mt-6 sm:-mt-12 lg:-mt-16 w-full max-w-6xl px-6">
+        <div className="rounded-4xl border border-mssn-slate/10 bg-white/95 p-6">
+          <h2 className="text-lg font-semibold text-mssn-slate">Registration has ended</h2>
+          <p className="mt-1 text-sm text-mssn-slate/70">The registration window is currently closed.</p>
+        </div>
+      </section>
+    )
+  }
   return (
     <section
       id="quick-actions"
@@ -247,6 +263,7 @@ export default function HomePage() {
         </div>
       </div>
       <QuickActionsBar />
+      <PricingDiscounts />
       <AdsSection />
     </div>
   )
