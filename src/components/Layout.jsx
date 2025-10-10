@@ -122,7 +122,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
             >
               <a href="/registration" onClick={createRouteHandler('/registration', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
               <a href="/existing/validate" onClick={createRouteHandler('/existing/validate', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
-              <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
+              <a href="/new" onClick={createRouteHandler('/new', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
             </div>
           </div>
           <a href="mailto:camp@mssnlagos.org" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
@@ -151,7 +151,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
             <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
             <a href="/registration" onClick={createRouteHandler('/registration')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
             <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
-            <a href="https://mssnlagos.org/camp/register/new" target="_blank" rel="noreferrer" onClick={onCloseNav} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
+            <a href="/new" onClick={createRouteHandler('/new')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
           </div>
           <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>
           <a href="#ads" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Advertise With Us</a>
