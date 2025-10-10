@@ -3,6 +3,7 @@ import Layout from './components/Layout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import ExistingMemberValidate from './pages/ExistingMemberValidate.jsx'
 import ExistingMemberForm from './pages/ExistingMemberForm.jsx'
+import RegistrationGate from './pages/RegistrationGate.jsx'
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/')
@@ -23,6 +24,8 @@ function Router() {
       return <ExistingMemberValidate />
     case '#/existing/edit':
       return <ExistingMemberForm />
+    case '#/registration':
+      return <RegistrationGate />
     case '#/':
     default:
       return <HomePage />
