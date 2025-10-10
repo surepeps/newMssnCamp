@@ -58,32 +58,112 @@ const quickActions = [
   },
 ]
 
-const adPromos = [
+const adSlots = [
   {
-    id: 'halal-finance',
-    title: 'Halal Bank Scholarships',
-    description: 'Secure partial or full sponsorship for leadership and tech tracks when you apply before 30 April.',
-    image:
-      'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80',
-    href: 'https://example.com/halal-bank',
+    id: 'hero-takeover',
+    name: 'Hero Slider Takeover',
+    type: 'Premium hero placement',
+    status: 'reserved',
+    summary: 'Full-width hero creative displayed on the onboarding hero with deep link CTA.',
+    metrics: [
+      { label: 'Weekly impressions', value: '18k visits' },
+      { label: 'CTR benchmark', value: '4.1%' },
+    ],
+    nextWindow: 'Next opening: 15 Jun – 12 Jul',
+    investment: '₦180k per week',
+    sponsor: 'Halal Bank Scholarships',
   },
   {
-    id: 'nutrition',
-    title: 'Nourish Foods Meal Plan',
-    description: 'Balanced meal kits and hydration stations set up across camp with vegan and allergy-friendly options.',
-    image:
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80',
-    href: 'https://example.com/nourish-foods',
+    id: 'confirmation-modal',
+    name: 'Registration Confirmation Modal',
+    type: 'Lifecycle placement',
+    status: 'available',
+    summary: 'Appears immediately after a camper completes registration with a call-to-action button.',
+    metrics: [
+      { label: 'View-through rate', value: '92%' },
+      { label: 'Avg. leads', value: '120 per week' },
+    ],
+    nextWindow: 'Instant activation • 2-week minimum',
+    investment: '₦140k per 14 days',
   },
   {
-    id: 'technaija',
-    title: 'TechNaija STEM Studio',
-    description: 'Hands-on innovation lab with devices, mentors, and post-camp incubation support for standout teams.',
-    image:
-      'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=900&q=80',
-    href: 'https://example.com/technaija',
+    id: 'daily-brief',
+    name: 'Daily Brief Email Banner',
+    type: 'Email placement',
+    status: 'available',
+    summary: 'Featured banner inside the nightly recap email sent to campers, alumni and guardians.',
+    metrics: [
+      { label: 'Open rate', value: '46%' },
+      { label: 'Audience size', value: '6.8k subscribers' },
+    ],
+    nextWindow: 'Reserve for upcoming camp week',
+    investment: '₦75k per send',
+  },
+  {
+    id: 'mobile-footer',
+    name: 'Mobile Footer Spotlight',
+    type: 'Always-on placement',
+    status: 'waitlist',
+    summary: 'Fixed footer placement on mobile that stays visible as users navigate registration screens.',
+    metrics: [
+      { label: 'Views per session', value: '3.4' },
+      { label: 'Mobile share', value: '82%' },
+    ],
+    nextWindow: 'Next opening: 01 Aug',
+    investment: '₦95k per week',
   },
 ]
+
+const placementInsights = [
+  {
+    label: 'Daily sessions',
+    value: '11.4k',
+    description: 'Across prospective, current and returning campers.',
+  },
+  {
+    label: 'Returning visitors',
+    value: '68%',
+    description: 'Members who revisit the portal within 7 days.',
+  },
+  {
+    label: 'Avg. session length',
+    value: '06:12',
+    description: 'Time spent navigating the onboarding journey.',
+  },
+]
+
+const requestGuidelines = [
+  'Share your preferred go-live date and the creative format you intend to ship.',
+  'Attach clear campaign objectives so we can recommend the best placement mix.',
+  'Our partnerships desk replies within 2 business days with timelines and specs.',
+]
+
+const SLOT_STATUS_META = {
+  available: {
+    label: 'Available now',
+    badgeClass: 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200',
+  },
+  reserved: {
+    label: 'Reserved',
+    badgeClass: 'bg-rose-100 text-rose-700 ring-1 ring-rose-200',
+  },
+  waitlist: {
+    label: 'Join waitlist',
+    badgeClass: 'bg-amber-100 text-amber-800 ring-1 ring-amber-200',
+  },
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function createInitialRequestValues() {
+  return {
+    fullName: '',
+    organization: '',
+    email: '',
+    slot: '',
+    objectives: '',
+  }
+}
 
 function SlideControls({ activeIndex, onSelect }) {
   return (
