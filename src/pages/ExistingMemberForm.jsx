@@ -208,6 +208,11 @@ export default function ExistingMemberForm() {
             <div className="flex flex-col gap-2">
               <h1 className="text-2xl font-semibold text-mssn-slate">Existing Member Registration</h1>
               <p className="text-sm text-mssn-slate/70">Review and edit your details. MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
+              {delegate?.upgraded && delegate.upgrade_details?.length ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
+                </div>
+              ) : null}
             </div>
             <SectionNav active={activeSection} onJump={jumpTo} />
             <div className="grid gap-6">
