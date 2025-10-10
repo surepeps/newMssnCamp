@@ -333,14 +333,14 @@ function SectionCard({ title, description, columns = 'sm:grid-cols-2', children 
   )
 }
 
-function buildValidationSchema(config) {
+function buildValidationSchema(config, extras = {}) {
   const optionalString = Yup.string().transform((value) => {
     if (typeof value !== 'string') return value
     const trimmed = value.trim()
     return trimmed.length ? trimmed : null
   })
 
-  return Yup.object({
+  const shape = {
     surname: Yup.string().trim().required('Required'),
     firstname: Yup.string().trim().required('Required'),
     othername: optionalString.nullable(),
@@ -355,14 +355,35 @@ function buildValidationSchema(config) {
     state_of_origin: optionalString.nullable(),
     school: config.showSchool ? Yup.string().required('Required') : optionalString.nullable(),
     class_level: config.showClassLevel ? Yup.string().required('Required') : optionalString.nullable(),
-    ailments: Yup.array().of(Yup.string())
-  })
+    ailments: Yup.array().of(Yup.string()),
+  }
+  if (extras.showEmergency) {
+    shape.next_of_kin = Yup.string().trim().required('Required')
+    shape.next_of_kin_tel = Yup.string().trim().required('Required')
+  }
+  if (extras.showCourse) {
+    shape.course = Yup.string().trim().required('Required')
+  }
+  if (extras.showDiscipline) {
+    shape.discipline = Yup.string().trim().required('Required')
+  }
+  if (extras.showWorkplace) {
+    shape.workplace = optionalString.nullable()
+  }
+  return Yup.object(shape)
 }
 
 function RegistrationForm({ category }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
 
   const maritalOptions = category === 'secondary' ? ['Single'] : MARITAL_OPTIONS
+
+  const isUG = category === 'undergraduate'
+  const isOthers = category === 'others'
+  const showCourse = isUG || isOthers
+  const showDiscipline = isUG || isOthers
+  const showWorkplace = isUG || isOthers
+  const showEmergency = isUG || isOthers
 
   const initialValues = useMemo(
     () => ({
@@ -380,12 +401,17 @@ function RegistrationForm({ category }) {
       state_of_origin: '',
       school: '',
       class_level: '',
-      ailments: []
+      ailments: [],
+      course: '',
+      next_of_kin: '',
+      next_of_kin_tel: '',
+      discipline: '',
+      workplace: ''
     }),
     [category]
   )
 
-  const validationSchema = useMemo(() => buildValidationSchema(config), [config])
+  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
   const handleSubmit = (values, helpers) => {
     const normalize = (input) => {
@@ -419,6 +445,19 @@ function RegistrationForm({ category }) {
     }
     if (config.showClassLevel) {
       payload.class_level = normalize(values.class_level)
+    }
+    if (showEmergency) {
+      payload.next_of_kin = normalize(values.next_of_kin)
+      payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
+    }
+    if (showCourse) {
+      payload.course = normalize(values.course)
+    }
+    if (showDiscipline) {
+      payload.discipline = normalize(values.discipline)
+    }
+    if (showWorkplace) {
+      payload.workplace = normalize(values.workplace)
     }
 
     Object.keys(payload).forEach((key) => {
@@ -463,7 +502,6 @@ function RegistrationForm({ category }) {
                 <SectionCard title="Personal details" description="Tell us a little about who you are.">
                   <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
                   <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                   <SelectField
                     formik={formik}
                     name="sex"
@@ -480,6 +518,7 @@ function RegistrationForm({ category }) {
                     required
                     placeholder="Enter age"
                   />
+                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                 </SectionCard>
 
                 <SectionCard title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
@@ -525,8 +564,8 @@ function RegistrationForm({ category }) {
                   />
                 </SectionCard>
 
-                {config.showSchool || config.showClassLevel ? (
-                  <SectionCard title="Education" description="Share your current institution details.">
+                {(config.showSchool || config.showClassLevel || showCourse || showDiscipline || showWorkplace) ? (
+                  <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
                     {config.showSchool ? (
                       <FormikAsyncSelect
                         formik={formik}
@@ -545,6 +584,22 @@ function RegistrationForm({ category }) {
                         fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
                       />
                     ) : null}
+                    {showCourse ? (
+                      <TextField formik={formik} name="course" label="Course" required placeholder="Enter course" />
+                    ) : null}
+                    {showDiscipline ? (
+                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" required placeholder="Enter discipline or occupation" />
+                    ) : null}
+                    {showWorkplace ? (
+                      <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                    ) : null}
+                  </SectionCard>
+                ) : null}
+
+                {showEmergency ? (
+                  <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" required placeholder="Enter next of kin" />
+                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" required placeholder="Enter phone number" />
                   </SectionCard>
                 ) : null}
 
