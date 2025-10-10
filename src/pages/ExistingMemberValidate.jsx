@@ -3,6 +3,7 @@ import { navigate } from '../utils/navigation.js'
 import StepProgress from '../components/StepProgress.jsx'
 import { RegistrationForm } from './NewMember.jsx'
 import { fetchJSON } from '../services/api.js'
+import { toast } from 'sonner'
 
 export default function ExistingMemberValidate() {
   const [mssnId, setMssnId] = useState('')
@@ -21,6 +22,7 @@ export default function ExistingMemberValidate() {
     setLoading(true)
     setError('')
     setDelegate(null)
+    const t = toast.loading('Verifying details…')
     try {
       const payload = { mssn_id: mssnId.trim(), surname: surname.trim() }
       const res = await fetchJSON('/registration/fetch', {
@@ -30,13 +32,16 @@ export default function ExistingMemberValidate() {
       })
       if (!res?.success || !res?.delegate?.details) {
         setError('Record not found. Check details and try again.')
+        toast.error('Record not found. Check details and try again.')
       } else {
         setDelegate(res.delegate)
         localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
+        toast.success('Record found. You can now update your details.')
       }
     } catch (err) {
       setError('Unable to verify at the moment. Please try again later.')
     } finally {
+      toast.dismiss(t)
       setLoading(false)
     }
   }
