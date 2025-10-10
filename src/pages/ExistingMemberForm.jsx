@@ -92,6 +92,27 @@ export default function ExistingMemberForm() {
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
 
+  const mapCategory = (pin) => {
+    const p = String(pin || '').toUpperCase()
+    if (p === 'TFL') return 'TFL'
+    if (p === 'SECONDARY') return 'Secondary'
+    if (p === 'UNDERGRADUATE') return 'Undergraduate'
+    if (p === 'OTHERS' || p === 'OTH') return 'Others'
+    return ''
+  }
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('existing_member_delegate')
+      if (raw) {
+        const data = JSON.parse(raw)
+        setDelegate(data)
+        const cat = mapCategory(data?.details?.pin_category || data?.details?.pin_cat)
+        if (cat) setCategory(cat)
+      }
+    } catch {}
+  }, [])
+
   const refs = {
     personal: useRef(null),
     contact: useRef(null),
