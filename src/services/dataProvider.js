@@ -1,5 +1,32 @@
 import { fetchJSON } from './api.js'
 
+const cacheStore = {
+  ailments: new Map(),
+  councils: new Map(),
+  schools: new Map(),
+  classLevels: new Map()
+}
+
+function buildCacheKey(namespace, params) {
+  return `${namespace}:${JSON.stringify(params)}`
+}
+
+async function cachedResponse(cache, key, loader) {
+  if (cache.has(key)) {
+    return cache.get(key)
+  }
+  const pending = loader()
+  cache.set(key, pending)
+  try {
+    const result = await pending
+    cache.set(key, result)
+    return result
+  } catch (error) {
+    cache.delete(key)
+    throw error
+  }
+}
+
 // Generic helpers returning { items, page, totalPages }
 export async function queryAilments({ page = 1, limit = 20, search = '' } = {}) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
