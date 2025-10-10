@@ -100,6 +100,7 @@ export default function ExistingMemberValidate() {
       localStorage.setItem('existing_member_updates', JSON.stringify([...prev, payload]))
     } catch {}
     helpers.setSubmitting(false)
+    toast.success('Details updated. Redirecting to payment…')
     navigate('/registration')
   }
 
