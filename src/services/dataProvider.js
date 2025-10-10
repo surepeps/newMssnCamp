@@ -39,12 +39,18 @@ export async function fetchBranches(/* councilId */) {
   return []
 }
 
-export async function fetchSchoolsSecondary() {
-  return []
+export async function fetchSchoolsSecondary({ page = 1, limit = 200 } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), school_identifier: 'S' })
+  const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
+  const records = res?.data?.records || []
+  return records.map((r) => ({ value: r.school_id, label: r.school_name }))
 }
 
-export async function fetchSchoolsUndergrad() {
-  return []
+export async function fetchSchoolsUndergrad({ page = 1, limit = 200 } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), school_identifier: 'U' })
+  const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
+  const records = res?.data?.records || []
+  return records.map((r) => ({ value: r.school_id, label: r.school_name }))
 }
 
 export async function fetchClassLevels(category) {
