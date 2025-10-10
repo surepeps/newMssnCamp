@@ -101,8 +101,10 @@ function SlideControls({ activeIndex, onSelect }) {
 }
 
 function HeroSlider() {
+  const { settings } = useSettings()
   const [activeIndex, setActiveIndex] = useState(0)
   const activeSlide = slides[activeIndex]
+  const campTitle = settings?.current_camp?.camp_title || 'Camp MSSN Lagos'
 
   useEffect(() => {
     const timer = window.setInterval(() => {
