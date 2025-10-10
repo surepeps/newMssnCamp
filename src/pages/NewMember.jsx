@@ -29,10 +29,10 @@ const CATEGORY_CONFIG = {
     label: 'Others',
     schoolIdentifier: 'O',
     classIdentifier: 'O',
-    showSchool: false,
-    showClassLevel: false,
-    schoolPlaceholder: '',
-    classPlaceholder: ''
+    showSchool: true,
+    showClassLevel: true,
+    schoolPlaceholder: 'Select institution...',
+    classPlaceholder: 'Select level...'
   }
 }
 
@@ -353,19 +353,19 @@ function buildValidationSchema(config, extras = {}) {
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
-    school: config.showSchool ? Yup.string().required('Required') : optionalString.nullable(),
-    class_level: config.showClassLevel ? Yup.string().required('Required') : optionalString.nullable(),
+    school: optionalString.nullable(),
+    class_level: optionalString.nullable(),
     ailments: Yup.array().of(Yup.string()),
   }
   if (extras.showEmergency) {
-    shape.next_of_kin = Yup.string().trim().required('Required')
-    shape.next_of_kin_tel = Yup.string().trim().required('Required')
+    shape.next_of_kin = optionalString.nullable()
+    shape.next_of_kin_tel = optionalString.nullable()
   }
   if (extras.showCourse) {
-    shape.course = Yup.string().trim().required('Required')
+    shape.course = optionalString.nullable()
   }
   if (extras.showDiscipline) {
-    shape.discipline = Yup.string().trim().required('Required')
+    shape.discipline = optionalString.nullable()
   }
   if (extras.showWorkplace) {
     shape.workplace = optionalString.nullable()
@@ -585,10 +585,10 @@ function RegistrationForm({ category }) {
                       />
                     ) : null}
                     {showCourse ? (
-                      <TextField formik={formik} name="course" label="Course" required placeholder="Enter course" />
+                      <TextField formik={formik} name="course" label="Course" placeholder="Enter course" />
                     ) : null}
                     {showDiscipline ? (
-                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" required placeholder="Enter discipline or occupation" />
+                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
                     ) : null}
                     {showWorkplace ? (
                       <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
@@ -598,8 +598,8 @@ function RegistrationForm({ category }) {
 
                 {showEmergency ? (
                   <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
-                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" required placeholder="Enter next of kin" />
-                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" required placeholder="Enter phone number" />
+                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
                   </SectionCard>
                 ) : null}
 
