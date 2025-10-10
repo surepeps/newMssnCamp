@@ -90,6 +90,7 @@ function AsyncSelect({
   const containerRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
   const [items, setItems] = useState([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -109,7 +110,7 @@ function AsyncSelect({
     setLoading(true)
     try {
       const targetPage = reset ? 1 : page + (items.length ? 1 : 0)
-      const res = await fetchPage({ page: targetPage, search: search.trim() })
+      const res = await fetchPage({ page: targetPage, search: debouncedSearch.trim() })
       const newItems = res.items || []
       setItems((prev) => (reset ? newItems : [...prev, ...newItems]))
       setPage(res.page || targetPage)
@@ -127,7 +128,7 @@ function AsyncSelect({
       load(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, search])
+  }, [open, debouncedSearch])
 
   useEffect(() => {
     if (prevOpen.current && !open) {
