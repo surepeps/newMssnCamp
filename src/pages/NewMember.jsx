@@ -379,8 +379,21 @@ function DraftSaver({ formik, category }) {
   const debounced = useDebouncedValue(formik.values, 400)
   useEffect(() => {
     try {
-      const payload = { category, values: debounced, updatedAt: Date.now() }
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+      const values = debounced || {}
+      const hasAny = Object.keys(values).some((k) => {
+        const v = values[k]
+        if (v == null) return false
+        if (Array.isArray(v)) return v.length > 0
+        if (typeof v === 'number') return String(v).trim() !== ''
+        if (typeof v === 'string') return v.trim().length > 0
+        return !!v
+      })
+      if (hasAny) {
+        const payload = { category, values, updatedAt: Date.now() }
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+      } else {
+        localStorage.removeItem(DRAFT_KEY)
+      }
     } catch {}
   }, [debounced, category])
   return null
