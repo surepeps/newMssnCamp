@@ -28,7 +28,7 @@ const CATEGORY_CONFIG = {
   others: {
     label: 'Others',
     schoolIdentifier: 'O',
-    classIdentifier: 'O',
+    classIdentifier: 'U',
     showSchool: true,
     showClassLevel: true,
     schoolPlaceholder: 'Select institution...',
