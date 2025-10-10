@@ -8,6 +8,7 @@ const cacheStore = {
   councils: new Map(),
   schools: new Map(),
   classLevels: new Map(),
+  states: new Map(),
 }
 
 const inflight = {
@@ -15,6 +16,7 @@ const inflight = {
   councils: new Map(),
   schools: new Map(),
   classLevels: new Map(),
+  states: new Map(),
 }
 
 function pruneCache(cache) {
@@ -126,6 +128,22 @@ export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20,
     const records = res?.data?.records || []
     const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
     return { items: records.map((r) => ({ value: r.class_id, label: r.class_name })), page: pg.page, totalPages: pg.totalPages }
+  })
+}
+
+export async function queryStates({ page = 1, limit = 20, search = '' } = {}) {
+  const normalizedPage = Number(page) || 1
+  const normalizedLimit = Number(limit) || 20
+  const rawSearch = (search || '').trim()
+  const key = buildCacheKey('states', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
+
+  return cachedResponse('states', cacheStore.states, key, async () => {
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    if (rawSearch) params.set('state', rawSearch)
+    const res = await fetchJSON(`/basic-needs/states?${params.toString()}`)
+    const records = res?.data?.records || []
+    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+    return { items: records.map((r) => ({ value: r.state_id, label: r.state })), page: pg.page, totalPages: pg.totalPages }
   })
 }
 
