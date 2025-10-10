@@ -85,10 +85,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
         <a
           href="/"
           className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/20 transition hover:bg-white"
-          onClick={() => {
-            setIsRegistrationOpen(false)
-            onCloseNav()
-          }}
+          onClick={createRouteHandler('/')}
         >
           <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover shadow-soft ring-1 ring-white/40" />
           <span className="flex flex-col text-left">
