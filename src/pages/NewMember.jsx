@@ -67,6 +67,17 @@ function useOutsideClick(ref, handler) {
   }, [ref, handler])
 }
 
+function useDebouncedValue(value, delay = 250) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(timeout)
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 function AsyncSelect({
   value,
   onChange,
