@@ -399,7 +399,7 @@ function DraftSaver({ formik, category }) {
   return null
 }
 
-function RegistrationForm({ category }) {
+export function RegistrationForm({ category, prefillValues, submitLabel, enableDraft = true, onSubmit: onSubmitOverride }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
 
   const maritalOptions = category === 'secondary' ? ['Single'] : MARITAL_OPTIONS
@@ -439,16 +439,21 @@ function RegistrationForm({ category }) {
       if (raw) {
         const draft = JSON.parse(raw)
         if (draft && draft.category === category && draft.values && typeof draft.values === 'object') {
-          return { ...base, ...draft.values }
+          const merged = { ...base, ...draft.values }
+          return prefillValues && typeof prefillValues === 'object' ? { ...merged, ...prefillValues } : merged
         }
       }
     } catch {}
-    return base
-  }, [category])
+    return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
+  }, [category, prefillValues])
 
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
 
   const handleSubmit = (values, helpers) => {
+    if (typeof onSubmitOverride === 'function') {
+      onSubmitOverride(values, helpers, { category })
+      return
+    }
     const normalize = (input) => {
       if (Array.isArray(input)) return input.filter(Boolean)
       if (typeof input === 'string') {
@@ -663,7 +668,7 @@ function RegistrationForm({ category }) {
                     disabled={!formik.isValid || formik.isSubmitting}
                     className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
                   >
-                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Payment'}
+                    {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
                   </button>
                   <a
                     href="#/"
@@ -673,7 +678,7 @@ function RegistrationForm({ category }) {
                     Cancel
                   </a>
                 </div>
-                <DraftSaver formik={formik} category={category} />
+                {enableDraft !== false ? <DraftSaver formik={formik} category={category} /> : null}
               </Form>
             )}
           </Formik>
