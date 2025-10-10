@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Formik, Form } from 'formik'
+import * as Yup from 'yup'
 import { fetchStates, queryAilments, queryCouncils, querySchools, queryClassLevels } from '../services/dataProvider.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
@@ -33,6 +35,8 @@ const CATEGORY_CONFIG = {
   }
 }
 
+const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
+
 function CategoryCard({ id, title, description, onClick }) {
   return (
     <button
@@ -50,10 +54,6 @@ function CategoryCard({ id, title, description, onClick }) {
       </span>
     </button>
   )
-}
-
-function Label({ children, required }) {
-  return <span className="text-xs text-mssn-slate/60">{children}{required ? ' *' : ''}</span>
 }
 
 function useOutsideClick(ref, handler) {
@@ -74,7 +74,7 @@ function AsyncSelect({
   multiple = false,
   disabled = false,
   fetchPage,
-  displayValue
+  onBlur
 }) {
   const containerRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -83,27 +83,22 @@ function AsyncSelect({
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
+  const prevOpen = useRef(false)
+
+  const normalizedValue = multiple ? (Array.isArray(value) ? value.filter(Boolean) : []) : (value || '')
+  const selectedLabels = useMemo(() => {
+    if (multiple) return normalizedValue
+    return normalizedValue ? [normalizedValue] : []
+  }, [multiple, normalizedValue])
 
   const hasMore = page < totalPages
-
-  const selectedLabels = useMemo(() => {
-    if (multiple) {
-      const map = new Map(items.map((it) => [String(it.value), it.label]))
-      return (value || []).map((v) => map.get(String(v)) || String(v))
-    } else {
-      const found = items.find((it) => String(it.value) === String(value))
-      if (found) return [found.label]
-      if (displayValue) return [displayValue]
-      return value ? [String(value)] : []
-    }
-  }, [items, value, multiple, displayValue])
 
   const load = async (reset = false) => {
     if (loading || disabled) return
     setLoading(true)
     try {
       const targetPage = reset ? 1 : page + (items.length ? 1 : 0)
-      const res = await fetchPage({ page: targetPage, search })
+      const res = await fetchPage({ page: targetPage, search: search.trim() })
       const newItems = res.items || []
       setItems((prev) => (reset ? newItems : [...prev, ...newItems]))
       setPage(res.page || targetPage)
@@ -123,23 +118,30 @@ function AsyncSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, search])
 
+  useEffect(() => {
+    if (prevOpen.current && !open) {
+      onBlur?.()
+    }
+    prevOpen.current = open
+  }, [open, onBlur])
+
   useOutsideClick(containerRef, () => setOpen(false))
 
   const onOptionClick = (opt) => {
     if (multiple) {
-      const set = new Set((value || []).map(String))
-      const key = String(opt.value)
-      if (set.has(key)) set.delete(key)
-      else set.add(key)
+      const set = new Set(normalizedValue)
+      if (set.has(opt.label)) set.delete(opt.label)
+      else set.add(opt.label)
       onChange(Array.from(set))
+      onBlur?.()
     } else {
-      onChange(opt.value)
+      onChange(opt.label)
       setOpen(false)
     }
   }
 
   const isSelected = (opt) => {
-    return multiple ? (value || []).map(String).includes(String(opt.value)) : String(value) === String(opt.value)
+    return multiple ? normalizedValue.includes(opt.label) : normalizedValue === opt.label
   }
 
   return (
@@ -148,13 +150,13 @@ function AsyncSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`w-full rounded-xl border px-3 py-2 text-left text-sm ${disabled ? 'cursor-not-allowed bg-mssn-mist border-mssn-slate/20 text-mssn-slate/60' : 'bg-white border-mssn-slate/20 text-mssn-slate'}`}
+        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm shadow-sm transition ${disabled ? 'cursor-not-allowed border-mssn-slate/10 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/20 bg-white text-mssn-slate hover:border-mssn-green/40 focus:outline-none focus:ring-2 focus:ring-mssn-green/25'}`}
       >
         {selectedLabels.length ? (
           multiple ? (
             <span className="flex flex-wrap gap-1">
               {selectedLabels.map((l, i) => (
-                <span key={i} className="rounded-lg bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">{l}</span>
+                <span key={i} className="rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">{l}</span>
               ))}
             </span>
           ) : (
@@ -165,13 +167,13 @@ function AsyncSelect({
         )}
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-mssn-slate/10 bg-white shadow-soft">
+        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-mssn-slate/10 bg-white shadow-glow">
           <div className="p-2">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-full rounded-lg border border-mssn-slate/20 bg-white px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-mssn-green/30"
+              className="w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-mssn-green/30"
             />
           </div>
           <div
@@ -188,7 +190,7 @@ function AsyncSelect({
                 type="button"
                 key={String(opt.value)}
                 onClick={() => onOptionClick(opt)}
-                className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-mssn-mist ${isSelected(opt) ? 'bg-mssn-mist' : ''}`}
+                className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-mssn-mist ${isSelected(opt) ? 'bg-mssn-mist' : ''}`}
               >
                 <span>{opt.label}</span>
                 {isSelected(opt) && <span className="text-mssn-greenDark">✓</span>}
@@ -203,232 +205,379 @@ function AsyncSelect({
   )
 }
 
+function FieldShell({ label, required, error, htmlFor, children, className }) {
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between">
+        <label htmlFor={htmlFor} className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
+          {label}
+          {required ? ' *' : ''}
+        </label>
+        {error ? <span className="text-xs font-medium text-rose-500">{error}</span> : null}
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  )
+}
+
+function TextField({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-field`
+  const baseClass = `w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`
+
+  return (
+    <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
+      {as === 'textarea' ? (
+        <textarea
+          id={id}
+          name={name}
+          rows={rows}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={`${baseClass} resize-none`}
+        />
+      ) : (
+        <input
+          id={id}
+          name={name}
+          type={type}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={baseClass}
+          min={type === 'number' ? '1' : undefined}
+        />
+      )}
+    </FieldShell>
+  )
+}
+
+function SelectField({ formik, name, label, options, required = false, placeholder = 'Select...', className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-select`
+  return (
+    <FieldShell label={label} required={required} error={error} htmlFor={id} className={className}>
+      <select
+        id={id}
+        name={name}
+        value={formik.values[name]}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        className={`w-full rounded-2xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate shadow-sm transition focus:border-mssn-green focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </FieldShell>
+  )
+}
+
+function FormikAsyncSelect({ formik, name, label, required = false, className, ...props }) {
+  const error = formik.touched[name] && formik.errors[name]
+  return (
+    <FieldShell label={label} required={required} error={error} className={className}>
+      <AsyncSelect
+        {...props}
+        value={formik.values[name]}
+        onChange={(val) => formik.setFieldValue(name, val)}
+        onBlur={() => formik.setFieldTouched(name, true)}
+      />
+    </FieldShell>
+  )
+}
+
+function SectionCard({ title, description, columns = 'sm:grid-cols-2', children }) {
+  return (
+    <div className="rounded-4xl border border-mssn-slate/10 bg-white/90 p-6 shadow-soft sm:p-8">
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
+        {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
+      </div>
+      <div className={`mt-6 grid gap-5 ${columns}`}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function buildValidationSchema(config) {
+  const optionalString = Yup.string().transform((value) => {
+    if (typeof value !== 'string') return value
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : null
+  })
+
+  return Yup.object({
+    surname: Yup.string().trim().required('Required'),
+    firstname: Yup.string().trim().required('Required'),
+    othername: optionalString.nullable(),
+    sex: Yup.string().required('Required'),
+    date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
+    area_council: Yup.string().required('Required'),
+    branch: Yup.string().required('Required'),
+    email: optionalString.nullable().email('Enter a valid email'),
+    tel_no: optionalString.nullable(),
+    resident_address: optionalString.nullable(),
+    marital_status: optionalString.nullable(),
+    state_of_origin: optionalString.nullable(),
+    school: config.showSchool ? Yup.string().required('Required') : optionalString.nullable(),
+    class_level: config.showClassLevel ? Yup.string().required('Required') : optionalString.nullable(),
+    ailments: Yup.array().of(Yup.string())
+  })
+}
+
 function RegistrationForm({ category }) {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.secondary
-  const [surname, setSurname] = useState('')
-  const [firstname, setFirstname] = useState('')
-  const [othername, setOthername] = useState('')
-  const [sex, setSex] = useState('')
-  const [age, setAge] = useState('')
-  const [areaCouncil, setAreaCouncil] = useState('')
-  const [branch, setBranch] = useState('')
-  const [email, setEmail] = useState('')
-  const [tel, setTel] = useState('')
-  const [address, setAddress] = useState('')
-  const [maritalStatus, setMaritalStatus] = useState('')
-  const [stateOrigin, setStateOrigin] = useState('')
-  const [school, setSchool] = useState('')
-  const [classLevel, setClassLevel] = useState('')
-  const [ailments, setAilments] = useState([])
   const [stateOptions, setStateOptions] = useState([])
-  const displayLabel = config.label
 
   useEffect(() => {
+    let mounted = true
     ;(async () => {
       const states = await fetchStates()
-      setStateOptions(states)
+      if (mounted) setStateOptions(states)
     })()
+    return () => {
+      mounted = false
+    }
   }, [])
 
-  const requiredOK =
-    surname.trim() && firstname.trim() && sex && areaCouncil && branch && String(age).trim()
+  const stateFetcher = useCallback(
+    ({ page, search }) => {
+      const pageSize = 25
+      const query = (search || '').toLowerCase()
+      const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes(query))
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+      const start = (page - 1) * pageSize
+      const items = filtered.slice(start, start + pageSize)
+      return Promise.resolve({ items, page, totalPages })
+    },
+    [stateOptions]
+  )
 
-  const onSubmit = (e) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    if (!form.checkValidity()) {
-      form.reportValidity()
-      return
+  const initialValues = useMemo(
+    () => ({
+      surname: '',
+      firstname: '',
+      othername: '',
+      sex: '',
+      date_of_birth: '',
+      area_council: '',
+      branch: '',
+      email: '',
+      tel_no: '',
+      resident_address: '',
+      marital_status: 'Single',
+      state_of_origin: '',
+      school: '',
+      class_level: '',
+      ailments: []
+    }),
+    [category]
+  )
+
+  const validationSchema = useMemo(() => buildValidationSchema(config), [config])
+
+  const handleSubmit = (values, helpers) => {
+    const normalize = (input) => {
+      if (Array.isArray(input)) return input.filter(Boolean)
+      if (typeof input === 'string') {
+        const trimmed = input.trim()
+        return trimmed.length ? trimmed : undefined
+      }
+      return input === undefined || input === null ? undefined : input
     }
-    if (!requiredOK) return
 
     const payload = {
-      surname,
-      firstname,
-      othername,
-      sex,
-      date_of_birth: String(age).trim(),
-      area_council: areaCouncil,
-      branch,
-      email: email || undefined,
-      tel_no: tel || undefined,
-      resident_address: address || undefined,
-      marital_status: maritalStatus || 'Single',
-      state_of_origin: stateOrigin || undefined,
-      ailments: ailments.join(','),
+      surname: values.surname.trim(),
+      firstname: values.firstname.trim(),
+      othername: normalize(values.othername),
+      sex: values.sex,
+      date_of_birth: String(values.date_of_birth).trim(),
+      area_council: values.area_council,
+      branch: values.branch,
+      email: normalize(values.email),
+      tel_no: normalize(values.tel_no),
+      resident_address: normalize(values.resident_address),
+      marital_status: normalize(values.marital_status) || 'Single',
+      state_of_origin: normalize(values.state_of_origin),
+      ailments: (normalize(values.ailments) || []).join(','),
       pin_category: category
     }
 
     if (config.showSchool) {
-      payload.school = school || undefined
+      payload.school = normalize(values.school)
     }
     if (config.showClassLevel) {
-      payload.class_level = classLevel || undefined
+      payload.class_level = normalize(values.class_level)
     }
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) delete payload[key]
+    })
 
     try {
       const prev = JSON.parse(localStorage.getItem('new_member_submissions') || '[]')
       localStorage.setItem('new_member_submissions', JSON.stringify([...prev, payload]))
     } catch {}
 
+    helpers.setSubmitting(false)
     window.location.hash = '#/registration'
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-10">
-      <div className="rounded-3xl border border-mssn-slate/10 bg-white shadow-soft">
-        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-        <form onSubmit={onSubmit} className="p-6 sm:p-8 lg:p-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
+    <section className="mx-auto w-full max-w-6xl px-6 py-12">
+      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white shadow-glow">
+        <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+        <div className="bg-radial-glow/40">
+          <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
-              <h1 className="text-2xl font-semibold capitalize text-mssn-slate">{displayLabel}</h1>
+              <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{config.label}</h1>
             </div>
-            <a href="#/new" className="text-sm text-mssn-greenDark">Change</a>
+            <a href="#/new" className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
+              Change category
+            </a>
           </div>
 
-          <input type="hidden" name="pin_category" value={category} />
+          <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+            validateOnMount
+          >
+            {(formik) => (
+              <Form className="mt-10 space-y-10 px-6 pb-10 sm:px-10">
+                <input type="hidden" name="pin_category" value={category} />
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <Label required>Surname</Label>
-              <input name="surname" value={surname} onChange={(e) => setSurname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-            <label className="block">
-              <Label required>Firstname</Label>
-              <input name="firstname" value={firstname} onChange={(e) => setFirstname(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-            <label className="block">
-              <Label>Othername</Label>
-              <input name="othername" value={othername} onChange={(e) => setOthername(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-            <label className="block">
-              <Label required>Sex</Label>
-              <select name="sex" value={sex} onChange={(e) => setSex(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm">
-                <option value="">Select...</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </label>
+                <SectionCard title="Personal details" description="Tell us a little about who you are.">
+                  <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
+                  <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
+                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
+                  <SelectField
+                    formik={formik}
+                    name="sex"
+                    label="Gender"
+                    required
+                    options={['Male', 'Female']}
+                    placeholder="Select gender"
+                  />
+                  <TextField
+                    formik={formik}
+                    name="date_of_birth"
+                    label="Age"
+                    type="number"
+                    required
+                    placeholder="Enter age"
+                  />
+                </SectionCard>
 
-            <label className="block">
-              <Label required>Date of Birth (Age)</Label>
-              <input name="date_of_birth" type="number" min="1" value={age} onChange={(e) => setAge(e.target.value)} required className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
+                <SectionCard title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
+                  <FormikAsyncSelect
+                    formik={formik}
+                    name="area_council"
+                    label="Area Council"
+                    required
+                    placeholder="Select council..."
+                    fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
+                  />
+                  <FormikAsyncSelect
+                    formik={formik}
+                    name="branch"
+                    label="Branch"
+                    required
+                    placeholder={formik.values.area_council ? 'Select branch...' : 'Select area council first'}
+                    disabled={!formik.values.area_council}
+                    fetchPage={({ page, search }) => Promise.resolve({ items: [], page, totalPages: 1 })}
+                  />
+                  <TextField formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
+                  <TextField formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                  <TextField
+                    formik={formik}
+                    name="resident_address"
+                    label="Resident Address"
+                    as="textarea"
+                    rows={3}
+                    placeholder="Enter residential address"
+                    className="sm:col-span-2"
+                  />
+                  <SelectField
+                    formik={formik}
+                    name="marital_status"
+                    label="Marital Status"
+                    options={MARITAL_OPTIONS}
+                    placeholder="Select status"
+                  />
+                  <FormikAsyncSelect
+                    formik={formik}
+                    name="state_of_origin"
+                    label="State of Origin"
+                    placeholder="Select state..."
+                    fetchPage={stateFetcher}
+                  />
+                </SectionCard>
 
-            <label className="block">
-              <Label required>Area Council</Label>
-              <AsyncSelect
-                value={areaCouncil}
-                onChange={setAreaCouncil}
-                placeholder="Select council..."
-                fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
-              />
-            </label>
+                {config.showSchool || config.showClassLevel ? (
+                  <SectionCard title="Education" description="Share your current institution details.">
+                    {config.showSchool ? (
+                      <FormikAsyncSelect
+                        formik={formik}
+                        name="school"
+                        label="School"
+                        placeholder={config.schoolPlaceholder}
+                        fetchPage={({ page, search }) => querySchools({ identifier: config.schoolIdentifier, page, limit: 20, search })}
+                      />
+                    ) : null}
+                    {config.showClassLevel ? (
+                      <FormikAsyncSelect
+                        formik={formik}
+                        name="class_level"
+                        label="Class Level"
+                        placeholder={config.classPlaceholder}
+                        fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
+                      />
+                    ) : null}
+                  </SectionCard>
+                ) : null}
 
-            <label className="block">
-              <Label required>Branch</Label>
-              <AsyncSelect
-                value={branch}
-                onChange={setBranch}
-                placeholder={areaCouncil ? 'Select branch...' : 'Select area council first'}
-                disabled={!areaCouncil}
-                fetchPage={({ page, search }) => Promise.resolve({ items: [], page, totalPages: 1 })}
-              />
-            </label>
+                <SectionCard title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
+                  <FormikAsyncSelect
+                    formik={formik}
+                    name="ailments"
+                    label="Ailments"
+                    multiple
+                    placeholder="Select ailments..."
+                    fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
+                    className="sm:col-span-2"
+                  />
+                </SectionCard>
 
-            <label className="block">
-              <Label>Email</Label>
-              <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-            <label className="block">
-              <Label>Phone Number</Label>
-              <input name="tel_no" value={tel} onChange={(e) => setTel(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-
-            <label className="block sm:col-span-2">
-              <Label>Resident Address</Label>
-              <input name="resident_address" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 w-full rounded-xl border border-mssn-slate/20 bg-white px-3 py-2 text-sm" />
-            </label>
-
-            <label className="block">
-              <Label>Marital Status</Label>
-              <AsyncSelect
-                value={maritalStatus}
-                onChange={setMaritalStatus}
-                placeholder="Single"
-                fetchPage={({ page, search }) => {
-                  const all = [{ value: 'Single', label: 'Single' }]
-                  const filtered = all.filter((o) => o.label.toLowerCase().includes((search || '').toLowerCase()))
-                  return Promise.resolve({ items: filtered, page: 1, totalPages: 1 })
-                }}
-              />
-            </label>
-
-            <label className="block">
-              <Label>State of Origin</Label>
-              <AsyncSelect
-                value={stateOrigin}
-                onChange={setStateOrigin}
-                placeholder="Select state..."
-                fetchPage={({ page, search }) => {
-                  const pageSize = 25
-                  const filtered = stateOptions.filter((s) => s.label.toLowerCase().includes((search || '').toLowerCase()))
-                  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-                  const start = (page - 1) * pageSize
-                  const items = filtered.slice(start, start + pageSize)
-                  return Promise.resolve({ items, page, totalPages })
-                }}
-              />
-            </label>
-
-            {config.showSchool && (
-              <label className="block sm:col-span-2">
-                <Label>School</Label>
-                <AsyncSelect
-                  value={school}
-                  onChange={setSchool}
-                  placeholder={config.schoolPlaceholder}
-                  fetchPage={({ page, search }) => querySchools({ identifier: config.schoolIdentifier, page, limit: 20, search })}
-                />
-              </label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={!formik.isValid || formik.isSubmitting}
+                    className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                  >
+                    {formik.isSubmitting ? 'Submitting…' : 'Continue to Registration'}
+                  </button>
+                  <a
+                    href="#/"
+                    className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                  >
+                    Cancel
+                  </a>
+                </div>
+              </Form>
             )}
-
-            {config.showClassLevel && (
-              <label className="block">
-                <Label>Class Level</Label>
-                <AsyncSelect
-                  value={classLevel}
-                  onChange={setClassLevel}
-                  placeholder={config.classPlaceholder}
-                  fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
-                />
-              </label>
-            )}
-
-            <label className="block sm:col-span-2">
-              <Label>Ailments</Label>
-              <AsyncSelect
-                value={ailments}
-                onChange={setAilments}
-                multiple
-                placeholder="Select ailments..."
-                fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
-              />
-            </label>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="submit"
-              disabled={!requiredOK}
-              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition ${requiredOK ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'}`}
-            >
-              Continue to Registration
-            </button>
-            <a href="#/" className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 px-6 py-3 text-sm font-semibold text-mssn-slate">Cancel</a>
-          </div>
-        </form>
+          </Formik>
+        </div>
       </div>
     </section>
   )
