@@ -55,6 +55,28 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
     }
   }
 
+  const shouldHandleLink = (event) => {
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return false
+    }
+    if (event.currentTarget instanceof HTMLAnchorElement && event.currentTarget.target === '_blank') {
+      return false
+    }
+    return true
+  }
+
+  const createRouteHandler = (path, { replace = false, closeNav = true } = {}) => (event) => {
+    if (!shouldHandleLink(event)) {
+      return
+    }
+    event.preventDefault()
+    setIsRegistrationOpen(false)
+    if (closeNav) {
+      onCloseNav()
+    }
+    navigate(path, { replace })
+  }
+
   useEffect(() => () => clearCloseTimeout(), [])
 
   return (
