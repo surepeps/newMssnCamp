@@ -256,51 +256,316 @@ function QuickActionsBar() {
 }
 
 function AdsSection() {
+  const [formValues, setFormValues] = useState(() => createInitialRequestValues())
+  const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' })
+
+  const requestOptions = useMemo(
+    () => adSlots.map((slot) => ({ value: slot.id, label: slot.name, status: slot.status })),
+    []
+  )
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormValues((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        return next
+      })
+    }
+  }
+
+  const validate = (values) => {
+    const nextErrors = {}
+    if (!values.fullName.trim()) nextErrors.fullName = 'Enter your full name'
+    if (!values.organization.trim()) nextErrors.organization = 'Enter your organisation'
+    if (!values.email.trim()) nextErrors.email = 'Enter a valid email'
+    else if (!emailPattern.test(values.email.trim())) nextErrors.email = 'Enter a valid email'
+    if (!values.slot.trim()) nextErrors.slot = 'Select a preferred slot'
+    if (!values.objectives.trim()) nextErrors.objectives = 'Share your campaign objectives'
+    return nextErrors
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    setSubmissionState({ status: 'idle', message: '' })
+    setIsSubmitting(true)
+    const validationErrors = validate(formValues)
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors)
+      setSubmissionState({ status: 'error', message: 'Please fix the highlighted fields.' })
+      setIsSubmitting(false)
+      return
+    }
+    setErrors({})
+    setSubmissionState({
+      status: 'success',
+      message: 'Request received. Our partnerships team will be in touch within 2 business days.',
+    })
+    setFormValues(createInitialRequestValues())
+    setIsSubmitting(false)
+  }
+
+  const handleSlotSelection = (slotId) => {
+    setFormValues((prev) => ({ ...prev, slot: slotId }))
+    setErrors((prev) => {
+      if (!prev.slot) return prev
+      const next = { ...prev }
+      delete next.slot
+      return next
+    })
+    setSubmissionState({ status: 'idle', message: '' })
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        const requestCard = document.getElementById('ad-slot-request')
+        requestCard?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }
+  }
+
   return (
     <section id="ads" className="mx-auto mt-28 w-full max-w-6xl px-6" aria-labelledby="ads-heading">
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-xl space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
-            Sponsored experiences
-          </span>
-          <h2 id="ads-heading" className="text-3xl font-semibold text-mssn-slate lg:text-4xl">
-            Partners powering scholarships, meals, and innovation labs
-          </h2>
-          <p className="text-base text-mssn-slate/70">
-            Discover exclusive offers from our partners before camp kicks off. Apply early to secure discounts, premium services, and gear upgrades.
-          </p>
-        </div>
-        <div className="text-sm text-mssn-slate/60">
-          Updated weekly as new sponsorships roll in. Log in to the portal to claim offers matched to your track.
-        </div>
-      </div>
-      <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {adPromos.map((promo) => (
-          <a
-            key={promo.id}
-            href={promo.href}
-            target="_blank"
-            rel="noreferrer"
-            className="group overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 transition hover:-translate-y-1 hover:border-mssn-green/40"
-          >
-            <div className="relative h-48 w-full overflow-hidden">
-              <img
-                src={promo.image}
-                alt={promo.title}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-mssn-night/60 via-transparent to-transparent" />
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-mssn-slate">{promo.title}</h3>
-              <p className="mt-3 text-sm text-mssn-slate/70">{promo.description}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-mssn-greenDark">
-                Learn more
-                <span aria-hidden="true">↗</span>
+      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 shadow-soft">
+        <div className="grid gap-10 p-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:p-12">
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">
+                Sponsored experiences
               </span>
+              <h2 id="ads-heading" className="text-3xl font-semibold text-mssn-slate lg:text-4xl">
+                Ad slot inventory & request desk
+              </h2>
+              <p className="text-base text-mssn-slate/70">
+                Promote programmes, scholarships or services to verified campers with placements designed for visibility and trust.
+              </p>
             </div>
-          </a>
-        ))}
+            <div className="grid gap-5 md:grid-cols-2" role="list">
+              {adSlots.map((slot) => {
+                const statusMeta = SLOT_STATUS_META[slot.status] || SLOT_STATUS_META.available
+                const buttonLabel =
+                  slot.status === 'available'
+                    ? 'Request this slot'
+                    : slot.status === 'waitlist'
+                      ? 'Join waitlist'
+                      : 'Currently booked'
+                const buttonStateClasses =
+                  slot.status === 'available'
+                    ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'
+                    : slot.status === 'waitlist'
+                      ? 'border border-amber-400/60 text-amber-700 hover:bg-amber-50'
+                      : 'border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60 cursor-not-allowed'
+                const isDisabled = slot.status === 'reserved'
+                return (
+                  <article
+                    key={slot.id}
+                    role="listitem"
+                    className="flex h-full flex-col rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-mssn-green/30"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-mssn-slate">{slot.name}</h3>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">
+                          {slot.type}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-semibold ${statusMeta.badgeClass}`}>
+                        {statusMeta.label}
+                      </span>
+                    </div>
+                    <p className="mt-4 text-sm text-mssn-slate/70">{slot.summary}</p>
+                    <dl className="mt-5 grid gap-2">
+                      {slot.metrics.map((metric) => (
+                        <div
+                          key={`${slot.id}-${metric.label}`}
+                          className="flex items-center justify-between gap-3 rounded-2xl bg-mssn-mist/60 px-3 py-2"
+                        >
+                          <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">
+                            {metric.label}
+                          </dt>
+                          <dd className="text-sm font-semibold text-mssn-slate">{metric.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <div className="mt-4 space-y-1 text-xs text-mssn-slate/60">
+                      <p>{slot.nextWindow}</p>
+                      <p className="font-semibold text-mssn-slate/70">{slot.investment}</p>
+                      {slot.sponsor ? <p>Currently running: {slot.sponsor}</p> : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => !isDisabled && handleSlotSelection(slot.id)}
+                      disabled={isDisabled}
+                      className={`mt-5 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-mssn-green/30 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 ${buttonStateClasses}`}
+                    >
+                      {buttonLabel}
+                    </button>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-mssn-slate/10 bg-mssn-mist/60 p-6">
+              <h3 className="text-sm font-semibold text-mssn-slate">Inventory snapshot</h3>
+              <dl className="mt-5 grid gap-4">
+                {placementInsights.map((item) => (
+                  <div key={item.label} className="rounded-2xl bg-white/70 p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{item.label}</dt>
+                    <dd className="mt-1 text-lg font-semibold text-mssn-slate">{item.value}</dd>
+                    <p className="mt-1 text-xs text-mssn-slate/60">{item.description}</p>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
+              <h3 className="text-sm font-semibold text-mssn-slate">Before you submit</h3>
+              <ul className="mt-4 space-y-3 text-sm text-mssn-slate/70">
+                {requestGuidelines.map((tip, index) => (
+                  <li key={tip} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-mssn-green/15 text-[0.65rem] font-semibold text-mssn-greenDark">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div
+              id="ad-slot-request"
+              tabIndex="-1"
+              className="rounded-3xl border border-mssn-green/20 bg-white/95 p-6 shadow-glow outline-none focus:ring-2 focus:ring-mssn-green/30"
+            >
+              <h3 className="text-base font-semibold text-mssn-slate">Request an ad slot</h3>
+              <p className="mt-2 text-sm text-mssn-slate/70">
+                Tell us about your campaign and we will share specs, timelines, and tracking setup.
+              </p>
+              {submissionState.status !== 'idle' ? (
+                <div
+                  className={`mt-4 rounded-2xl border px-3 py-2 text-xs font-medium ${
+                    submissionState.status === 'success'
+                      ? 'border-mssn-green/30 bg-mssn-green/10 text-mssn-greenDark'
+                      : 'border-rose-200 bg-rose-50 text-rose-600'
+                  }`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {submissionState.message}
+                </div>
+              ) : null}
+              <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
+                <div>
+                  <label htmlFor="ad-request-fullName" className="text-xs font-semibold uppercase tracking-[0.22em] text-mssn-slate/70">
+                    Full name*
+                  </label>
+                  <input
+                    id="ad-request-fullName"
+                    name="fullName"
+                    value={formValues.fullName}
+                    onChange={handleChange}
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${
+                      errors.fullName ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20'
+                    }`}
+                    placeholder="Enter your full name"
+                    autoComplete="name"
+                  />
+                  {errors.fullName ? <p className="mt-1 text-xs font-medium text-rose-500">{errors.fullName}</p> : null}
+                </div>
+                <div>
+                  <label htmlFor="ad-request-organization" className="text-xs font-semibold uppercase tracking-[0.22em] text-mssn-slate/70">
+                    Organisation*
+                  </label>
+                  <input
+                    id="ad-request-organization"
+                    name="organization"
+                    value={formValues.organization}
+                    onChange={handleChange}
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${
+                      errors.organization ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20'
+                    }`}
+                    placeholder="What organisation are you representing?"
+                    autoComplete="organization"
+                  />
+                  {errors.organization ? <p className="mt-1 text-xs font-medium text-rose-500">{errors.organization}</p> : null}
+                </div>
+                <div>
+                  <label htmlFor="ad-request-email" className="text-xs font-semibold uppercase tracking-[0.22em] text-mssn-slate/70">
+                    Work email*
+                  </label>
+                  <input
+                    id="ad-request-email"
+                    name="email"
+                    type="email"
+                    value={formValues.email}
+                    onChange={handleChange}
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${
+                      errors.email ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20'
+                    }`}
+                    placeholder="name@company.com"
+                    autoComplete="email"
+                  />
+                  {errors.email ? <p className="mt-1 text-xs font-medium text-rose-500">{errors.email}</p> : null}
+                </div>
+                <div>
+                  <label htmlFor="ad-request-slot" className="text-xs font-semibold uppercase tracking-[0.22em] text-mssn-slate/70">
+                    Preferred slot*
+                  </label>
+                  <select
+                    id="ad-request-slot"
+                    name="slot"
+                    value={formValues.slot}
+                    onChange={handleChange}
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${
+                      errors.slot ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20'
+                    }`}
+                  >
+                    <option value="">Select a placement...</option>
+                    {requestOptions.map((option) => {
+                      const statusMeta = SLOT_STATUS_META[option.status] || SLOT_STATUS_META.available
+                      return (
+                        <option key={option.value} value={option.value}>
+                          {option.label} ({statusMeta.label.toLowerCase()})
+                        </option>
+                      )
+                    })}
+                    <option value="custom-brief">I need help choosing</option>
+                  </select>
+                  {errors.slot ? <p className="mt-1 text-xs font-medium text-rose-500">{errors.slot}</p> : null}
+                </div>
+                <div>
+                  <label htmlFor="ad-request-objectives" className="text-xs font-semibold uppercase tracking-[0.22em] text-mssn-slate/70">
+                    Campaign objectives*
+                  </label>
+                  <textarea
+                    id="ad-request-objectives"
+                    name="objectives"
+                    rows="3"
+                    value={formValues.objectives}
+                    onChange={handleChange}
+                    className={`mt-2 w-full resize-none rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-mssn-green/25 ${
+                      errors.objectives ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20'
+                    }`}
+                    placeholder="Share key outcomes, KPIs, or offers."
+                  />
+                  {errors.objectives ? <p className="mt-1 text-xs font-medium text-rose-500">{errors.objectives}</p> : null}
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-mssn-green/30 ${
+                    isSubmitting
+                      ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'
+                      : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'
+                  }`}
+                >
+                  {isSubmitting ? 'Sending…' : 'Submit request'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   )
