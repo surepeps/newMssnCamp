@@ -163,8 +163,6 @@ function HeroSlider() {
   )
 }
 
-import PricingDiscounts from '../components/PricingDiscounts.jsx'
-
 function QuickActionsBar() {
   return (
     <section
