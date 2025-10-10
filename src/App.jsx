@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage.jsx'
 import ExistingMemberValidate from './pages/ExistingMemberValidate.jsx'
 import ExistingMemberForm from './pages/ExistingMemberForm.jsx'
 import RegistrationGate from './pages/RegistrationGate.jsx'
+import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/')
@@ -53,6 +54,7 @@ function Router() {
 function App() {
   return (
     <Layout>
+      <RegistrationBoundary />
       <Router />
     </Layout>
   )
