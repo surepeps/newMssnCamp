@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useState } from 'react'
+import { navigate } from '../utils/navigation.js'
 import StepProgress from '../components/StepProgress.jsx'
 
 export default function ExistingMemberValidate() {
@@ -13,7 +15,7 @@ export default function ExistingMemberValidate() {
       return
     }
     const params = new URLSearchParams({ mssnId: mssnId.trim(), surname: surname.trim() })
-    window.location.hash = `#/existing/edit?${params.toString()}`
+    navigate(`/existing/edit?${params.toString()}`)
   }
 
   return (
