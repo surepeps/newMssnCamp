@@ -231,9 +231,14 @@ function ResumeRegistrationBanner() {
             <p className="text-sm font-semibold text-mssn-slate">You have a pending new registration</p>
             <p className="text-xs text-mssn-slate/60">{resumeName ? `${resumeName} • ` : ''}{String(resumeCategory).charAt(0).toUpperCase() + String(resumeCategory).slice(1)}</p>
           </div>
-          <button type="button" onClick={() => navigate(`/new/${resumeCategory}`)} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">
-            Continue
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => navigate(`/new/${resumeCategory}`)} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">
+              Continue
+            </button>
+            <button type="button" onClick={() => { try { localStorage.removeItem(DRAFT_KEY) } catch {} setDraft(null) }} className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700">
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     </section>
