@@ -488,14 +488,12 @@ function RegistrationForm({ category }) {
                     placeholder="Select council..."
                     fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
                   />
-                  <FormikAsyncSelect
+                  <TextField
                     formik={formik}
                     name="branch"
                     label="Branch"
                     required
-                    placeholder={formik.values.area_council ? 'Select branch...' : 'Select area council first'}
-                    disabled={!formik.values.area_council}
-                    fetchPage={({ page, search }) => Promise.resolve({ items: [], page, totalPages: 1 })}
+                    placeholder="Enter branch name"
                   />
                   <TextField formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
                   <TextField formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
