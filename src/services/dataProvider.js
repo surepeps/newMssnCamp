@@ -1,5 +1,42 @@
 import { fetchJSON } from './api.js'
 
+// Generic helpers returning { items, page, totalPages }
+export async function queryAilments({ page = 1, limit = 20, search = '' } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (search) params.set('ailment_name', search)
+  const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
+  const records = res?.data?.records || []
+  const pg = res?.data?.pagination || { totalPages: page, page }
+  return { items: records.map((r) => ({ value: r.ailment_id, label: r.ailment_name })), page: pg.page, totalPages: pg.totalPages }
+}
+
+export async function queryCouncils({ page = 1, limit = 20, search = '' } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (search) params.set('councilName', search)
+  const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
+  const records = res?.data?.records || []
+  const pg = res?.data?.pagination || { totalPages: page, page }
+  return { items: records.map((r) => ({ value: String(r.councilID), label: r.councilName })), page: pg.page, totalPages: pg.totalPages }
+}
+
+export async function querySchools({ identifier = 'S', page = 1, limit = 20, search = '' } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), school_identifier: identifier })
+  if (search) params.set('school_name', search)
+  const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
+  const records = res?.data?.records || []
+  const pg = res?.data?.pagination || { totalPages: page, page }
+  return { items: records.map((r) => ({ value: r.school_id, label: r.school_name })), page: pg.page, totalPages: pg.totalPages }
+}
+
+export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20, search = '' } = {}) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), class_identifier: identifier })
+  if (search) params.set('class_name', search)
+  const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
+  const records = res?.data?.records || []
+  const pg = res?.data?.pagination || { totalPages: page, page }
+  return { items: records.map((r) => ({ value: r.class_id, label: r.class_name })), page: pg.page, totalPages: pg.totalPages }
+}
+
 export async function fetchStates() {
   const states = [
     'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara','FCT Abuja'
@@ -20,63 +57,31 @@ export async function fetchHighestQualifications() {
 }
 
 export async function fetchAilments({ page = 1, limit = 100, search = '' } = {}) {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-  if (search) params.set('ailment_name', search)
-  const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
-  const records = res?.data?.records || []
-  return records.map((r) => ({ value: r.ailment_id, label: r.ailment_name }))
+  const { items } = await queryAilments({ page, limit, search })
+  return items
 }
 
 export async function fetchCouncils({ page = 1, limit = 200, search = '' } = {}) {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-  if (search) params.set('councilName', search)
-  const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
-  const records = res?.data?.records || []
-  return records.map((r) => ({ value: String(r.councilID), label: r.councilName }))
+  const { items } = await queryCouncils({ page, limit, search })
+  return items
 }
 
 export async function fetchBranches(/* councilId */) {
   return []
 }
 
-export async function fetchSchoolsSecondary({ page = 1, limit = 200 } = {}) {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit), school_identifier: 'S' })
-  const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
-  const records = res?.data?.records || []
-  return records.map((r) => ({ value: r.school_id, label: r.school_name }))
+export async function fetchSchoolsSecondary({ page = 1, limit = 200, search = '' } = {}) {
+  const { items } = await querySchools({ identifier: 'S', page, limit, search })
+  return items
 }
 
-export async function fetchSchoolsUndergrad({ page = 1, limit = 200 } = {}) {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit), school_identifier: 'U' })
-  const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
-  const records = res?.data?.records || []
-  return records.map((r) => ({ value: r.school_id, label: r.school_name }))
+export async function fetchSchoolsUndergrad({ page = 1, limit = 200, search = '' } = {}) {
+  const { items } = await querySchools({ identifier: 'U', page, limit, search })
+  return items
 }
 
 export async function fetchClassLevels(category) {
-  switch (category) {
-    case 'Secondary':
-      return [
-        { value: 'JSS1', label: 'JSS 1' },
-        { value: 'JSS2', label: 'JSS 2' },
-        { value: 'JSS3', label: 'JSS 3' },
-        { value: 'SS1', label: 'SS 1' },
-        { value: 'SS2', label: 'SS 2' },
-        { value: 'SS3', label: 'SS 3' },
-      ]
-    case 'Undergraduate':
-      return [
-        { value: '100', label: '100' },
-        { value: '200', label: '200' },
-        { value: '300', label: '300' },
-        { value: '400', label: '400' },
-        { value: '500', label: '500' },
-      ]
-    case 'Others':
-      return []
-    case 'TFL':
-      return []
-    default:
-      return []
-  }
+  const id = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'O'
+  const { items } = await queryClassLevels({ identifier: id, page: 1, limit: 200 })
+  return items
 }
