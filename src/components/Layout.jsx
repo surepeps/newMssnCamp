@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { isModifiedEvent, navigate } from '../utils/navigation.js'
+
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
