@@ -667,6 +667,7 @@ function RegistrationForm({ category }) {
                   </button>
                   <a
                     href="#/"
+                    onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
                     className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
                   >
                     Cancel
