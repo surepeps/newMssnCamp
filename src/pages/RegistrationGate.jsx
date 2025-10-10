@@ -56,6 +56,17 @@ export default function RegistrationGate() {
   const status = open ? 'open' : startValid && new Date() < new Date(camp.registration_start) ? 'upcoming' : 'closed'
   const deadline = isValidDate(camp?.discounts?.deadline) ? new Date(camp.discounts.deadline) : null
 
+  const handleExistingMemberClick = (event) => {
+    if (!open) {
+      return
+    }
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return
+    }
+    event.preventDefault()
+    navigate('/existing/validate')
+  }
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
@@ -96,8 +107,9 @@ export default function RegistrationGate() {
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
-              href={open ? '#/existing/validate' : undefined}
+              href={open ? '/existing/validate' : undefined}
               aria-disabled={!open}
+              onClick={handleExistingMemberClick}
               className={`inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition sm:w-auto ${
                 open ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate'
               }`}
