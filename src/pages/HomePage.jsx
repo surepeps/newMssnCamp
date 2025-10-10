@@ -135,7 +135,7 @@ function QuickActionsBar() {
       className="relative z-20 mx-auto mt-6 w-full max-w-6xl px-6"
       aria-label="Quick actions"
     >
-      <div className="rounded-4xl bg-white/95 p-6 shadow-glow ring-1 ring-mssn-slate/10">
+      <div className="rounded-4xl bg-white/95 p-6 ring-1 ring-mssn-slate/10">
         <div className="grid gap-6 lg:grid-cols-3">
           {quickActions.map((action) => (
             <a
@@ -187,7 +187,7 @@ function AdsSection() {
             href={promo.href}
             target="_blank"
             rel="noreferrer"
-            className="group overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 shadow-soft transition hover:-translate-y-1 hover:border-mssn-green/40"
+            className="group overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 transition hover:-translate-y-1 hover:border-mssn-green/40"
           >
             <div className="relative h-48 w-full overflow-hidden">
               <img

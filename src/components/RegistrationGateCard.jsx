@@ -43,7 +43,7 @@ export default function RegistrationGateCard() {
 
   return (
     <section className="relative z-20 mx-auto -mt-6 sm:-mt-12 lg:-mt-16 w-full max-w-6xl px-6" aria-label="Registration gate">
-      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 p-6 shadow-soft">
+      <div className="overflow-hidden rounded-4xl border border-mssn-slate/10 bg-white/95 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3">

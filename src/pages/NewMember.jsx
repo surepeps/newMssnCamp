@@ -168,7 +168,7 @@ export default function NewMember({ category }) {
   if (!category || !CATEGORIES.includes(category)) {
     return (
       <section className="mx-auto w-full max-w-6xl px-6 py-12">
-        <div className="rounded-4xl bg-white p-6 shadow-soft ring-1 ring-mssn-slate/10">
+        <div className="rounded-4xl bg-white p-6 ring-1 ring-mssn-slate/10">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-mssn-greenDark">New Member</span>

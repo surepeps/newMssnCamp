@@ -36,7 +36,7 @@ export default function RegistrationBoundary() {
 
   return (
     <div className="fixed inset-0 z-50 flex min-h-screen w-screen items-center justify-center bg-mssn-night/90 p-6">
-      <div className="w-full max-w-2xl overflow-hidden rounded-4xl border border-white/10 bg-white/95 shadow-glow">
+      <div className="w-full max-w-2xl overflow-hidden rounded-4xl border border-white/10 bg-white/95">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="p-8 text-center">
           {state.type === 'error' && (
