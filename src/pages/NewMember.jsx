@@ -27,8 +27,8 @@ const CATEGORY_CONFIG = {
   },
   others: {
     label: 'Others',
-    schoolIdentifier: 'O',
-    classIdentifier: 'U',
+    schoolIdentifier: 'U',
+    classIdentifier: 'O',
     showSchool: true,
     showClassLevel: true,
     schoolPlaceholder: 'Select institution...',
@@ -511,7 +511,7 @@ function RegistrationForm({ category }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="rounded-3xl border border-mssn-slate/10 bg-white">
+      <div className="rounded-xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
