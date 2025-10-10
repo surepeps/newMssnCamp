@@ -38,6 +38,7 @@ function Router() {
       pattern: '#/existing/:action',
       render: ({ params }) => (params.action === 'edit' ? <ExistingMemberForm /> : <ExistingMemberValidate />),
     },
+    { pattern: '#/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '#/registration', render: () => <RegistrationGate /> },
     { pattern: '#/', render: () => <HomePage /> },
   ]
