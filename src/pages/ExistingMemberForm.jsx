@@ -475,6 +475,7 @@ export default function ExistingMemberForm() {
                   }
                   Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
                   try {
+                    setProcessing(true)
                     const res = await fetchJSON('/registration/new', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -482,17 +483,24 @@ export default function ExistingMemberForm() {
                     })
                     const data = res?.data || {}
                     const message = data.message || res?.message || 'Registered successfully'
-                    const priceInfo = typeof data.price !== 'undefined' ? ` • ���${Number(data.price).toFixed(2)}` : ''
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
                     if (data.redirect_url) {
-                      window.location.href = data.redirect_url
+                      setRedirecting(true)
+                      setTimeout(() => {
+                        window.location.href = data.redirect_url
+                      }, 700)
                     } else {
-                      navigate('/registration')
+                      setRedirecting(true)
+                      setTimeout(() => {
+                        navigate('/registration')
+                      }, 700)
                     }
                   } catch (_) {
                   } finally {
                     helpers.setSubmitting(false)
+                    setProcessing(false)
                   }
                 }}
               >
