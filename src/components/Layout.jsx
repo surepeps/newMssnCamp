@@ -189,18 +189,17 @@ function Footer() {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
 
   return (
-    <footer className="mt-24 bg-gradient-to-tr from-mssn-slate to-mssn-night text-white">
+    <footer className="mt-24 bg-mssn-green text-white">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-3">
           <div className="space-y-4">
             <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover" />
             <p className="text-sm font-semibold">Muslim Students’ Society of Nigeria, Lagos State Area Unit</p>
-            <p className="text-xs text-white/80">Strengthening faith, education and community impact across Lagos.</p>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-white">Quick links</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
+            <ul className="mt-3 space-y-2 text-sm text-white/95">
               <li><a href="/" onClick={(e)=>{e.preventDefault(); navigate('/')}} className="hover:underline">Home</a></li>
               <li><a href="/new" onClick={(e)=>{e.preventDefault(); navigate('/new')}} className="hover:underline">New Member</a></li>
               <li><a href="/existing/validate" onClick={(e)=>{e.preventDefault(); navigate('/existing/validate')}} className="hover:underline">Existing Member</a></li>
@@ -210,25 +209,15 @@ function Footer() {
 
           <div>
             <h4 className="text-sm font-semibold text-white">Contact</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
+            <ul className="mt-3 space-y-2 text-sm text-white/95">
               <li><a href="mailto:camp@mssnlagos.org" className="hover:underline">camp@mssnlagos.org</a></li>
               <li><a href="tel:+2348130001122" className="hover:underline">+234 813 000 1122</a></li>
-              <li className="mt-2 text-xs text-white/70">Office: Lagos State Area Unit</li>
+              <li className="mt-2 text-xs text-white/80">Office: Lagos State Area Unit</li>
             </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-white">Follow</h4>
-            <div className="mt-3 flex items-center gap-3">
-              <a href="#" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10">FB</a>
-              <a href="#" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10">TW</a>
-              <a href="#" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10">IG</a>
-            </div>
-            <div className="mt-4 text-xs text-white/80">Designed by <strong>MSSN Web Team</strong></div>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-white/10 pt-6 text-sm text-white/70 flex flex-col items-center justify-between gap-3 md:flex-row">
+        <div className="mt-8 border-t border-white/20 pt-6 text-sm text-white/90 flex flex-col items-center justify-between gap-3 md:flex-row">
           <div>© {currentYear} MSSN Lagos State Area Unit. All rights reserved.</div>
           <div className="text-xs">Built with care for our students &amp; community.</div>
         </div>
