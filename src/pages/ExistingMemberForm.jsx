@@ -311,7 +311,8 @@ export default function ExistingMemberForm() {
     setVBranch(normalize(details.branch))
     setVState(normalize(details.state_of_origin))
     if (category !== 'TFL') setVSchool(normalize(details.school))
-    setVClassLevel(normalize(upgradeTarget.class_level || details.class_level))
+    const targetClassLevel = delegate?.upgrade_details?.[0]?.to?.class_level
+    setVClassLevel(normalize(targetClassLevel != null ? targetClassLevel : details.class_level))
     setVCourse(normalize(details.course))
     const rawA = normalize(details.ailments)
     const arrA = rawA && rawA.toLowerCase() !== 'none' ? rawA.split(',').map((s) => s.trim()).filter(Boolean) : []
