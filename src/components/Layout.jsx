@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { isModifiedEvent, navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import FullPageLoader from './FullPageLoader.jsx'
+import PwaInstallPrompt from './PwaInstallPrompt.jsx'
+import WhatsAppWidget from './WhatsAppWidget.jsx'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
