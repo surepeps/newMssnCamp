@@ -297,7 +297,7 @@ function QuickActionsBar() {
     const values = draft.values && typeof draft.values === 'object' ? draft.values : {}
     const surname = typeof values.surname === 'string' ? values.surname.trim() : ''
     const firstname = typeof values.firstname === 'string' ? values.firstname.trim() : ''
-    const name = `${surname} ${firstname}`.trim().replace(/\s+/g, ' ').trim()
+    const name = `${surname} ${firstname}`.replace(/\s+/g, ' ').trim()
     let updatedAtLabel = null
     if (typeof draft.updatedAt === 'number') {
       const date = new Date(draft.updatedAt)
