@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 function useOutsideClick(ref, handler) {
-  useEffect(() => {
+  React.useEffect(() => {
     const listener = (e) => {
       if (!ref.current || ref.current.contains(e.target)) return
       handler()
@@ -12,9 +12,9 @@ function useOutsideClick(ref, handler) {
 }
 
 function useDebouncedValue(value, delay = 250) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
+  const [debouncedValue, setDebouncedValue] = React.useState(value)
 
-  useEffect(() => {
+  React.useEffect(() => {
     const timeout = setTimeout(() => setDebouncedValue(value), delay)
     return () => clearTimeout(timeout)
   }, [value, delay])
@@ -32,18 +32,18 @@ export default function AsyncSelect({
   onBlur,
   invalid = false,
 }) {
-  const containerRef = useRef(null)
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState('')
+  const containerRef = React.useRef(null)
+  const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
-  const [items, setItems] = useState([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const prevOpen = useRef(false)
+  const [items, setItems] = React.useState([])
+  const [page, setPage] = React.useState(1)
+  const [totalPages, setTotalPages] = React.useState(1)
+  const [loading, setLoading] = React.useState(false)
+  const prevOpen = React.useRef(false)
 
   const normalizedValue = multiple ? (Array.isArray(value) ? value.filter(Boolean) : []) : (value || '')
-  const selectedLabels = useMemo(() => {
+  const selectedLabels = React.useMemo(() => {
     if (multiple) return normalizedValue
     return normalizedValue ? [normalizedValue] : []
   }, [multiple, normalizedValue])
@@ -65,7 +65,7 @@ export default function AsyncSelect({
     }
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (open) {
       setItems([])
       setPage(1)
@@ -76,7 +76,7 @@ export default function AsyncSelect({
   }, [open, debouncedSearch])
 
   // Prefetch current value so the label is shown even if the dropdown hasn't been opened
-  useEffect(() => {
+  React.useEffect(() => {
     let mounted = true
     const ensureValueLoaded = async () => {
       try {
@@ -118,7 +118,7 @@ export default function AsyncSelect({
     }
   }, [value, multiple, disabled, fetchPage])
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (prevOpen.current && !open) {
       onBlur?.()
     }
