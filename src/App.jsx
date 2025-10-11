@@ -10,6 +10,8 @@ import ReprintSlip from './pages/ReprintSlip.jsx'
 import CheckMssnId from './pages/CheckMssnId.jsx'
 import ContactUs from './pages/ContactUs.jsx'
 import PaymentValidation from './pages/PaymentValidation.jsx'
+import NotFound from './pages/NotFound.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Toaster } from 'sonner'
 
 function usePathRoute() {
