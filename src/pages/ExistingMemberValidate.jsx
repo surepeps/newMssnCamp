@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate, createNavigationHandler } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
@@ -8,16 +8,16 @@ import * as Yup from 'yup'
 const goToCheckMssnId = createNavigationHandler('/check-mssn-id')
 
 export default function ExistingMemberValidate() {
-  const [error, setError] = React.useState('')
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
-  const [pendingDelegate, setPendingDelegate] = React.useState(null)
-  const mssnRef = React.useRef(null)
+  const [error, setError] = useState('')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [pendingDelegate, setPendingDelegate] = useState(null)
+  const mssnRef = useRef(null)
 
   const formatMssn = (val) => (typeof val === 'string' ? val.replace(/\s+/g, '').toUpperCase() : val)
   const formatSurname = (val) => (typeof val === 'string' ? val.replace(/\s{2,}/g, ' ').trim().toUpperCase() : val)
 
-  const [initialValues, setInitialValues] = React.useState({ mssnId: '', surname: '' })
-  React.useEffect(() => {
+  const [initialValues, setInitialValues] = useState({ mssnId: '', surname: '' })
+  useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const qMssn = params.get('mssnId') || ''
@@ -27,7 +27,7 @@ export default function ExistingMemberValidate() {
     mssnRef.current?.focus()
   }, [])
 
-  const validationSchema = React.useMemo(() =>
+  const validationSchema = useMemo(() =>
     Yup.object({
       mssnId: Yup.string()
         .transform((v) => formatMssn(v))
