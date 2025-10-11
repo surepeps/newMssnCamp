@@ -5,6 +5,7 @@ import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, fetchHighestQualifications } from '../services/dataProvider.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
+import ProcessingModal from '../components/ProcessingModal.jsx'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -497,6 +498,8 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
 
+  const [processing, setProcessing] = useState(false)
+
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
       onSubmitOverride(values, helpers, { category })
@@ -558,6 +561,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     })
 
     try {
+      setProcessing(true)
       const res = await fetchJSON('/registration/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -578,6 +582,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       // Error toast handled globally in fetchJSON
     } finally {
       helpers.setSubmitting(false)
+      setProcessing(false)
     }
   }
 
@@ -761,6 +766,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
               </Form>
             )}
           </Formik>
+      <ProcessingModal visible={processing} title="Processing payment…" subtitle="Please wait while we submit your registration and prepare payment." />
       </div>
     </section>
   )
