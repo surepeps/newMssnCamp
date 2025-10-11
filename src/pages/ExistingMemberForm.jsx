@@ -363,7 +363,9 @@ export default function ExistingMemberForm() {
   const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
 
   const buildPrefill = () => {
-    const sx = (details.sex || '').toString().trim().toLowerCase()
+    const d = details || {}
+    const toInfo = upgradeTarget || {}
+    const sx = (d.sex || '').toString().trim().toLowerCase()
     const parseA = (v) => {
       const s = (v == null ? '' : String(v)).trim()
       if (!s) return []
