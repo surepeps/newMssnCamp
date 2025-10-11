@@ -66,7 +66,7 @@ const buildDetailItems = (delegate) => {
       const rawValue = delegate[definition.key]
       if (rawValue == null || rawValue === '') return null
       const value = definition.transform ? definition.transform(rawValue) : rawValue
-      const href = definition.hrefPrefix ? `${definition.hrefPrefix}${String(value).toString().trim()}` : null
+      const href = definition.hrefPrefix ? `${definition.hrefPrefix}${String(value).trim()}` : null
       return { label: definition.label, value, href }
     })
     .filter(Boolean)
