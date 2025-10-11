@@ -6,6 +6,7 @@ import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLeve
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
+import { useSettings } from '../context/SettingsContext.jsx'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
