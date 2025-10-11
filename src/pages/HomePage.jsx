@@ -199,18 +199,21 @@ function HeroSlider() {
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
         <img src={bgImage} alt={campTitle} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/40 via-mssn-night/25 to-transparent" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-24">
+        <div className="max-w-3xl">
+          <div className="mb-4 h-0.5 w-20 rounded-full bg-white/40" />
+        </div>
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
           {camp?.camp_code || 'CAMP'}
         </span>
-        <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{campTitle}</h1>
+        <h1 className="text-4xl font-extrabold leading-tight text-white drop-shadow-2xl sm:text-5xl lg:text-6xl">{campTitle}</h1>
         {camp?.camp_theme && (
-          <p className="max-w-2xl text-lg text-white/90 lg:text-xl">{camp.camp_theme}</p>
+          <p className="max-w-2xl text-lg text-white/95 lg:text-xl drop-shadow-lg">{camp.camp_theme}</p>
         )}
         {camp?.camp_date && (
-          <p className="text-sm text-white/80">{camp.camp_date}</p>
+          <p className="text-sm text-white/90">{camp.camp_date}</p>
         )}
       </div>
     </section>
