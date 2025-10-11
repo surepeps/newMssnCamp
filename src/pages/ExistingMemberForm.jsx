@@ -373,7 +373,7 @@ export default function ExistingMemberForm() {
       {showUpgradeModal ? null : (
         <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-          <div className="bg-radial-glow/40">
+          <div className="bg-radial-glow/40 rounded-3xl">
             <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
@@ -447,7 +447,7 @@ export default function ExistingMemberForm() {
                     })
                     const data = res?.data || {}
                     const message = data.message || res?.message || 'Registered successfully'
-                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ���${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
                     if (data.redirect_url) {
