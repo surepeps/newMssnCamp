@@ -14,7 +14,7 @@ function StatusBadge({ status }) {
 }
 
 function Countdown({ start }) {
-  const parts = useMemo(() => {
+  const parts = React.useMemo(() => {
     const now = new Date()
     const diff = Math.max(0, new Date(start).getTime() - now.getTime())
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
