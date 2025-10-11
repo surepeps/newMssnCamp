@@ -13,6 +13,22 @@ export default function ExistingMemberValidate() {
   const surnameRef = useRef(null)
 
   useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const qMssn = params.get('mssnId') || ''
+      const qSurname = params.get('surname') || ''
+      if (qMssn) setMssnId(formatMssn(qMssn))
+      if (qSurname) setSurname(formatSurname(qSurname))
+      if (!qMssn || !qSurname) {
+        const raw = localStorage.getItem('existing_member_delegate')
+        if (raw) {
+          const data = JSON.parse(raw)
+          const d = data?.details || {}
+          if (d.mssn_id) setMssnId(formatMssn(d.mssn_id))
+          if (d.surname) setSurname(formatSurname(d.surname))
+        }
+      }
+    } catch {}
     mssnRef.current?.focus()
   }, [])
 
