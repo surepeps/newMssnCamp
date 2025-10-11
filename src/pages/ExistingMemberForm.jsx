@@ -260,6 +260,28 @@ export default function ExistingMemberForm() {
   }
 
   useEffect(() => {
+    let cancelled = false
+    const loadQualifications = async () => {
+      try {
+        const list = await fetchHighestQualifications({ who: qualificationAudience })
+        if (!cancelled) {
+          setQualifications(Array.isArray(list) ? list : [])
+        }
+      } catch {
+        if (!cancelled) setQualifications([])
+      }
+    }
+    if (qualificationAudience) {
+      loadQualifications()
+    } else {
+      setQualifications([])
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [qualificationAudience])
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
