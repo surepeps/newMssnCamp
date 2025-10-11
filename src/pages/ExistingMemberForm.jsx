@@ -13,6 +13,7 @@ import {
   queryClassLevels,
   queryCourses,
 } from '../services/dataProvider.js'
+import { RegistrationForm } from './NewMember.jsx'
 
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
 
@@ -98,6 +99,7 @@ export default function ExistingMemberForm() {
   const [loading, setLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
@@ -250,6 +252,42 @@ export default function ExistingMemberForm() {
   const schoolIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'U'
   const classIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'O'
 
+  const toInfo = delegate?.upgrade_details?.[0]?.to || {}
+  const targetPin = String(toInfo?.pin_category || '').toUpperCase()
+  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
+  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
+
+  const buildPrefill = () => {
+    const sx = (d.sex || '').toString().trim().toLowerCase()
+    const parseA = (v) => {
+      const s = (v == null ? '' : String(v)).trim()
+      if (!s) return []
+      return s.toLowerCase() === 'none' ? [] : s.split(',').map((s) => s.trim()).filter(Boolean)
+    }
+    return {
+      surname: d.surname || surname || '',
+      firstname: d.firstname || '',
+      othername: d.othername || '',
+      sex: sx === 'male' ? 'Male' : sx === 'female' ? 'Female' : '',
+      date_of_birth: d.date_of_birth || '',
+      area_council: d.area_council || '',
+      branch: d.branch || '',
+      email: d.email || '',
+      tel_no: d.tel_no || '',
+      resident_address: d.resident_address || '',
+      marital_status: d.marital_status || 'Single',
+      state_of_origin: d.state_of_origin || '',
+      school: d.school || '',
+      class_level: toInfo.class_level || d.class_level || '',
+      ailments: parseA(d.ailments),
+      course: d.course || '',
+      next_of_kin: d.next_of_kin || '',
+      next_of_kin_tel: d.next_of_kin_tel || '',
+      discipline: d.discipline || '',
+      workplace: d.workplace || ''
+    }
+  }
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="mb-6">
@@ -272,291 +310,297 @@ export default function ExistingMemberForm() {
           </div>
 
           <div className="px-6 pb-10 pt-6 sm:px-10">
-            <SectionNav active={activeSection} onJump={jumpTo} />
-            <div className="mt-6 grid gap-6">
-              <CategoryHints rules={rules} />
-            </div>
+            {upgradeStarted ? (
+              <RegistrationForm category={targetCategory || currentCategoryLower} prefillValues={buildPrefill()} submitLabel="Register & Pay" enableDraft={false} />
+            ) : (
+              <>
+                <SectionNav active={activeSection} onJump={jumpTo} />
+                <div className="mt-6 grid gap-6">
+                  <CategoryHints rules={rules} />
+                </div>
 
-            <form id="updForm" className="mt-6 space-y-10" data-parsley-validate onSubmit={onSubmit} noValidate>
-              <div id="personal" ref={refs.personal}>
-                <SectionCard title="Personal details" description="Tell us a little about who you are.">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Surname *</label>
-                    </div>
-                    <input name="surname" type="text" required placeholder="Enter surname" defaultValue={d.surname || surname} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Firstname *</label>
-                    </div>
-                    <input name="firstname" type="text" required placeholder="Enter firstname" defaultValue={d.firstname || ''} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Gender *</label>
-                    </div>
-                    <input name="gender" type="text" required readOnly placeholder="Gender" defaultValue={genderDisplay} className={`${inputClass} ${inputDisabledClass}`} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Age *</label>
-                    </div>
-                    <input name="age" type="number" min="0" required placeholder="Enter age" defaultValue={d.date_of_birth || ''} className={inputClass} />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Othername</label>
-                    </div>
-                    <input name="othername" type="text" placeholder="Enter other names" defaultValue={d.othername || ''} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Category *</label>
-                    </div>
-                    <select name="category" required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
-                      <option value="" disabled>Select category</option>
-                      {CATEGORY_OPTIONS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Resident Address *</label>
-                    </div>
-                    <textarea name="address" required rows={3} placeholder="Enter residential address" defaultValue={d.resident_address || ''} className={`${inputClass} resize-none`}></textarea>
-                  </div>
-                </SectionCard>
-              </div>
-
-              <div id="contact" ref={refs.contact}>
-                <SectionCard title="Contact & location" description="How can we reach you and where are you based?">
-                  {rules.email.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Email Address{rules.email.required ? ' *' : ''}</label>
+                <form id="updForm" className="mt-6 space-y-10" data-parsley-validate onSubmit={onSubmit} noValidate>
+                  <div id="personal" ref={refs.personal}>
+                    <SectionCard title="Personal details" description="Tell us a little about who you are.">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Surname *</label>
+                        </div>
+                        <input name="surname" type="text" required placeholder="Enter surname" defaultValue={d.surname || surname} className={inputClass} />
                       </div>
-                      <input name="email" type="email" required={rules.email.required} placeholder="name@email.com" defaultValue={d.email || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="email" value="-------" />
-                  )}
-
-                  {rules.phone.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Phone Number{rules.phone.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Firstname *</label>
+                        </div>
+                        <input name="firstname" type="text" required placeholder="Enter firstname" defaultValue={d.firstname || ''} className={inputClass} />
                       </div>
-                      <input name="phone" type="text" required={rules.phone.required} placeholder="Enter phone number" defaultValue={d.tel_no || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="phone" value="-------" />
-                  )}
-                </SectionCard>
-              </div>
-
-              <div id="emergency" ref={refs.emergency}>
-                <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?">
-                  {rules.nextOfKin.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Next of Kin{rules.nextOfKin.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Gender *</label>
+                        </div>
+                        <input name="gender" type="text" required readOnly placeholder="Gender" defaultValue={genderDisplay} className={`${inputClass} ${inputDisabledClass}`} />
                       </div>
-                      <input name="nextOfKin" type="text" required={rules.nextOfKin.required} placeholder="Enter next of kin" defaultValue={d.next_of_kin || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="nextOfKin" value="------" />
-                  )}
-
-                  {rules.nextOfKinPhone.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Next of Kin Phone Number{rules.nextOfKinPhone.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Age *</label>
+                        </div>
+                        <input name="age" type="number" min="0" required placeholder="Enter age" defaultValue={d.date_of_birth || ''} className={inputClass} />
                       </div>
-                      <input name="nextOfKinPhone" type="text" required={rules.nextOfKinPhone.required} placeholder="Enter phone number" defaultValue={d.next_of_kin_tel || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="nextOfKinPhone" value="------" />
-                  )}
-                </SectionCard>
-              </div>
-
-              <div id="details" ref={refs.details}>
-                <SectionCard title="Personal details" description="Additional personal information for records.">
-                  {rules.maritalStatus.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Marital Status{rules.maritalStatus.required ? ' *' : ''}</label>
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Othername</label>
+                        </div>
+                        <input name="othername" type="text" placeholder="Enter other names" defaultValue={d.othername || ''} className={inputClass} />
                       </div>
-                      <select name="maritalStatus" required={rules.maritalStatus.required} defaultValue={d.marital_status || ''} className={inputClass}>
-                        <option value="" disabled>Select marital status</option>
-                        {maritalStatuses.map((m) => (
-                          <option key={m.value ?? m} value={m.value ?? m}>{m.label ?? m}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <HiddenInput name="maritalStatus" value={rules.maritalStatus.defaultValue || 'Single'} />
-                  )}
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>State of Origin *</label>
-                    </div>
-                    <AsyncSelect
-                      value={vState}
-                      onChange={setVState}
-                      placeholder="Select state..."
-                      fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="state" value={vState} />
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Category *</label>
+                        </div>
+                        <select name="category" required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+                          <option value="" disabled>Select category</option>
+                          {CATEGORY_OPTIONS.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Resident Address *</label>
+                        </div>
+                        <textarea name="address" required rows={3} placeholder="Enter residential address" defaultValue={d.resident_address || ''} className={`${inputClass} resize-none`}></textarea>
+                      </div>
+                    </SectionCard>
                   </div>
-                </SectionCard>
-              </div>
 
-              <div id="education" ref={refs.education}>
-                <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>School *</label>
-                    </div>
-                    {rules.school.mode === 'text' ? (
-                      <input name="school" type="text" required placeholder="Enter school name" defaultValue={d.school || ''} className={inputClass} />
-                    ) : (
-                      <>
+                  <div id="contact" ref={refs.contact}>
+                    <SectionCard title="Contact & location" description="How can we reach you and where are you based?">
+                      {rules.email.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Email Address{rules.email.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="email" type="email" required={rules.email.required} placeholder="name@email.com" defaultValue={d.email || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="email" value="-------" />
+                      )}
+
+                      {rules.phone.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Phone Number{rules.phone.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="phone" type="text" required={rules.phone.required} placeholder="Enter phone number" defaultValue={d.tel_no || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="phone" value="-------" />
+                      )}
+                    </SectionCard>
+                  </div>
+
+                  <div id="emergency" ref={refs.emergency}>
+                    <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?">
+                      {rules.nextOfKin.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Next of Kin{rules.nextOfKin.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="nextOfKin" type="text" required={rules.nextOfKin.required} placeholder="Enter next of kin" defaultValue={d.next_of_kin || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="nextOfKin" value="------" />
+                      )}
+
+                      {rules.nextOfKinPhone.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Next of Kin Phone Number{rules.nextOfKinPhone.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="nextOfKinPhone" type="text" required={rules.nextOfKinPhone.required} placeholder="Enter phone number" defaultValue={d.next_of_kin_tel || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="nextOfKinPhone" value="------" />
+                      )}
+                    </SectionCard>
+                  </div>
+
+                  <div id="details" ref={refs.details}>
+                    <SectionCard title="Personal details" description="Additional personal information for records.">
+                      {rules.maritalStatus.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Marital Status{rules.maritalStatus.required ? ' *' : ''}</label>
+                          </div>
+                          <select name="maritalStatus" required={rules.maritalStatus.required} defaultValue={d.marital_status || ''} className={inputClass}>
+                            <option value="" disabled>Select marital status</option>
+                            {maritalStatuses.map((m) => (
+                              <option key={m.value ?? m} value={m.value ?? m}>{m.label ?? m}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <HiddenInput name="maritalStatus" value={rules.maritalStatus.defaultValue || 'Single'} />
+                      )}
+
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>State of Origin *</label>
+                        </div>
                         <AsyncSelect
-                          value={vSchool}
-                          onChange={setVSchool}
-                          placeholder={category === 'Undergraduate' || category === 'Others' ? 'Select institution...' : 'Select school...'}
-                          fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })}
+                          value={vState}
+                          onChange={setVState}
+                          placeholder="Select state..."
+                          fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
                         />
-                        <HiddenInput name="school" value={vSchool} />
-                      </>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Class Level *</label>
-                    </div>
-                    <AsyncSelect
-                      value={vClassLevel}
-                      onChange={setVClassLevel}
-                      placeholder="Select class level..."
-                      fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })}
-                    />
-                    <HiddenInput name="classLevel" value={vClassLevel} />
-                  </div>
-
-                  {rules.course.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Course{rules.course.required ? ' *' : ''}</label>
+                        <HiddenInput name="state" value={vState} />
                       </div>
-                      <AsyncSelect
-                        value={vCourse}
-                        onChange={setVCourse}
-                        placeholder="Select course..."
-                        fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
-                      />
-                      <HiddenInput name="course" value={vCourse || '------'} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="course" value="------" />
-                  )}
+                    </SectionCard>
+                  </div>
 
-                  {rules.highestQualification.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Highest Qualification{rules.highestQualification.required ? ' *' : ''}</label>
+                  <div id="education" ref={refs.education}>
+                    <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>School *</label>
+                        </div>
+                        {rules.school.mode === 'text' ? (
+                          <input name="school" type="text" required placeholder="Enter school name" defaultValue={d.school || ''} className={inputClass} />
+                        ) : (
+                          <>
+                            <AsyncSelect
+                              value={vSchool}
+                              onChange={setVSchool}
+                              placeholder={category === 'Undergraduate' || category === 'Others' ? 'Select institution...' : 'Select school...'}
+                              fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })}
+                            />
+                            <HiddenInput name="school" value={vSchool} />
+                          </>
+                        )}
                       </div>
-                      <select name="highestQualification" required={rules.highestQualification.required} defaultValue={d.highest_qualification || ''} className={inputClass}>
-                        <option value="" disabled>Select highest qualification</option>
-                        {qualifications.map((q) => (
-                          <option key={q.value ?? q} value={q.value ?? q}>{q.label ?? q}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <HiddenInput name="highestQualification" value="------" />
-                  )}
 
-                  {rules.discipline.visible ? (
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Discipline / Occupation{rules.discipline.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Class Level *</label>
+                        </div>
+                        <AsyncSelect
+                          value={vClassLevel}
+                          onChange={setVClassLevel}
+                          placeholder="Select class level..."
+                          fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })}
+                        />
+                        <HiddenInput name="classLevel" value={vClassLevel} />
                       </div>
-                      <input name="discipline" type="text" required={rules.discipline.required} placeholder="Enter discipline or occupation" defaultValue={d.discipline || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="discipline" value="------" />
-                  )}
 
-                  {rules.organisation.visible ? (
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Organisation / Workplace</label>
+                      {rules.course.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Course{rules.course.required ? ' *' : ''}</label>
+                          </div>
+                          <AsyncSelect
+                            value={vCourse}
+                            onChange={setVCourse}
+                            placeholder="Select course..."
+                            fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                          />
+                          <HiddenInput name="course" value={vCourse || '------'} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="course" value="------" />
+                      )}
+
+                      {rules.highestQualification.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Highest Qualification{rules.highestQualification.required ? ' *' : ''}</label>
+                          </div>
+                          <select name="highestQualification" required={rules.highestQualification.required} defaultValue={d.highest_qualification || ''} className={inputClass}>
+                            <option value="" disabled>Select highest qualification</option>
+                            {qualifications.map((q) => (
+                              <option key={q.value ?? q} value={q.value ?? q}>{q.label ?? q}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <HiddenInput name="highestQualification" value="------" />
+                      )}
+
+                      {rules.discipline.visible ? (
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Discipline / Occupation{rules.discipline.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="discipline" type="text" required={rules.discipline.required} placeholder="Enter discipline or occupation" defaultValue={d.discipline || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="discipline" value="------" />
+                      )}
+
+                      {rules.organisation.visible ? (
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Organisation / Workplace</label>
+                          </div>
+                          <input name="organisation" type="text" placeholder="Enter organisation / work place" defaultValue={d.workplace || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="organisation" value="------" />
+                      )}
+                    </SectionCard>
+                  </div>
+
+                  <div id="membership" ref={refs.membership}>
+                    <SectionCard title="MSSN Membership Details" description="Your council, branch and health details." columns="sm:grid-cols-2">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Area Council</label>
+                        </div>
+                        <AsyncSelect
+                          value={vCouncil}
+                          onChange={setVCouncil}
+                          placeholder="Select council..."
+                          fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
+                        />
+                        <HiddenInput name="council" value={vCouncil} />
                       </div>
-                      <input name="organisation" type="text" placeholder="Enter organisation / work place" defaultValue={d.workplace || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="organisation" value="------" />
-                  )}
-                </SectionCard>
-              </div>
 
-              <div id="membership" ref={refs.membership}>
-                <SectionCard title="MSSN Membership Details" description="Your council, branch and health details." columns="sm:grid-cols-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Area Council</label>
-                    </div>
-                    <AsyncSelect
-                      value={vCouncil}
-                      onChange={setVCouncil}
-                      placeholder="Select council..."
-                      fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="council" value={vCouncil} />
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Branch</label>
+                        </div>
+                        <input name="branch" value={vBranch} onChange={(e) => setVBranch(e.target.value)} placeholder="Enter branch (optional)" className={inputClass} />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Ailments</label>
+                        </div>
+                        <AsyncSelect
+                          value={vAilments}
+                          onChange={setVAilments}
+                          multiple
+                          placeholder="Select ailments..."
+                          fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
+                        />
+                        <HiddenInput name="ailments" value={vAilments.join(',')} />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Numbers of Camp Previously Attended</label>
+                        </div>
+                        <input name="previousCamps" type="text" readOnly placeholder="—" defaultValue={d.camp_attendance ?? ''} className={`${inputClass} ${inputDisabledClass}`} />
+                      </div>
+                    </SectionCard>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Branch</label>
-                    </div>
-                    <input name="branch" value={vBranch} onChange={(e) => setVBranch(e.target.value)} placeholder="Enter branch (optional)" className={inputClass} />
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <button type="submit" disabled={Boolean(delegate?.upgraded)} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${delegate?.upgraded ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}>
+                      Register & Pay
+                    </button>
                   </div>
-
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Ailments</label>
-                    </div>
-                    <AsyncSelect
-                      value={vAilments}
-                      onChange={setVAilments}
-                      multiple
-                      placeholder="Select ailments..."
-                      fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="ailments" value={vAilments.join(',')} />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Numbers of Camp Previously Attended</label>
-                    </div>
-                    <input name="previousCamps" type="text" readOnly placeholder="—" defaultValue={d.camp_attendance ?? ''} className={`${inputClass} ${inputDisabledClass}`} />
-                  </div>
-                </SectionCard>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button type="submit" disabled={Boolean(delegate?.upgraded)} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${delegate?.upgraded ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}>
-                  Register & Pay
-                </button>
-              </div>
-            </form>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -595,11 +639,7 @@ export default function ExistingMemberForm() {
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Close</button>
-            <button type="button" onClick={() => {
-              const toPin = (delegate?.upgrade_details?.[0]?.to?.pin_category || '').toUpperCase()
-              const path = toPin === 'SECONDARY' ? '/new/secondary' : toPin === 'UNDERGRADUATE' ? '/new/undergraduate' : toPin === 'TFL' ? '/new/secondary' : '/new/others'
-              navigate(path)
-            }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
+            <button type="button" onClick={() => { setUpgradeStarted(true); setShowUpgradeModal(false) }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
           </div>
         </div>
       </div>
