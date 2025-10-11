@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import * as React from 'react'
 
 function useOutsideClick(ref, handler) {
   useEffect(() => {
