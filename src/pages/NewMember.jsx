@@ -757,7 +757,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                   <button
                     type="submit"
                     disabled={!formik.isValid || formik.isSubmitting}
-                    className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                    className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
                   >
                     {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
                   </button>

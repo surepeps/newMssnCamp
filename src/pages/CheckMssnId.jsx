@@ -237,7 +237,7 @@ export default function CheckMssnId() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
+                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
               >
                 {loading ? 'Searching…' : 'Search'}
               </button>

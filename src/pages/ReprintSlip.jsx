@@ -256,7 +256,7 @@ export default function ReprintSlip() {
                 className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${
                   loading
                     ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'
-                    : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'
+                    : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'
                 }`}
               >
                 {loading ? 'Fetching slip…' : 'Retrieve slip'}
@@ -296,13 +296,6 @@ export default function ReprintSlip() {
                   className="inline-flex items-center justify-center rounded-full border border-mssn-green/40 px-4 py-2 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/10"
                 >
                   Download PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/registration')}
-                  className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
-                >
-                  Check registration status
                 </button>
               </div>
             </div>
