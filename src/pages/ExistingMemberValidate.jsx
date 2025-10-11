@@ -50,14 +50,13 @@ export default function ExistingMemberValidate() {
       let msg = 'Unable to verify at the moment. Please try again later.'
       if (err?.name === 'AbortError') {
         msg = 'Request timed out. Please check your internet connection and try again.'
-      } else if (typeof err?.status === 'number') {
-        if (err.status === 400 || err.status === 422) msg = 'Invalid details provided. Please check MSSN ID and Surname.'
-        else if (err.status === 404) msg = 'Record not found. Please confirm your details.'
-        else if (err.status === 429) msg = 'Too many attempts. Please wait a moment and try again.'
-        else if (err.status >= 500) msg = 'Server error. Please try again shortly.'
-        else msg = err.message || msg
       } else if (err?.message) {
         msg = err.message
+      } else if (typeof err?.status === 'number') {
+        if (err.status === 400 || err.status === 422) msg = 'Invalid details provided. Please check MSSN ID and Surname.'
+        else if (err.status === 404) msg = 'Record not found.'
+        else if (err.status === 429) msg = 'Too many attempts. Please wait a moment and try again.'
+        else if (err.status >= 500) msg = 'Server error. Please try again shortly.'
       }
       setError(msg)
     } finally {
@@ -74,7 +73,7 @@ export default function ExistingMemberValidate() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-12">
+    <section className="mx-auto w-full max-w-3xl px-6 py-12">
       <div className="mb-6">
         <StepProgress steps={["Validate", "Edit", "Pay"]} current={0} />
       </div>
@@ -82,7 +81,7 @@ export default function ExistingMemberValidate() {
       <div className="rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
-          <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
+          <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">Validation</h1>
@@ -98,7 +97,7 @@ export default function ExistingMemberValidate() {
             </a>
           </div>
 
-          <form id="validateForm" className="mt-10 space-y-8 px-6 pb-10 sm:px-10" onSubmit={onSubmit} noValidate>
+          <form id="validateForm" className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={onSubmit} noValidate>
             <div className="rounded-3xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Verification</h2>
@@ -107,7 +106,7 @@ export default function ExistingMemberValidate() {
                   <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert" aria-live="polite">{error}</div>
                 ) : null}
               </div>
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="mt-6 grid gap-5">
                 <div>
                   <div className="flex items-center justify-between">
                     <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">MSSN ID *</label>
