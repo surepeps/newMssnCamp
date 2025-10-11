@@ -10,7 +10,9 @@ import {
   querySchools,
   queryClassLevels,
   queryCourses,
+  queryQualifications,
 } from '../services/dataProvider.js'
+import { useSettings } from '../context/SettingsContext.jsx'
 import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'sonner'
@@ -211,6 +213,12 @@ export default function ExistingMemberForm() {
   const categoryKey = targetCategory || currentCategoryLower || 'secondary'
   const qualificationAudience = categoryKey === 'undergraduate' ? 'Undergraduate' : categoryKey === 'others' ? 'Others' : ''
 
+  const { settings } = useSettings()
+  const camp = settings?.current_camp
+  const priceOriginal = categoryKey === 'undergraduate' ? camp?.prices?.undergraduate : categoryKey === 'secondary' ? camp?.prices?.secondary : camp?.prices?.others
+  const priceDiscounted = categoryKey === 'undergraduate' ? camp?.discounts?.price_und : categoryKey === 'secondary' ? camp?.discounts?.price_sec : camp?.discounts?.price_oth
+  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
 
@@ -239,7 +247,7 @@ export default function ExistingMemberForm() {
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
             if (cat) setCategory(cat)
-            setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
+            setShowUpgradeModal(Boolean(res.delegate?.upgraded))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
             const msg = res?.message || 'Unable to load record. Please check details and try again.'
@@ -377,6 +385,12 @@ export default function ExistingMemberForm() {
                 <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
                 <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{delegate?.details?.pin_category} FORM</h1>
                 <p className="mt-2 text-sm text-mssn-slate/70">MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {finalPrice != null ? (
+                    <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+                  ) : null}
+                  <a href="/" onClick={(e)=>{e.preventDefault(); navigate('/')}} className="text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">Back to Home</a>
+                </div>
                 {delegate?.upgraded && delegate.upgrade_details?.length ? (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                     Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
@@ -499,7 +513,14 @@ export default function ExistingMemberForm() {
                         <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
-                        <SelectFieldEM formik={formik} name="highest_qualification" label="Highest Qualification" required options={qualificationOptions} placeholder="Select qualification..." />
+                        <FormikAsyncSelectEM
+                          formik={formik}
+                          name="highest_qualification"
+                          label="Highest Qualification"
+                          required
+                          placeholder="Select qualification..."
+                          fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
+                        />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
                         <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
