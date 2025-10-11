@@ -60,6 +60,12 @@ const quickActions = [
   },
 ]
 
+const CATEGORY_LABELS = {
+  secondary: 'Secondary',
+  undergraduate: 'Undergraduate',
+  others: 'Others',
+}
+
 const adSlots = [
   {
     id: 'hero-takeover',
