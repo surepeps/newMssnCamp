@@ -2,44 +2,48 @@ import * as React from 'react'
 import { navigate, createNavigationHandler } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
+import { Formik, Form } from 'formik'
+import * as Yup from 'yup'
 
 const goToCheckMssnId = createNavigationHandler('/check-mssn-id')
 
 export default function ExistingMemberValidate() {
-  const [mssnId, setMssnId] = React.useState('')
-  const [surname, setSurname] = React.useState('')
-  const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
   const [pendingDelegate, setPendingDelegate] = React.useState(null)
   const mssnRef = React.useRef(null)
-  const surnameRef = React.useRef(null)
 
+  const formatMssn = (val) => (typeof val === 'string' ? val.replace(/\s+/g, '').toUpperCase() : val)
+  const formatSurname = (val) => (typeof val === 'string' ? val.replace(/\s{2,}/g, ' ').trim().toUpperCase() : val)
+
+  const [initialValues, setInitialValues] = React.useState({ mssnId: '', surname: '' })
   React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const qMssn = params.get('mssnId') || ''
       const qSurname = params.get('surname') || ''
-      if (qMssn) setMssnId(formatMssn(qMssn))
-      if (qSurname) setSurname(formatSurname(qSurname))
+      setInitialValues({ mssnId: formatMssn(qMssn), surname: formatSurname(qSurname) })
     } catch {}
     mssnRef.current?.focus()
   }, [])
 
-  const formatMssn = (val) => val.replace(/\s+/g, '').toUpperCase()
-  const formatSurname = (val) => val.replace(/\s{2,}/g, ' ').trim().toUpperCase()
+  const validationSchema = React.useMemo(() =>
+    Yup.object({
+      mssnId: Yup.string()
+        .transform((v) => formatMssn(v))
+        .trim()
+        .required('Required'),
+      surname: Yup.string()
+        .transform((v) => formatSurname(v))
+        .trim()
+        .required('Required'),
+    })
+  , [])
 
-  const onSubmit = async (e) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    if (!form.checkValidity()) {
-      form.reportValidity()
-      return
-    }
-    setLoading(true)
+  const handleSubmit = async (values, helpers) => {
     setError('')
     try {
-      const payload = { mssn_id: formatMssn(mssnId), surname: formatSurname(surname) }
+      const payload = { mssn_id: formatMssn(values.mssnId), surname: formatSurname(values.surname) }
       const res = await fetchJSON('/registration/fetch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,11 +66,9 @@ export default function ExistingMemberValidate() {
       }
     } catch (err) {
       let msg = 'Unable to verify at the moment. Please try again later.'
-      if (err?.name === 'AbortError') {
-        msg = 'Request timed out. Please check your internet connection and try again.'
-      } else if (err?.message) {
-        msg = err.message
-      } else if (typeof err?.status === 'number') {
+      if (err?.name === 'AbortError') msg = 'Request timed out. Please check your internet connection and try again.'
+      else if (err?.message) msg = err.message
+      else if (typeof err?.status === 'number') {
         if (err.status === 400 || err.status === 422) msg = 'Invalid details provided. Please check MSSN ID and Surname.'
         else if (err.status === 404) msg = 'Record not found.'
         else if (err.status === 429) msg = 'Too many attempts. Please wait a moment and try again.'
@@ -74,13 +76,12 @@ export default function ExistingMemberValidate() {
       }
       setError(msg)
     } finally {
-      setLoading(false)
+      helpers.setSubmitting(false)
     }
   }
 
-  const clearForm = () => {
-    setMssnId('')
-    setSurname('')
+  const clearForm = (resetForm) => {
+    resetForm({ values: { mssnId: '', surname: '' } })
     setError('')
     mssnRef.current?.focus()
   }
@@ -107,85 +108,96 @@ export default function ExistingMemberValidate() {
 
         </div>
 
-          <form id="validateForm" className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={onSubmit} noValidate>
-            <div>
-              <div className="mt-6 grid gap-5">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">MSSN ID *</label>
+        <Formik initialValues={initialValues} enableReinitialize validationSchema={validationSchema} validateOnMount onSubmit={handleSubmit}>
+          {(formik) => (
+            <Form id="validateForm" className="mt-6 space-y-8 px-6 pb-8 sm:px-8" noValidate>
+              <div>
+                <div className="mt-6 grid gap-5">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">MSSN ID *</label>
+                      {formik.touched.mssnId && formik.errors.mssnId ? <span className="text-xs font-medium text-rose-500">{formik.errors.mssnId}</span> : null}
+                    </div>
+                    <input
+                      id="mssnId"
+                      name="mssnId"
+                      type="text"
+                      inputMode="text"
+                      autoComplete="off"
+                      placeholder="ENTER MSSN ID"
+                      value={formik.values.mssnId}
+                      ref={mssnRef}
+                      onChange={(e) => formik.setFieldValue('mssnId', formatMssn(e.target.value))}
+                      onBlur={formik.handleBlur}
+                      className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${(formik.touched.mssnId && formik.errors.mssnId) ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
+                      aria-invalid={Boolean(formik.touched.mssnId && formik.errors.mssnId)}
+                      required
+                    />
                   </div>
-                  <input
-                    id="mssnId"
-                    name="mssnId"
-                    type="text"
-                    required
-                    inputMode="text"
-                    autoComplete="off"
-                    placeholder="ENTER MSSN ID"
-                    value={mssnId}
-                    ref={mssnRef}
-                    onChange={(e) => setMssnId(formatMssn(e.target.value))}
-                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
-                    aria-invalid={Boolean(error)}
-                  />
-                </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="surname" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">Surname *</label>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="surname" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">Surname *</label>
+                      {formik.touched.surname && formik.errors.surname ? <span className="text-xs font-medium text-rose-500">{formik.errors.surname}</span> : null}
+                    </div>
+                    <input
+                      id="surname"
+                      name="surname"
+                      type="text"
+                      placeholder="ENTER SURNAME"
+                      value={formik.values.surname}
+                      onChange={(e) => formik.setFieldValue('surname', formatSurname(e.target.value))}
+                      onBlur={formik.handleBlur}
+                      className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${(formik.touched.surname && formik.errors.surname) ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
+                      aria-invalid={Boolean(formik.touched.surname && formik.errors.surname)}
+                      required
+                    />
                   </div>
-                  <input
-                    id="surname"
-                    name="surname"
-                    type="text"
-                    required
-                    placeholder="ENTER SURNAME"
-                    value={surname}
-                    ref={surnameRef}
-                    onChange={(e) => setSurname(formatSurname(e.target.value))}
-                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
-                    aria-invalid={Boolean(error)}
-                  />
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
-              >
-                {loading ? 'Verifying…' : 'Validate'}
-              </button>
-              <button
-                type="button"
-                onClick={clearForm}
-                disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/new')}
-                className="inline-flex items-center justify-center rounded-2xl bg-mssn-green/10 px-8 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
-              >
-                New member? Register here
-              </button>
-            </div>
-          </form>
+              {error ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+              ) : null}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={!formik.isValid || formik.isSubmitting}
+                  className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                >
+                  {formik.isSubmitting ? 'Verifying…' : 'Validate'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearForm(formik.resetForm)}
+                  disabled={formik.isSubmitting}
+                  className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/new')}
+                  className="inline-flex items-center justify-center rounded-2xl bg-mssn-green/10 px-8 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
+                >
+                  New member? Register here
+                </button>
+              </div>
+
+              {formik.isSubmitting && (
+                <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/40">
+                  <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
+                    <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
+                    <p className="mt-1 text-sm text-mssn-slate/70">Verifying your details. Please wait…</p>
+                  </div>
+                </div>
+              )}
+            </Form>
+          )}
+        </Formik>
       </div>
-
-      {loading && (
-        <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/40">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
-            <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
-            <p className="mt-1 text-sm text-mssn-slate/70">Verifying your details. Please wait…</p>
-          </div>
-        </div>
-      )}
 
       {showUpgradeModal && (
         <div className="fixed inset-0 z-[1002] grid place-items-center bg-black/40">
@@ -200,7 +212,10 @@ export default function ExistingMemberValidate() {
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Cancel</button>
               <button type="button" onClick={() => {
-                const qs = new URLSearchParams({ mssnId: mssnId.replace(/\s+/g,'').toUpperCase(), surname: surname.replace(/\s{2,}/g,' ').trim().toUpperCase(), upgrade: '1' }).toString()
+                const params = new URLSearchParams(window.location.search)
+                const m = (params.get('mssnId') || '').replace(/\s+/g,'').toUpperCase()
+                const s = (params.get('surname') || '').replace(/\s{2,}/g,' ').trim().toUpperCase()
+                const qs = new URLSearchParams({ mssnId: m, surname: s, upgrade: '1' }).toString()
                 setShowUpgradeModal(false)
                 navigate(`/existing/edit?${qs}`)
               }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
