@@ -3,7 +3,6 @@ import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import {
-  fetchMaritalStatuses,
   fetchHighestQualifications,
   queryStates,
   queryAilments,
