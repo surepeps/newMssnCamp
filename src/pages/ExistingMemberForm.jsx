@@ -43,7 +43,8 @@ function TextFieldEM({ formik, name, label, type = 'text', required = false, pla
   const id = `${name}-field`
   const val = formik.values[name]
   const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
-  const invalid = (required && isEmpty(val)) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && isEmpty(val)) || hasError
   const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
 
   return (
@@ -82,7 +83,8 @@ function SelectFieldEM({ formik, name, label, options, required = false, placeho
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-select`
   const value = formik.values[name]
-  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && (!value || String(value).trim() === '')) || hasError
   return (
     <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
       <select
@@ -109,7 +111,8 @@ function FormikAsyncSelectEM({ formik, name, label, required = false, className,
   const error = formik.touched[name] && formik.errors[name]
   const val = formik.values[name]
   const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
-  const invalid = (required && isEmpty) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && isEmpty) || hasError
   return (
     <FieldShellEM label={label} required={required} error={error} className={className}>
       <AsyncSelect
