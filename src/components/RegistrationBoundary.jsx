@@ -16,7 +16,7 @@ function StatusPill({ variant = 'error', children }) {
 export default function RegistrationBoundary() {
   const { settings, loading, error, refresh } = useSettings()
 
-  const state = useMemo(() => {
+  const state = React.useMemo(() => {
     if (loading) return { type: 'loading', shouldGate: false }
     if (error) return { type: 'error', shouldGate: true, message: String(error) }
 
