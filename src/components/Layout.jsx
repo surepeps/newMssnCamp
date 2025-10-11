@@ -140,7 +140,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
               <a href="/new" onClick={createRouteHandler('/new', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
             </div>
           </div>
-          <a href="mailto:camp@mssnlagos.org" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
+          <a href="/contact" onClick={createRouteHandler('/contact', { closeNav: false })} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
         </nav>
         <button
           type="button"
