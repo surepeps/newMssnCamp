@@ -382,15 +382,30 @@ function DraftSaver({ formik, category }) {
   useEffect(() => {
     try {
       const values = debounced || {}
-      const hasAny = Object.keys(values).some((k) => {
-        const v = values[k]
-        if (v == null) return false
-        if (Array.isArray(v)) return v.length > 0
-        if (typeof v === 'number') return String(v).trim() !== ''
-        if (typeof v === 'string') return v.trim().length > 0
-        return !!v
+      const hasAnyFilled = Object.entries(values).some(([key, rawValue]) => {
+        if (rawValue == null) return false
+        if (Array.isArray(rawValue)) {
+          return rawValue.some((item) => {
+            if (item == null) return false
+            if (typeof item === 'string') return item.trim().length > 0
+            return Boolean(item)
+          })
+        }
+        if (typeof rawValue === 'string') {
+          const trimmed = rawValue.trim()
+          if (!trimmed) return false
+          if (key === 'marital_status' && trimmed.toLowerCase() === 'single') return false
+          return true
+        }
+        if (typeof rawValue === 'number') {
+          return !Number.isNaN(rawValue)
+        }
+        if (typeof rawValue === 'object') {
+          return Object.keys(rawValue).length > 0
+        }
+        return Boolean(rawValue)
       })
-      if (hasAny) {
+      if (hasAnyFilled) {
         const payload = { category, values, updatedAt: Date.now() }
         localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
       } else {

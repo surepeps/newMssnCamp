@@ -6,6 +6,7 @@ import ExistingMemberForm from './pages/ExistingMemberForm.jsx'
 import RegistrationGate from './pages/RegistrationGate.jsx'
 import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
+import ReprintSlip from './pages/ReprintSlip.jsx'
 import { Toaster } from 'sonner'
 
 function usePathRoute() {
@@ -53,6 +54,7 @@ function Router() {
       pattern: '/existing/:action',
       render: ({ params }) => (params.action === 'edit' ? <ExistingMemberForm /> : <ExistingMemberValidate />),
     },
+    { pattern: '/reprint-slip', render: () => <ReprintSlip /> },
     { pattern: '/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '/registration', render: () => <RegistrationGate /> },
     { pattern: '/', render: () => <HomePage /> },
