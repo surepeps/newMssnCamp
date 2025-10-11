@@ -102,9 +102,6 @@ export default function ExistingMemberValidate() {
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Verification</h2>
                 <p className="mt-2 text-sm text-mssn-slate/70">We’ll verify your details and take you to the edit page to confirm or update your information before payment.</p>
-                {error ? (
-                  <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert" aria-live="polite">{error}</div>
-                ) : null}
               </div>
               <div className="mt-6 grid gap-5">
                 <div>
