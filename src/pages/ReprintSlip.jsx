@@ -4,7 +4,6 @@ import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 
-const STORAGE_KEY = 'reprint_slip_last'
 
 const formatMssnId = (value) => value.replace(/\s+/g, '').toUpperCase()
 const formatPaymentRef = (value) => value.replace(/\s+/g, '').toUpperCase()
@@ -84,17 +83,6 @@ export default function ReprintSlip() {
   const camp = settings?.current_camp
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const data = JSON.parse(raw)
-        if (data?.mssn_id) setMssnId(formatMssnId(String(data.mssn_id)))
-        if (data?.payment_ref) setPaymentRef(formatPaymentRef(String(data.payment_ref)))
-        if (data?.delegate && typeof data.delegate === 'object') {
-          setDelegate(data.delegate)
-        }
-      }
-    } catch {}
     mssnFieldRef.current?.focus()
   }, [])
 
@@ -126,17 +114,6 @@ export default function ReprintSlip() {
       }
       setDelegate(response.delegate)
       toast.success('Registration slip found. You can now view and print it.')
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            mssn_id: formattedMssn,
-            payment_ref: formattedRef,
-            delegate: response.delegate,
-            fetched_at: Date.now(),
-          }),
-        )
-      } catch {}
     } catch (err) {
       if (err?.name === 'AbortError') {
         setError('Request timed out. Please try again in a moment.')
@@ -155,9 +132,6 @@ export default function ReprintSlip() {
     setPaymentRef('')
     setDelegate(null)
     setError('')
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {}
     mssnFieldRef.current?.focus()
   }
 
