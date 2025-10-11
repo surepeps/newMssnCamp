@@ -252,6 +252,90 @@ function ResumeRegistrationBanner() {
 }
 
 function QuickActionsBar() {
+  const [draft, setDraft] = useState(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const loadDraftFromStorage = () => {
+      try {
+        const raw = window.localStorage.getItem(DRAFT_KEY)
+        if (!raw) {
+          setDraft(null)
+          return
+        }
+        const data = JSON.parse(raw)
+        if (data && typeof data === 'object') {
+          setDraft(data)
+        } else {
+          setDraft(null)
+        }
+      } catch {
+        setDraft(null)
+      }
+    }
+
+    const handleStorage = (event) => {
+      if (event?.key && event.key !== DRAFT_KEY) {
+        return
+      }
+      loadDraftFromStorage()
+    }
+
+    loadDraftFromStorage()
+    window.addEventListener('storage', handleStorage)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
+  const resumeDetails = useMemo(() => {
+    if (!draft || typeof draft !== 'object') return null
+    const category = typeof draft.category === 'string' ? draft.category : null
+    const values = draft.values && typeof draft.values === 'object' ? draft.values : {}
+    const surname = typeof values.surname === 'string' ? values.surname.trim() : ''
+    const firstname = typeof values.firstname === 'string' ? values.firstname.trim() : ''
+    const name = `${surname} ${firstname}`.trim().replace(/\s+/g, ' ').trim()
+    let updatedAtLabel = null
+    if (typeof draft.updatedAt === 'number') {
+      const date = new Date(draft.updatedAt)
+      if (!Number.isNaN(date.getTime())) {
+        updatedAtLabel = date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+      }
+    }
+    return {
+      category,
+      categoryLabel: category ? CATEGORY_LABELS[category] || category : null,
+      name: name || null,
+      updatedAtLabel,
+    }
+  }, [draft])
+
+  const resumeMeta = useMemo(() => {
+    if (!resumeDetails) return ''
+    const parts = []
+    if (resumeDetails.name) parts.push(resumeDetails.name)
+    if (resumeDetails.categoryLabel) parts.push(resumeDetails.categoryLabel)
+    if (resumeDetails.updatedAtLabel) parts.push(`Saved ${resumeDetails.updatedAtLabel}`)
+    return parts.join(' • ')
+  }, [resumeDetails])
+
+  const handleResumeDraft = () => {
+    const targetCategory = resumeDetails?.category
+    navigate(targetCategory ? `/new/${targetCategory}` : '/new')
+  }
+
+  const handleDeleteDraft = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(DRAFT_KEY)
+      } catch {}
+    }
+    setDraft(null)
+  }
+
   const handleActionClick = (href) => (event) => {
     if (href.startsWith('http')) {
       return
@@ -271,6 +355,32 @@ function QuickActionsBar() {
     >
       <div className="rounded-4xl bg-white/95 p-6 ring-1 ring-mssn-slate/10">
         <div className="grid gap-6 lg:grid-cols-3">
+          {resumeDetails ? (
+            <div className="flex flex-col gap-4 rounded-3xl border border-mssn-green/30 bg-mssn-green/10 p-6 lg:col-span-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-mssn-green">Saved registration draft</h2>
+                  {resumeMeta ? <p className="mt-1 text-xs text-mssn-slate/60">{resumeMeta}</p> : null}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResumeDraft}
+                    className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
+                  >
+                    Continue
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteDraft}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {quickActions.map((action) => (
             <a
               key={action.id}
