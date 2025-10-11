@@ -266,12 +266,13 @@ export default function CheckMssnId() {
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-mssn-slate/60">MSSN ID</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-mssn-slate/60">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-mssn-slate/60">Class level</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-mssn-slate/60">Area council</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-mssn-slate/60">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-mssn-slate/10 bg-white">
               {loading ? (
-                <tr><td colSpan="6" className="px-6 py-6 text-center text-sm text-mssn-slate/60">Loading…</td></tr>
+                <tr><td colSpan="7" className="px-6 py-6 text-center text-sm text-mssn-slate/60">Loading…</td></tr>
               ) : rows.length ? (
                 rows.map((r, idx) => {
                   const cat = r.pin_category || r.pin_cat || ''
@@ -283,6 +284,7 @@ export default function CheckMssnId() {
                       <td className="px-6 py-3 text-sm font-mono">{r.mssn_id}</td>
                       <td className="px-6 py-3 text-sm">{cat}</td>
                       <td className="px-6 py-3 text-sm">{r.class_level}</td>
+                      <td className="px-6 py-3 text-sm">{r.area_council}</td>
                       <td className="px-6 py-3 text-right">
                         <button
                           type="button"
@@ -298,7 +300,7 @@ export default function CheckMssnId() {
                   )
                 })
               ) : (
-                <tr><td colSpan="6" className="px-6 py-6 text-center text-sm text-mssn-slate/60">No results found</td></tr>
+                <tr><td colSpan="7" className="px-6 py-6 text-center text-sm text-mssn-slate/60">No results found</td></tr>
               )}
             </tbody>
           </table>
