@@ -198,6 +198,14 @@ export default function ExistingMemberForm() {
   const [vCourse, setVCourse] = useState('')
   const [vAilments, setVAilments] = useState([])
 
+  const details = delegate?.details || {}
+  const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
+  const targetPin = String(upgradeTarget?.pin_category || '').toUpperCase()
+  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : targetPin === 'OTHERS' ? 'others' : targetPin === 'SECONDARY' || targetPin === 'TFL' ? 'secondary' : ''
+  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
+  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+  const qualificationAudience = categoryKey === 'undergraduate' ? 'Undergraduate' : categoryKey === 'others' ? 'Others' : ''
+
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
 
