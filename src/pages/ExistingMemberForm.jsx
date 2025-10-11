@@ -3,7 +3,6 @@ import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import {
-  fetchMaritalStatuses,
   fetchHighestQualifications,
   queryStates,
   queryAilments,
@@ -183,7 +182,6 @@ export default function ExistingMemberForm() {
   const query = useQuery()
   const [category, setCategory] = useState('')
   const [delegate, setDelegate] = useState(null)
-  const [maritalStatuses, setMaritalStatuses] = useState([])
   const [qualifications, setQualifications] = useState([])
   const [activeSection, setActiveSection] = useState('personal')
   const [loading, setLoading] = useState(false)
@@ -199,6 +197,14 @@ export default function ExistingMemberForm() {
   const [vClassLevel, setVClassLevel] = useState('')
   const [vCourse, setVCourse] = useState('')
   const [vAilments, setVAilments] = useState([])
+
+  const details = delegate?.details || {}
+  const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
+  const targetPin = String(upgradeTarget?.pin_category || '').toUpperCase()
+  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : targetPin === 'OTHERS' ? 'others' : targetPin === 'SECONDARY' || targetPin === 'TFL' ? 'secondary' : ''
+  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
+  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+  const qualificationAudience = categoryKey === 'undergraduate' ? 'Undergraduate' : categoryKey === 'others' ? 'Others' : ''
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
@@ -254,15 +260,26 @@ export default function ExistingMemberForm() {
   }
 
   useEffect(() => {
-    ;(async () => {
-      const [ms, hq] = await Promise.all([
-        fetchMaritalStatuses(),
-        fetchHighestQualifications(),
-      ])
-      setMaritalStatuses(ms)
-      setQualifications(hq)
-    })()
-  }, [])
+    let cancelled = false
+    const loadQualifications = async () => {
+      try {
+        const list = await fetchHighestQualifications({ who: qualificationAudience })
+        if (!cancelled) {
+          setQualifications(Array.isArray(list) ? list : [])
+        }
+      } catch {
+        if (!cancelled) setQualifications([])
+      }
+    }
+    if (qualificationAudience) {
+      loadQualifications()
+    } else {
+      setQualifications([])
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [qualificationAudience])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -278,20 +295,29 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
+  const qualificationOptions = useMemo(() => {
+    if (!qualifications.length) return []
+    if (!qualificationAudience) return qualifications.map((item) => item.label)
+    const normalizedAudience = qualificationAudience.toLowerCase()
+    const filtered = qualifications.filter((item) => String(item.who || '').trim().toLowerCase() === normalizedAudience)
+    const source = filtered.length ? filtered : qualifications
+    return source.map((item) => item.label)
+  }, [qualificationAudience, qualifications])
+
   useEffect(() => {
-    const det = delegate?.details
-    if (!det) return
+    if (!delegate?.details) return
     const normalize = (v) => (v == null ? '' : String(v).trim())
-    setVCouncil(normalize(det.area_council))
-    setVBranch(normalize(det.branch))
-    setVState(normalize(det.state_of_origin))
-    if (rules.school.mode !== 'text') setVSchool(normalize(det.school))
-    setVClassLevel(normalize(det.class_level))
-    setVCourse(normalize(det.course))
-    const rawA = normalize(det.ailments)
+    setVCouncil(normalize(details.area_council))
+    setVBranch(normalize(details.branch))
+    setVState(normalize(details.state_of_origin))
+    if (category !== 'TFL') setVSchool(normalize(details.school))
+    const targetClassLevel = delegate?.upgrade_details?.[0]?.to?.class_level
+    setVClassLevel(normalize(targetClassLevel != null ? targetClassLevel : details.class_level))
+    setVCourse(normalize(details.course))
+    const rawA = normalize(details.ailments)
     const arrA = rawA && rawA.toLowerCase() !== 'none' ? rawA.split(',').map((s) => s.trim()).filter(Boolean) : []
     setVAilments(arrA)
-  }, [delegate, category])
+  }, [category, delegate, details, upgradeTarget])
 
   const rules = {
     email: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: category !== 'TFL' && category !== 'Secondary', required: false },
@@ -325,20 +351,13 @@ export default function ExistingMemberForm() {
   const inputClass = 'mt-2 w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 focus:border-mssn-green focus:ring-mssn-green/25'
   const inputDisabledClass = 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50'
 
-  const d = delegate?.details || {}
-  const genderDisplay = d?.sex ? (String(d.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(d.sex).trim().toLowerCase() === 'female' ? 'Female' : d.sex)) : ''
-
-  const toInfo = delegate?.upgrade_details?.[0]?.to || {}
-  const targetPin = String(toInfo?.pin_category || '').toUpperCase()
-  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
-  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
-  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+  const genderDisplay = details?.sex ? (String(details.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(details.sex).trim().toLowerCase() === 'female' ? 'Female' : details.sex)) : ''
 
   const schoolIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'U'
   const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
 
   const buildPrefill = () => {
-    const sx = (d.sex || '').toString().trim().toLowerCase()
+    const sx = (details.sex || '').toString().trim().toLowerCase()
     const parseA = (v) => {
       const s = (v == null ? '' : String(v)).trim()
       if (!s) return []
