@@ -320,20 +320,13 @@ export default function ExistingMemberForm() {
   const inputClass = 'mt-2 w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 focus:border-mssn-green focus:ring-mssn-green/25'
   const inputDisabledClass = 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50'
 
-  const d = delegate?.details || {}
-  const genderDisplay = d?.sex ? (String(d.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(d.sex).trim().toLowerCase() === 'female' ? 'Female' : d.sex)) : ''
-
-  const toInfo = delegate?.upgrade_details?.[0]?.to || {}
-  const targetPin = String(toInfo?.pin_category || '').toUpperCase()
-  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
-  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
-  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+  const genderDisplay = details?.sex ? (String(details.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(details.sex).trim().toLowerCase() === 'female' ? 'Female' : details.sex)) : ''
 
   const schoolIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'U'
   const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
 
   const buildPrefill = () => {
-    const sx = (d.sex || '').toString().trim().toLowerCase()
+    const sx = (details.sex || '').toString().trim().toLowerCase()
     const parseA = (v) => {
       const s = (v == null ? '' : String(v)).trim()
       if (!s) return []
