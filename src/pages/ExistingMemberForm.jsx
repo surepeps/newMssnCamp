@@ -323,7 +323,7 @@ export default function ExistingMemberForm() {
     const rawA = normalize(details.ailments)
     const arrA = rawA && rawA.toLowerCase() !== 'none' ? rawA.split(',').map((s) => s.trim()).filter(Boolean) : []
     setVAilments(arrA)
-  }, [category, delegate, details, upgradeTarget])
+  }, [category, delegate])
 
   const rules = {
     email: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: category !== 'TFL' && category !== 'Secondary', required: false },
@@ -396,7 +396,7 @@ export default function ExistingMemberForm() {
     }
   }
 
-  const initialValuesEM = useMemo(() => buildPrefill(), [details, upgradeTarget, surname])
+  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
