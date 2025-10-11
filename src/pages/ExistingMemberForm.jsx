@@ -582,7 +582,7 @@ export default function ExistingMemberForm() {
             </div>
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Close</button>
+            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
             <button type="button" onClick={() => { setUpgradeStarted(true); setShowUpgradeModal(false) }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
           </div>
         </div>
