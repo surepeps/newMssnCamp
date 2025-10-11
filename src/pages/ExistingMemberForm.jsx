@@ -136,7 +136,7 @@ function SectionCardEM({ title, description, columns = 'sm:grid-cols-2', childre
   )
 }
 
-function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace }) {
+function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace, showHighestQualification }) {
   const optionalString = Yup.string().transform((value) => {
     if (typeof value !== 'string') return value
     const trimmed = value.trim()
@@ -167,6 +167,9 @@ function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, sh
   if (showCourse) {
     shape.course = optionalString.nullable()
   }
+  if (showHighestQualification) {
+    shape.highest_qualification = optionalString.nullable().required('Required')
+  }
   if (showDiscipline) {
     shape.discipline = optionalString.nullable()
   }
@@ -187,6 +190,7 @@ export default function ExistingMemberForm() {
   const [loading, setLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
 
   // AsyncSelect controlled values
@@ -237,13 +241,15 @@ export default function ExistingMemberForm() {
             setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
-            navigate('/existing/validate')
+            const msg = res?.message || 'Unable to load record. Please check details and try again.'
+            setLoadError(msg)
           }
         } else {
           navigate('/existing/validate')
         }
-      } catch {
-        navigate('/existing/validate')
+      } catch (err) {
+        const msg = err?.message || 'Unable to load record. Please try again later.'
+        setLoadError(msg)
       } finally {
         setLoading(false)
       }
@@ -317,7 +323,7 @@ export default function ExistingMemberForm() {
     const rawA = normalize(details.ailments)
     const arrA = rawA && rawA.toLowerCase() !== 'none' ? rawA.split(',').map((s) => s.trim()).filter(Boolean) : []
     setVAilments(arrA)
-  }, [category, delegate, details, upgradeTarget])
+  }, [category, delegate])
 
   const rules = {
     email: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: category !== 'TFL' && category !== 'Secondary', required: false },
@@ -357,7 +363,9 @@ export default function ExistingMemberForm() {
   const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
 
   const buildPrefill = () => {
-    const sx = (details.sex || '').toString().trim().toLowerCase()
+    const d = details || {}
+    const toInfo = upgradeTarget || {}
+    const sx = (d.sex || '').toString().trim().toLowerCase()
     const parseA = (v) => {
       const s = (v == null ? '' : String(v)).trim()
       if (!s) return []
@@ -380,6 +388,7 @@ export default function ExistingMemberForm() {
       class_level: toInfo.class_level || d.class_level || '',
       ailments: parseA(d.ailments),
       course: d.course || '',
+      highest_qualification: d.highest_qualification || '',
       next_of_kin: d.next_of_kin || '',
       next_of_kin_tel: d.next_of_kin_tel || '',
       discipline: d.discipline || '',
@@ -387,9 +396,11 @@ export default function ExistingMemberForm() {
     }
   }
 
+  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      {showUpgradeModal ? null : (
+      {(showUpgradeModal || showRegisteredModal || loadError) ? null : (
         <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="bg-radial-glow/40 rounded-3xl">
@@ -413,12 +424,13 @@ export default function ExistingMemberForm() {
 
             <div className="px-6 pb-10 pt-6 sm:px-10">
               <Formik
-                initialValues={buildPrefill()}
+                initialValues={initialValuesEM}
                 validationSchema={buildValidationSchemaEM({
                   showCourse: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showWorkplace: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showEmergency: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
                 onSubmit={async (values, helpers) => {
@@ -454,6 +466,7 @@ export default function ExistingMemberForm() {
                     payload.next_of_kin = normalize(values.next_of_kin)
                     payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
                     payload.course = normalize(values.course)
+                    payload.highest_qualification = normalize(values.highest_qualification)
                     payload.discipline = normalize(values.discipline)
                     payload.workplace = normalize(values.workplace)
                   }
@@ -509,6 +522,9 @@ export default function ExistingMemberForm() {
                         <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <SelectFieldEM formik={formik} name="highest_qualification" label="Highest Qualification" required options={qualificationOptions} placeholder="Select qualification..." />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
                         <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
@@ -549,14 +565,56 @@ export default function ExistingMemberForm() {
       </div>
     )}
 
-    {showRegisteredModal && (
+    {loadError && (
       <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/40">
         <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
-          <h3 className="text-lg font-semibold text-mssn-slate">Already Registered</h3>
-          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. Would you like to re‑print your slip?</p>
+          <h3 className="text-lg font-semibold text-mssn-slate">Cannot load record</h3>
+          <p className="mt-2 text-sm text-mssn-slate/70">{loadError}</p>
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => { setShowRegisteredModal(false) }} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Continue Editing</button>
-            <button type="button" onClick={() => navigate('/registration')} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Re‑print Slip</button>
+            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {showRegisteredModal && (
+      <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/50">
+        <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-soft">
+          <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">✓</div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-mssn-slate">You’re already registered</h3>
+                <p className="mt-1 text-sm text-mssn-slate/70">We found an existing registration for this MSSN ID. You can re‑print your slip now.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                    <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">MSSN ID</div>
+                    <div className="mt-1 text-sm font-semibold text-mssn-slate">{mssnId}</div>
+                  </div>
+                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                    <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Name</div>
+                    <div className="mt-1 text-sm font-semibold text-mssn-slate">{[details.surname, details.firstname, details.othername].filter(Boolean).join(' ') || '—'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+              <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const paymentRef = delegate?.payment_reference || delegate?.details?.payment_reference || ''
+                  const params = new URLSearchParams()
+                  if (mssnId) params.set('mssnId', String(mssnId))
+                  if (paymentRef) params.set('paymentRef', String(paymentRef))
+                  navigate(`/reprint-slip${params.toString() ? `?${params.toString()}` : ''}`)
+                }}
+                className="inline-flex items-center justify-center rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white hover:bg-mssn-greenDark"
+              >
+                Re‑print Slip
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -573,7 +631,7 @@ export default function ExistingMemberForm() {
             </div>
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Close</button>
+            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
             <button type="button" onClick={() => { setUpgradeStarted(true); setShowUpgradeModal(false) }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
           </div>
         </div>

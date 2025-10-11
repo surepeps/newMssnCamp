@@ -83,7 +83,46 @@ export default function ReprintSlip() {
   const camp = settings?.current_camp
 
   useEffect(() => {
-    mssnFieldRef.current?.focus()
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const qM = params.get('mssnId') || ''
+      const qR = params.get('paymentRef') || ''
+      if (qM) setMssnId(formatMssnId(qM))
+      if (qR) setPaymentRef(formatPaymentRef(qR))
+      if (qM && qR) {
+        // Auto fetch
+        ;(async () => {
+          setLoading(true)
+          setError('')
+          try {
+            const payload = { mssn_id: formatMssnId(qM), payment_ref: formatPaymentRef(qR) }
+            const response = await fetchJSON('/slip/reprint', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
+            if (!response?.success || !response?.delegate) {
+              const message = response?.message || 'Registration slip not found. Check the details and try again.'
+              setError(message)
+              setDelegate(null)
+            } else {
+              setDelegate(response.delegate)
+              toast.success('Registration slip found. You can now view and print it.')
+            }
+          } catch (err) {
+            if (err?.name === 'AbortError') setError('Request timed out. Please try again in a moment.')
+            else if (err?.message) setError(err.message)
+            else setError('Unable to fetch registration slip. Please try again later.')
+          } finally {
+            setLoading(false)
+          }
+        })()
+      } else {
+        mssnFieldRef.current?.focus()
+      }
+    } catch {
+      mssnFieldRef.current?.focus()
+    }
   }, [])
 
   const summaryItems = useMemo(() => buildSummaryItems(delegate, paymentRef), [delegate, paymentRef])

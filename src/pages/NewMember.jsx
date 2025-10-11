@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses } from '../services/dataProvider.js'
+import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, fetchHighestQualifications } from '../services/dataProvider.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 
@@ -368,6 +368,9 @@ function buildValidationSchema(config, extras = {}) {
   if (extras.showCourse) {
     shape.course = optionalString.nullable()
   }
+  if (extras.showHighestQualification) {
+    shape.highest_qualification = optionalString.nullable().required('Required')
+  }
   if (extras.showDiscipline) {
     shape.discipline = optionalString.nullable()
   }
@@ -427,6 +430,33 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const showDiscipline = isUG || isOthers
   const showWorkplace = isUG || isOthers
   const showEmergency = isUG || isOthers
+  const showHighestQualification = isUG || isOthers
+
+  const [qualifications, setQualifications] = useState([])
+  const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const list = await fetchHighestQualifications({ who: qualificationAudience })
+        if (!cancelled) setQualifications(Array.isArray(list) ? list : [])
+      } catch {
+        if (!cancelled) setQualifications([])
+      }
+    }
+    if (qualificationAudience) load()
+    else setQualifications([])
+    return () => { cancelled = true }
+  }, [qualificationAudience])
+
+  const qualificationOptions = useMemo(() => {
+    if (!qualifications.length) return []
+    if (!qualificationAudience) return qualifications.map((item) => item.label)
+    const normalizedAudience = qualificationAudience.toLowerCase()
+    const filtered = qualifications.filter((item) => String(item.who || '').trim().toLowerCase() === normalizedAudience)
+    const source = filtered.length ? filtered : qualifications
+    return source.map((item) => item.label)
+  }, [qualificationAudience, qualifications])
 
   const initialValues = useMemo(() => {
     const base = {
@@ -446,6 +476,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       class_level: '',
       ailments: [],
       course: '',
+      highest_qualification: '',
       next_of_kin: '',
       next_of_kin_tel: '',
       discipline: '',
@@ -464,7 +495,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
   }, [category, prefillValues])
 
-  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency }), [config, showCourse, showDiscipline, showWorkplace, showEmergency])
+  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
 
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
@@ -511,6 +542,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     }
     if (showCourse) {
       payload.course = normalize(values.course)
+    }
+    if (showHighestQualification) {
+      payload.highest_qualification = normalize(values.highest_qualification)
     }
     if (showDiscipline) {
       payload.discipline = normalize(values.discipline)
@@ -667,6 +701,16 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                         label="Course"
                         placeholder="Select course..."
                         fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                      />
+                    ) : null}
+                    {showHighestQualification ? (
+                      <SelectField
+                        formik={formik}
+                        name="highest_qualification"
+                        label="Highest Qualification"
+                        required
+                        options={qualificationOptions}
+                        placeholder="Select qualification..."
                       />
                     ) : null}
                     {showDiscipline ? (
