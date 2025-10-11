@@ -39,8 +39,8 @@ export default function PwaInstallPrompt() {
     }
     window.addEventListener('swUpdated', onSwUpdated)
 
-    // Show iOS hint if no beforeinstallprompt and is iOS
-    if (isiOS() && !window.matchMedia) {
+    // Show Apple install hint when not already installed (iOS/iPadOS/macOS Safari)
+    if (isAppleDevice() && !isStandalone()) {
       setShowIosHelp(true)
       setVisible(true)
     }
