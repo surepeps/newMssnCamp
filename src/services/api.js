@@ -1,5 +1,7 @@
 import { toast } from 'sonner'
 
+import { toast } from 'sonner'
+
 const BASE_URL = 'https://demo-api.mssnlagos.net/api/public'
 
 async function fetchJSON(path, options = {}) {
