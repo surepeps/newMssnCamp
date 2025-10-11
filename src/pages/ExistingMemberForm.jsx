@@ -305,19 +305,18 @@ export default function ExistingMemberForm() {
   }, [qualificationAudience, qualifications])
 
   useEffect(() => {
-    const det = delegate?.details
-    if (!det) return
+    if (!delegate?.details) return
     const normalize = (v) => (v == null ? '' : String(v).trim())
-    setVCouncil(normalize(det.area_council))
-    setVBranch(normalize(det.branch))
-    setVState(normalize(det.state_of_origin))
-    if (rules.school.mode !== 'text') setVSchool(normalize(det.school))
-    setVClassLevel(normalize(det.class_level))
-    setVCourse(normalize(det.course))
-    const rawA = normalize(det.ailments)
+    setVCouncil(normalize(details.area_council))
+    setVBranch(normalize(details.branch))
+    setVState(normalize(details.state_of_origin))
+    if (category !== 'TFL') setVSchool(normalize(details.school))
+    setVClassLevel(normalize(upgradeTarget.class_level || details.class_level))
+    setVCourse(normalize(details.course))
+    const rawA = normalize(details.ailments)
     const arrA = rawA && rawA.toLowerCase() !== 'none' ? rawA.split(',').map((s) => s.trim()).filter(Boolean) : []
     setVAilments(arrA)
-  }, [delegate, category])
+  }, [category, delegate, details, upgradeTarget])
 
   const rules = {
     email: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: category !== 'TFL' && category !== 'Secondary', required: false },
