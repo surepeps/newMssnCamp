@@ -4,8 +4,7 @@ import { navigate } from '../utils/navigation.js'
 
 export default function PaymentValidation() {
   const params = new URLSearchParams(window.location.search)
-  const paymentRef = params.get('paymentRef') || params.get('ref') || params.get('tx') || ''
-  const mssnId = params.get('mssnId') || ''
+  const reference = params.get('reference') || params.get('paymentRef') || params.get('ref') || params.get('tx') || ''
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [delegate, setDelegate] = React.useState(null)
@@ -16,15 +15,14 @@ export default function PaymentValidation() {
       setLoading(true)
       setError('')
       try {
-        const query = new URLSearchParams()
-        if (paymentRef) query.set('paymentRef', paymentRef)
-        if (mssnId) query.set('mssnId', mssnId)
-        const res = await fetchJSON(`/payment/validate?${query.toString()}`)
+        if (!reference) {
+          setError('Missing payment reference')
+          return
+        }
+        const res = await fetchJSON(`/payment/opay/callback?reference=${encodeURIComponent(reference)}`)
         const data = res?.data || {}
-        if (data && (data.delegate || data.details)) {
-          setDelegate(data.delegate || data.details)
-        } else if (data && data.success && data.delegate) {
-          setDelegate(data.delegate)
+        if (data && (data.delegate || (data.transaction && data.transaction.status === 'Success'))) {
+          setDelegate(data.delegate || null)
         } else {
           setError(data.message || 'Payment could not be validated.')
         }
@@ -34,9 +32,8 @@ export default function PaymentValidation() {
         setLoading(false)
       }
     }
-    if (paymentRef || mssnId) validate()
-    else setError('Missing payment reference or MSSN ID')
-  }, [paymentRef, mssnId])
+    validate()
+  }, [reference])
 
   const onPrint = () => {
     const el = printRef.current
