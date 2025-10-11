@@ -73,16 +73,16 @@ const buildDetailItems = (delegate) => {
 }
 
 export default function ReprintSlip() {
-  const [mssnId, setMssnId] = useState('')
-  const [paymentRef, setPaymentRef] = useState('')
-  const [delegate, setDelegate] = useState(null)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const mssnFieldRef = useRef(null)
+  const [mssnId, setMssnId] = React.useState('')
+  const [paymentRef, setPaymentRef] = React.useState('')
+  const [delegate, setDelegate] = React.useState(null)
+  const [error, setError] = React.useState('')
+  const [loading, setLoading] = React.useState(false)
+  const mssnFieldRef = React.useRef(null)
   const { settings } = useSettings()
   const camp = settings?.current_camp
 
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const qM = params.get('mssnId') || ''
@@ -125,8 +125,8 @@ export default function ReprintSlip() {
     }
   }, [])
 
-  const summaryItems = useMemo(() => buildSummaryItems(delegate, paymentRef), [delegate, paymentRef])
-  const detailItems = useMemo(() => buildDetailItems(delegate), [delegate])
+  const summaryItems = React.useMemo(() => buildSummaryItems(delegate, paymentRef), [delegate, paymentRef])
+  const detailItems = React.useMemo(() => buildDetailItems(delegate), [delegate])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
