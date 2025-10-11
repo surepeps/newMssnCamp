@@ -193,6 +193,8 @@ export default function ExistingMemberForm() {
   const [showRegisteredModal, setShowRegisteredModal] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
+  const [processing, setProcessing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
