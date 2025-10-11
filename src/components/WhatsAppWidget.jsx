@@ -1,14 +1,14 @@
-import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function WhatsAppWidget({ phone = '+2348130001122' }) {
-  const [open, setOpen] = React.useState(false)
-  const [messages, setMessages] = React.useState([
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([
     { id: 1, from: 'bot', text: 'Hi! 👋 How can we help you with your registration today?' },
   ])
-  const [text, setText] = React.useState('')
-  const listRef = React.useRef(null)
+  const [text, setText] = useState('')
+  const listRef = useRef(null)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }))
     }
