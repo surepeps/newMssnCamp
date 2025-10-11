@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import * as React from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { isValidDate } from '../utils/registration.js'
 
