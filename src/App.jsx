@@ -74,14 +74,16 @@ function Router() {
       return route.render({ params })
     }
   }
-  return <HomePage />
+  return <NotFound />
 }
 
 function App() {
   return (
     <Layout>
       <RegistrationBoundary />
-      <Router />
+      <ErrorBoundary>
+        <Router />
+      </ErrorBoundary>
       <Toaster richColors position="top-center" closeButton />
     </Layout>
   )
