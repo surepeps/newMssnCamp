@@ -774,6 +774,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             )}
           </Formik>
       <ProcessingModal visible={processing} title="Processing payment…" subtitle="Please wait while we submit your registration and prepare payment." />
+      <ProcessingModal visible={redirecting} title="Redirecting to payment…" subtitle="Please hold on while we redirect you to the payment page." />
       </div>
     </section>
   )
