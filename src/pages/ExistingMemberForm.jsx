@@ -252,17 +252,6 @@ export default function ExistingMemberForm() {
   }
 
   useEffect(() => {
-    ;(async () => {
-      const [ms, hq] = await Promise.all([
-        fetchMaritalStatuses(),
-        fetchHighestQualifications(),
-      ])
-      setMaritalStatuses(ms)
-      setQualifications(hq)
-    })()
-  }, [])
-
-  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
