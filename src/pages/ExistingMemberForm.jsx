@@ -131,7 +131,7 @@ export default function ExistingMemberForm() {
           setDelegate(data)
           const cat = mapCategory(data?.details?.pin_category || data?.details?.pin_cat)
           if (cat) setCategory(cat)
-          setShowUpgradeModal(Boolean(data?.upgraded))
+          setShowUpgradeModal(Boolean(data?.upgraded) && !((query.get('upgrade') || '') === '1'))
           setShowRegisteredModal(Boolean(data?.alreadyRegistered))
           return
         }
@@ -149,7 +149,7 @@ export default function ExistingMemberForm() {
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
             if (cat) setCategory(cat)
-            setShowUpgradeModal(Boolean(res.delegate?.upgraded))
+            setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
             navigate('/existing/validate')
