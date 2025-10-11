@@ -407,14 +407,14 @@ export default function ExistingMemberForm() {
   const d = delegate?.details || {}
   const genderDisplay = d?.sex ? (String(d.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(d.sex).trim().toLowerCase() === 'female' ? 'Female' : d.sex)) : ''
 
-  const schoolIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'U'
-  const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
-
   const toInfo = delegate?.upgrade_details?.[0]?.to || {}
   const targetPin = String(toInfo?.pin_category || '').toUpperCase()
   const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
   const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
   const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+
+  const schoolIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'U'
+  const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
 
   const buildPrefill = () => {
     const sx = (d.sex || '').toString().trim().toLowerCase()
