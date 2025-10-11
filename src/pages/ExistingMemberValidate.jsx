@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { navigate } from '../utils/navigation.js'
+import { navigate, createNavigationHandler } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
+
+const goToCheckMssnId = createNavigationHandler('/check-mssn-id')
 
 export default function ExistingMemberValidate() {
   const [mssnId, setMssnId] = useState('')
@@ -96,7 +98,7 @@ export default function ExistingMemberValidate() {
             </div>
             <a
               href="/check-mssn-id"
-              onClick={(e) => { e.preventDefault(); navigate('/check-mssn-id') }}
+              onClick={goToCheckMssnId}
               className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green"
             >
               Don’t know your MSSN ID?

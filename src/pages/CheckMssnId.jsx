@@ -174,7 +174,7 @@ export default function CheckMssnId() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
-        <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40 rounded-3xl">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div>
