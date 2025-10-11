@@ -16,9 +16,28 @@ createRoot(document.getElementById('root')).render(
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').then((reg) => {
-      // Registration successful
-      // You can listen for updates here if needed
-      // console.log('Service worker registered:', reg)
+      // Listen for updates and expose event
+      if (reg.waiting) {
+        window.dispatchEvent(new CustomEvent('swUpdated', { detail: { registration: reg } }))
+      }
+      reg.addEventListener('updatefound', () => {
+        const installing = reg.installing
+        if (installing) {
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                // New update available
+                window.dispatchEvent(new CustomEvent('swUpdated', { detail: { registration: reg } }))
+              }
+            }
+          })
+        }
+      })
+
+      // Handle controllingchanging to reload if new SW takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
     }).catch((err) => {
       // console.warn('Service worker registration failed:', err)
     })
