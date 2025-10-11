@@ -98,7 +98,7 @@ export default function ExistingMemberValidate() {
           </div>
 
           <form id="validateForm" className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={onSubmit} noValidate>
-            <div className="rounded-3xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
+            <div>
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Verification</h2>
                 <p className="mt-2 text-sm text-mssn-slate/70">We’ll verify your details and take you to the edit page to confirm or update your information before payment.</p>
