@@ -5,6 +5,7 @@ import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 
 
+const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 const formatMssnId = (value) => value.replace(/\s+/g, '').toUpperCase()
 const formatPaymentRef = (value) => value.replace(/\s+/g, '').toUpperCase()
 
@@ -309,16 +310,26 @@ export default function ReprintSlip() {
 
           <div id="slip-print-area" className="mx-auto w-full rounded-3xl bg-white ring-1 ring-mssn-slate/10">
             <div className="border-b border-mssn-slate/10 p-6 sm:p-8">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">{camp?.camp_code || 'CAMP'}</span>
-                  <h3 className="text-xl font-semibold text-mssn-slate">{camp?.camp_title || 'Camp MSSN Lagos'}</h3>
-                  {camp?.camp_theme ? <p className="text-sm text-mssn-slate/70">{camp.camp_theme}</p> : null}
-                  {camp?.camp_date ? <p className="text-sm text-mssn-slate/70">{camp.camp_date}</p> : null}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-white ring-1 ring-mssn-slate/10">
+                    <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-cover" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">{camp?.camp_code || 'CAMP'}</span>
+                    <h3 className="text-xl font-semibold text-mssn-slate">{camp?.camp_title || 'Camp MSSN Lagos'}</h3>
+                    {camp?.camp_theme ? <p className="text-sm text-mssn-slate/70">{camp.camp_theme}</p> : null}
+                    {camp?.camp_date ? <p className="text-sm text-mssn-slate/70">{camp.camp_date}</p> : null}
+                  </div>
                 </div>
-                <div className="mt-2 sm:mt-0 text-right">
+                <div className="text-right">
                   <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Payment reference</div>
-                  <div className="mt-1 text-sm font-semibold text-mssn-slate">{delegate.payment_reference || paymentRef}</div>
+                  <div className="mt-1 text-sm font-semibold text-mssn-slate">{delegate?.payment_reference || paymentRef}</div>
+                  {delegate?.payment_status ? (
+                    <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-mssn-green/30 bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">
+                      {titleCase(delegate.payment_status)}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
