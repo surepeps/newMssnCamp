@@ -20,15 +20,6 @@ export default function ExistingMemberValidate() {
       const qSurname = params.get('surname') || ''
       if (qMssn) setMssnId(formatMssn(qMssn))
       if (qSurname) setSurname(formatSurname(qSurname))
-      if (!qMssn || !qSurname) {
-        const raw = localStorage.getItem('existing_member_delegate')
-        if (raw) {
-          const data = JSON.parse(raw)
-          const d = data?.details || {}
-          if (d.mssn_id) setMssnId(formatMssn(d.mssn_id))
-          if (d.surname) setSurname(formatSurname(d.surname))
-        }
-      }
     } catch {}
     mssnRef.current?.focus()
   }, [])
@@ -57,7 +48,6 @@ export default function ExistingMemberValidate() {
         setError(msg)
         toast.error(msg)
       } else {
-        localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
         const needsUpgrade = Boolean(res?.delegate?.upgraded)
         if (needsUpgrade) {
           setPendingDelegate(res.delegate)
