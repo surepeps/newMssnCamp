@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
@@ -75,16 +75,16 @@ const buildDetailItems = (delegate) => {
 }
 
 export default function ReprintSlip() {
-  const [delegate, setDelegate] = React.useState(null)
-  const [error, setError] = React.useState('')
-  const [loading, setLoading] = React.useState(false)
-  const [initialValues, setInitialValues] = React.useState({ mssnId: '', paymentRef: '' })
-  const [displayPaymentRef, setDisplayPaymentRef] = React.useState('')
-  const mssnFieldRef = React.useRef(null)
+  const [delegate, setDelegate] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [initialValues, setInitialValues] = useState({ mssnId: '', paymentRef: '' })
+  const [displayPaymentRef, setDisplayPaymentRef] = useState('')
+  const mssnFieldRef = useRef(null)
   const { settings } = useSettings()
   const camp = settings?.current_camp
 
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const qM = params.get('mssnId') || ''
@@ -128,10 +128,10 @@ export default function ReprintSlip() {
     }
   }, [])
 
-  const summaryItems = React.useMemo(() => buildSummaryItems(delegate, displayPaymentRef), [delegate, displayPaymentRef])
-  const detailItems = React.useMemo(() => buildDetailItems(delegate), [delegate])
+  const summaryItems = useMemo(() => buildSummaryItems(delegate, displayPaymentRef), [delegate, displayPaymentRef])
+  const detailItems = useMemo(() => buildDetailItems(delegate), [delegate])
 
-  const validationSchema = React.useMemo(() => Yup.object({
+  const validationSchema = useMemo(() => Yup.object({
     mssnId: Yup.string().transform((v) => (typeof v==='string'? formatMssnId(v): v)).trim().required('Required'),
     paymentRef: Yup.string().transform((v) => (typeof v==='string'? formatPaymentRef(v): v)).trim().required('Required'),
   }), [])
