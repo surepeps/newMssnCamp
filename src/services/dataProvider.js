@@ -10,6 +10,7 @@ const cacheStore = {
   classLevels: new Map(),
   states: new Map(),
   courses: new Map(),
+  qualifications: new Map(),
 }
 
 const inflight = {
@@ -19,6 +20,7 @@ const inflight = {
   classLevels: new Map(),
   states: new Map(),
   courses: new Map(),
+  qualifications: new Map(),
 }
 
 function pruneCache(cache) {
@@ -200,13 +202,76 @@ export async function queryCourses({ page = 1, limit = 20, search = '' } = {}) {
   })
 }
 
+export async function queryQualifications({ page = 1, limit = 20, search = '', who } = {}) {
+  const normalizedPage = Number(page) || 1
+  const normalizedLimit = Number(limit) || 20
+  const rawSearch = (search || '').trim()
+  const trimmedWho = typeof who === 'string' ? who.trim() : ''
+  const normalizedWho = trimmedWho.toLowerCase()
+  const key = buildCacheKey('qualifications', {
+    page: normalizedPage,
+    limit: normalizedLimit,
+    search: rawSearch.toLowerCase(),
+    who: normalizedWho,
+  })
+
+  return cachedResponse('qualifications', cacheStore.qualifications, key, async () => {
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    if (rawSearch) params.set('qualification_name', rawSearch)
+    if (trimmedWho) params.set('who', trimmedWho)
+    try {
+      const res = await fetchJSON(`/basic-needs/qualifications?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      const items = records
+        .filter((record) => {
+          if (!normalizedWho) return true
+          const recordWho = String(record.who || '').trim().toLowerCase()
+          return recordWho === normalizedWho
+        })
+        .map((r) => ({
+          value: r.id ?? r.qualification_id ?? r.qualification_name,
+          label: r.qualification_name,
+          who: r.who,
+        }))
+      return { items, page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
+  })
+}
+
 export async function fetchCourses({ page = 1, limit = 200, search = '' } = {}) {
   const { items } = await queryCourses({ page, limit, search })
   return items
 }
 
-export async function fetchHighestQualifications() {
-  return []
+export async function fetchHighestQualifications({ who } = {}) {
+  const trimmedWho = typeof who === 'string' ? who.trim() : ''
+  const collected = []
+  let page = 1
+  let totalPages = 1
+  const pageLimit = 20
+  try {
+    do {
+      const { items, totalPages: fetchedTotalPages } = await queryQualifications({ page, limit: pageLimit, who: trimmedWho })
+      if (Array.isArray(items) && items.length) {
+        items.forEach((item) => {
+          if (!collected.some((existing) => existing.label === item.label)) {
+            collected.push(item)
+          }
+        })
+      }
+      totalPages = fetchedTotalPages || totalPages
+      if (!totalPages || totalPages <= page) {
+        break
+      }
+      page += 1
+    } while (page <= totalPages)
+  } catch (err) {
+    return collected
+  }
+  return collected
 }
 
 export async function fetchAilments({ page = 1, limit = 100, search = '' } = {}) {
