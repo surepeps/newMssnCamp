@@ -375,7 +375,7 @@ export default function ExistingMemberForm() {
             <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
-                <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">Edit</h1>
+                <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{delegate?.details?.pin_category} FORM</h1>
                 <p className="mt-2 text-sm text-mssn-slate/70">MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
                 {delegate?.upgraded && delegate.upgrade_details?.length ? (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
