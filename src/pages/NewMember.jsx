@@ -499,6 +499,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
 
   const [processing, setProcessing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
