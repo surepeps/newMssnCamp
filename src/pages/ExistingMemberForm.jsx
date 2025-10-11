@@ -182,7 +182,6 @@ export default function ExistingMemberForm() {
   const query = useQuery()
   const [category, setCategory] = useState('')
   const [delegate, setDelegate] = useState(null)
-  const [maritalStatuses, setMaritalStatuses] = useState([])
   const [qualifications, setQualifications] = useState([])
   const [activeSection, setActiveSection] = useState('personal')
   const [loading, setLoading] = useState(false)
