@@ -13,7 +13,9 @@ import {
   queryClassLevels,
   queryCourses,
 } from '../services/dataProvider.js'
-import { RegistrationForm } from './NewMember.jsx'
+import { Formik, Form as FormikForm } from 'formik'
+import * as Yup from 'yup'
+import { toast } from 'sonner'
 
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
 
@@ -88,6 +90,163 @@ function SectionCard({ title, description, columns = 'sm:grid-cols-2', children 
     </div>
   )
 }
+
+// Replicated helpers to match /new/:section look
+function FieldShellEM({ label, required, error, htmlFor, children, className }) {
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between">
+        <label htmlFor={htmlFor} className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
+          {label}
+          {required ? ' *' : ''}
+        </label>
+        {error ? <span className="text-xs font-medium text-rose-500">{error}</span> : null}
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  )
+}
+
+function TextFieldEM({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-field`
+  const val = formik.values[name]
+  const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
+  const invalid = (required && isEmpty(val)) || (!!error)
+  const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
+
+  return (
+    <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
+      {as === 'textarea' ? (
+        <textarea
+          id={id}
+          name={name}
+          rows={rows}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={`${baseClass} resize-none`}
+          required={required}
+        />
+      ) : (
+        <input
+          id={id}
+          name={name}
+          type={type}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={baseClass}
+          min={type === 'number' ? '1' : undefined}
+          required={required}
+        />
+      )}
+    </FieldShellEM>
+  )
+}
+
+function SelectFieldEM({ formik, name, label, options, required = false, placeholder = 'Select...', className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-select`
+  const value = formik.values[name]
+  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
+  return (
+    <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
+      <select
+        id={id}
+        name={name}
+        value={formik.values[name]}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        required={required}
+        className={`w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </FieldShellEM>
+  )
+}
+
+function FormikAsyncSelectEM({ formik, name, label, required = false, className, ...props }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const val = formik.values[name]
+  const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
+  const invalid = (required && isEmpty) || (!!error)
+  return (
+    <FieldShellEM label={label} required={required} error={error} className={className}>
+      <AsyncSelect
+        {...props}
+        value={formik.values[name]}
+        onChange={(val) => formik.setFieldValue(name, val)}
+        onBlur={() => formik.setFieldTouched(name, true)}
+        invalid={invalid}
+      />
+    </FieldShellEM>
+  )
+}
+
+function SectionCardEM({ title, description, columns = 'sm:grid-cols-2', children }) {
+  return (
+    <div className="bg-white/90">
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
+        {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
+      </div>
+      <div className={`mt-6 grid gap-5 ${columns}`}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace }) {
+  const optionalString = Yup.string().transform((value) => {
+    if (typeof value !== 'string') return value
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : null
+  })
+
+  const shape = {
+    surname: Yup.string().trim().required('Required'),
+    firstname: Yup.string().trim().required('Required'),
+    othername: optionalString.nullable(),
+    sex: Yup.string().required('Required'),
+    date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
+    area_council: Yup.string().required('Required'),
+    branch: Yup.string().required('Required'),
+    email: optionalString.nullable().email('Enter a valid email'),
+    tel_no: optionalString.nullable(),
+    resident_address: optionalString.nullable(),
+    marital_status: optionalString.nullable(),
+    state_of_origin: optionalString.nullable(),
+    school: optionalString.nullable(),
+    class_level: optionalString.nullable(),
+    ailments: Yup.array().of(Yup.string()),
+  }
+  if (showEmergency) {
+    shape.next_of_kin = optionalString.nullable()
+    shape.next_of_kin_tel = optionalString.nullable()
+  }
+  if (showCourse) {
+    shape.course = optionalString.nullable()
+  }
+  if (showDiscipline) {
+    shape.discipline = optionalString.nullable()
+  }
+  if (showWorkplace) {
+    shape.workplace = optionalString.nullable()
+  }
+  return Yup.object(shape)
+}
+
+const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
 
 export default function ExistingMemberForm() {
   const query = useQuery()
@@ -256,6 +415,7 @@ export default function ExistingMemberForm() {
   const targetPin = String(toInfo?.pin_category || '').toUpperCase()
   const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
   const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
+  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
 
   const buildPrefill = () => {
     const sx = (d.sex || '').toString().trim().toLowerCase()
@@ -311,7 +471,128 @@ export default function ExistingMemberForm() {
 
           <div className="px-6 pb-10 pt-6 sm:px-10">
             {upgradeStarted ? (
-              <RegistrationForm category={targetCategory || currentCategoryLower} prefillValues={buildPrefill()} submitLabel="Register & Pay" enableDraft={false} />
+              <Formik
+                initialValues={buildPrefill()}
+                validationSchema={buildValidationSchemaEM({
+                  showCourse: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showWorkplace: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showEmergency: categoryKey === 'undergraduate' || categoryKey === 'others',
+                })}
+                enableReinitialize
+                onSubmit={async (values, helpers) => {
+                  const normalize = (input) => {
+                    if (Array.isArray(input)) return input.filter(Boolean)
+                    if (typeof input === 'string') {
+                      const trimmed = input.trim()
+                      return trimmed.length ? trimmed : undefined
+                    }
+                    return input === undefined || input === null ? undefined : input
+                  }
+                  const categoryApi = categoryKey === 'undergraduate' ? 'UNDERGRADUATE' : categoryKey === 'secondary' ? 'SECONDARY' : 'OTHERS'
+                  const payload = {
+                    surname: values.surname.trim(),
+                    firstname: values.firstname.trim(),
+                    othername: normalize(values.othername),
+                    sex: values.sex,
+                    date_of_birth: String(values.date_of_birth).trim(),
+                    area_council: values.area_council,
+                    branch: values.branch,
+                    email: normalize(values.email),
+                    tel_no: normalize(values.tel_no),
+                    resident_address: normalize(values.resident_address),
+                    marital_status: normalize(values.marital_status) || 'Single',
+                    state_of_origin: normalize(values.state_of_origin),
+                    ailments: (normalize(values.ailments) || []).join(','),
+                    pin_category: categoryApi,
+                  }
+                  payload.school = normalize(values.school)
+                  payload.class_level = normalize(values.class_level)
+                  if (categoryKey === 'undergraduate' || categoryKey === 'others') {
+                    payload.next_of_kin = normalize(values.next_of_kin)
+                    payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
+                    payload.course = normalize(values.course)
+                    payload.discipline = normalize(values.discipline)
+                    payload.workplace = normalize(values.workplace)
+                  }
+                  Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
+                  try {
+                    const res = await fetchJSON('/registration/new', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload),
+                    })
+                    const data = res?.data || {}
+                    const message = data.message || res?.message || 'Registered successfully'
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+                    const discount = data.discount_applied ? ' • discount applied' : ''
+                    toast.success(`${message}${priceInfo}${discount}`)
+                    if (data.redirect_url) {
+                      window.location.href = data.redirect_url
+                    } else {
+                      navigate('/registration')
+                    }
+                  } catch (_) {
+                  } finally {
+                    helpers.setSubmitting(false)
+                  }
+                }}
+              >
+                {(formik) => (
+                  <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
+                    <input type="hidden" name="pin_category" value={categoryKey} />
+
+                    <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
+                      <TextFieldEM formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
+                      <TextFieldEM formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
+                      <SelectFieldEM formik={formik} name="sex" label="Gender" required options={['Male','Female']} placeholder="Select gender" />
+                      <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" />
+                      <TextFieldEM formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
+                    </SectionCardEM>
+
+                    <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
+                      <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
+                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
+                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                      <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
+                      <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
+                      <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
+                    </SectionCardEM>
+
+                    <SectionCardEM title="Education & Occupation" description="Share your institution and occupation details.">
+                      <FormikAsyncSelectEM formik={formik} name="school" label="School" placeholder={categoryKey==='undergraduate'||categoryKey==='others'?'Select institution...':'Select school...'} fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })} />
+                      <FormikAsyncSelectEM formik={formik} name="class_level" label="Class Level" placeholder="Select class level..." fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })} />
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                      )}
+                    </SectionCardEM>
+
+                    {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                      <SectionCardEM title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                        <TextFieldEM formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                        <TextFieldEM formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
+                      </SectionCardEM>
+                    )}
+
+                    <SectionCardEM title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="ailments" label="Ailments" multiple placeholder="Select ailments..." fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })} className="sm:col-span-2" />
+                    </SectionCardEM>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                        {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
+                      </button>
+                    </div>
+                  </FormikForm>
+                )}
+              </Formik>
             ) : (
               <>
                 <SectionNav active={activeSection} onJump={jumpTo} />
