@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import * as React from 'react'
 import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
 
@@ -6,12 +6,12 @@ export default function PaymentValidation() {
   const params = new URLSearchParams(window.location.search)
   const paymentRef = params.get('paymentRef') || params.get('ref') || params.get('tx') || ''
   const mssnId = params.get('mssnId') || ''
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [delegate, setDelegate] = useState(null)
-  const printRef = useRef(null)
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const [delegate, setDelegate] = React.useState(null)
+  const printRef = React.useRef(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     const validate = async () => {
       setLoading(true)
       setError('')
