@@ -87,7 +87,7 @@ export default function ExistingMemberValidate() {
     <section className="mx-auto w-full max-w-3xl px-6 py-12">
       <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-        <div className="bg-radial-glow/40">
+        <div className="bg-radial-glow/40 rounded-3xl">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
@@ -95,14 +95,15 @@ export default function ExistingMemberValidate() {
               <p className="mt-2 text-sm text-mssn-slate/70">Enter your MSSN ID and surname to continue.</p>
             </div>
             <a
-              href="https://mssnlagos.org/camp/register/returning"
-              target="_blank"
-              rel="noreferrer"
+              href="/check-mssn-id"
+              onClick={(e) => { e.preventDefault(); navigate('/check-mssn-id') }}
               className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green"
             >
               Don’t know your MSSN ID?
             </a>
           </div>
+
+        </div>
 
           <form id="validateForm" className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={onSubmit} noValidate>
             <div>
@@ -176,7 +177,6 @@ export default function ExistingMemberValidate() {
               </button>
             </div>
           </form>
-        </div>
       </div>
 
       {loading && (
