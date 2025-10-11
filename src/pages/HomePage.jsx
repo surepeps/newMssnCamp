@@ -218,39 +218,6 @@ function HeroSlider() {
   )
 }
 
-function ResumeRegistrationBanner() {
-  const [draft, setDraft] = useState(null)
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY)
-      if (raw) setDraft(JSON.parse(raw))
-    } catch {}
-  }, [])
-  const resumeCategory = draft?.category
-  if (!resumeCategory) return null
-  const resumeName = draft?.values?.surname || draft?.values?.firstname ? `${draft?.values?.surname ?? ''} ${draft?.values?.firstname ?? ''}`.trim() : null
-  return (
-    <section className="relative z-20 mx-auto -mt-14 w-full max-w-6xl px-6" aria-label="Resume registration">
-      <div className="rounded-4xl border border-mssn-green/30 bg-white p-5 shadow-soft">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-mssn-slate">You have a pending new registration</p>
-            <p className="text-xs text-mssn-slate/60">{resumeName ? `${resumeName} • ` : ''}{String(resumeCategory).charAt(0).toUpperCase() + String(resumeCategory).slice(1)}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => navigate(`/new/${resumeCategory}`)} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">
-              Continue
-            </button>
-            <button type="button" onClick={() => { try { localStorage.removeItem(DRAFT_KEY) } catch {} setDraft(null) }} className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function QuickActionsBar() {
   const [draft, setDraft] = useState(null)
 
