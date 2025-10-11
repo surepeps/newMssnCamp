@@ -468,10 +468,10 @@ export default function ExistingMemberForm() {
                 <SectionCard title="MSSN Membership Details" description="Your council, branch and health details." columns="sm:grid-cols-2">
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className={labelClass}>Area Council *</label>
+                      <label className={labelClass}>Area Council</label>
                     </div>
-                    <select name="council" required className={inputClass}>
-                      <option value="" disabled>Select council</option>
+                    <select name="council" className={inputClass}>
+                      <option value="">Select council (optional)</option>
                       {councils.map((c) => (
                         <option key={c.value ?? c} value={c.value ?? c}>{c.label ?? c}</option>
                       ))}
@@ -480,10 +480,10 @@ export default function ExistingMemberForm() {
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className={labelClass}>Branch *</label>
+                      <label className={labelClass}>Branch</label>
                     </div>
-                    <select name="branch" required className={inputClass}>
-                      <option value="" disabled>Select branch</option>
+                    <select name="branch" className={inputClass}>
+                      <option value="">Select branch (optional)</option>
                       {branches.map((b) => (
                         <option key={b.value ?? b} value={b.value ?? b}>{b.label ?? b}</option>
                       ))}
