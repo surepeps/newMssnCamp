@@ -8,6 +8,7 @@ import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
 import ReprintSlip from './pages/ReprintSlip.jsx'
 import CheckMssnId from './pages/CheckMssnId.jsx'
+import ContactUs from './pages/ContactUs.jsx'
 import { Toaster } from 'sonner'
 
 function usePathRoute() {
