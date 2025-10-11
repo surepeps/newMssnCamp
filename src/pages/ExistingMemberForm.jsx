@@ -16,8 +16,6 @@ import * as Yup from 'yup'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 
-const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
-
 function useQuery() {
   return React.useMemo(() => new URLSearchParams(window.location.search), [])
 }
@@ -328,39 +326,6 @@ export default function ExistingMemberForm() {
     setVAilments(arrA)
   }, [category, delegate])
 
-  const rules = {
-    email: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: category !== 'TFL' && category !== 'Secondary', required: false },
-    phone: category === 'TFL' ? { visible: false, required: false } : { visible: true, required: true },
-    maritalStatus: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: false, required: false, defaultValue: 'Single' },
-    nextOfKin: category === 'TFL' ? { visible: false, required: false } : { visible: true, required: true },
-    nextOfKinPhone: category === 'TFL' ? { visible: false, required: false } : { visible: true, required: true },
-    course: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: false, required: false },
-    highestQualification: category === 'TFL' ? { visible: false, required: false } : { visible: true, required: true },
-    discipline: category === 'Undergraduate' || category === 'Others' ? { visible: true, required: true } : { visible: false, required: false },
-    organisation: category === 'TFL' ? { visible: false, required: false } : { visible: true, required: false },
-    school: category === 'TFL' ? { mode: 'text' } : { mode: 'select' },
-  }
-
-  const onSubmit = (e) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    if (!form.checkValidity()) {
-      form.reportValidity()
-      return
-    }
-    alert('Submitted. Connect database to complete registration and payment.')
-  }
-
-  const jumpTo = (id) => {
-    const el = refs[id]?.current
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  const labelClass = 'text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70'
-  const inputClass = 'mt-2 w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 focus:border-mssn-green focus:ring-mssn-green/25'
-  const inputDisabledClass = 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50'
-
-  const genderDisplay = details?.sex ? (String(details.sex).trim().toLowerCase() === 'male' ? 'Male' : (String(details.sex).trim().toLowerCase() === 'female' ? 'Female' : details.sex)) : ''
 
   const schoolIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'U'
   const classIdentifier = categoryKey === 'secondary' ? 'S' : categoryKey === 'undergraduate' ? 'U' : 'O'
@@ -474,9 +439,9 @@ export default function ExistingMemberForm() {
                     payload.workplace = normalize(values.workplace)
                   }
                   Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
-                  try {
+                  try { 
                     setProcessing(true)
-                    const res = await fetchJSON('/registration/new', {
+                    const res = await fetchJSON('/registration/existing', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(payload),
@@ -497,7 +462,8 @@ export default function ExistingMemberForm() {
                         navigate('/registration')
                       }, 700)
                     }
-                  } catch (_) {
+                  } catch (e) {
+                    console.log(e)
                   } finally {
                     helpers.setSubmitting(false)
                     setProcessing(false)

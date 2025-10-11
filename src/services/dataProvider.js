@@ -78,7 +78,7 @@ export async function queryAilments({ page = 1, limit = 20, search = '' } = {}) 
   const key = buildCacheKey('ailments', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('ailments', cacheStore.ailments, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()) })
     if (rawSearch) params.set('ailment_name', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
@@ -98,7 +98,7 @@ export async function queryCouncils({ page = 1, limit = 20, search = '' } = {}) 
   const key = buildCacheKey('councils', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('councils', cacheStore.councils, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()) })
     if (rawSearch) params.set('councilName', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
@@ -118,7 +118,7 @@ export async function querySchools({ identifier = 'S', page = 1, limit = 20, sea
   const key = buildCacheKey('schools', { identifier, page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('schools', cacheStore.schools, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), school_identifier: identifier })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()), school_identifier: identifier })
     if (rawSearch) params.set('school_name', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
@@ -138,7 +138,7 @@ export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20,
   const key = buildCacheKey('class-levels', { identifier, page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('classLevels', cacheStore.classLevels, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), class_identifier: identifier })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()), class_identifier: identifier })
     if (rawSearch) params.set('class_name', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
@@ -158,7 +158,7 @@ export async function queryStates({ page = 1, limit = 20, search = '' } = {}) {
   const key = buildCacheKey('states', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('states', cacheStore.states, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()) })
     if (rawSearch) params.set('state', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/states?${params.toString()}`)
@@ -189,7 +189,7 @@ export async function queryCourses({ page = 1, limit = 20, search = '' } = {}) {
   const key = buildCacheKey('courses', { page: normalizedPage, limit: normalizedLimit, search: rawSearch.toLowerCase() })
 
   return cachedResponse('courses', cacheStore.courses, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()) })
     if (rawSearch) params.set('course_name', rawSearch)
     try {
       const res = await fetchJSON(`/basic-needs/courses?${params.toString()}`)
@@ -216,7 +216,7 @@ export async function queryQualifications({ page = 1, limit = 20, search = '', w
   })
 
   return cachedResponse('qualifications', cacheStore.qualifications, key, async () => {
-    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
+    const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), search: String(rawSearch.toLowerCase()) })
     if (rawSearch) params.set('qualification_name', rawSearch)
     if (trimmedWho) params.set('who', trimmedWho)
     try {
