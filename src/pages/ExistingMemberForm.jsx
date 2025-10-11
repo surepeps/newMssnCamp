@@ -578,13 +578,43 @@ export default function ExistingMemberForm() {
     )}
 
     {showRegisteredModal && (
-      <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/40">
-        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
-          <h3 className="text-lg font-semibold text-mssn-slate">Already Registered</h3>
-          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. You can re-print your slip below.</p>
-          <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
-            <button type="button" onClick={() => navigate('/registration')} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Re‑print Slip</button>
+      <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/50">
+        <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-soft">
+          <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">✓</div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-mssn-slate">You’re already registered</h3>
+                <p className="mt-1 text-sm text-mssn-slate/70">We found an existing registration for this MSSN ID. You can re‑print your slip now.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                    <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">MSSN ID</div>
+                    <div className="mt-1 text-sm font-semibold text-mssn-slate">{mssnId}</div>
+                  </div>
+                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                    <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Name</div>
+                    <div className="mt-1 text-sm font-semibold text-mssn-slate">{[details.surname, details.firstname, details.othername].filter(Boolean).join(' ') || '—'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+              <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const paymentRef = delegate?.payment_reference || delegate?.details?.payment_reference || ''
+                  const params = new URLSearchParams()
+                  if (mssnId) params.set('mssnId', String(mssnId))
+                  if (paymentRef) params.set('paymentRef', String(paymentRef))
+                  navigate(`/reprint-slip${params.toString() ? `?${params.toString()}` : ''}`)
+                }}
+                className="inline-flex items-center justify-center rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white hover:bg-mssn-greenDark"
+              >
+                Re‑print Slip
+              </button>
+            </div>
           </div>
         </div>
       </div>
