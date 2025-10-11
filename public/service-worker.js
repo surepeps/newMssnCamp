@@ -6,6 +6,7 @@ const PRECACHE_URLS = [
 ]
 
 self.addEventListener('install', (event) => {
+  // activate immediately
   self.skipWaiting()
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
@@ -14,15 +15,25 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
+    (async () => {
+      // Claim clients immediately so the page is controlled by the SW
+      await self.clients.claim()
+      const keys = await caches.keys()
+      await Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) return caches.delete(key)
           return null
         })
       )
-    )
+    })()
   )
+})
+
+self.addEventListener('message', (event) => {
+  if (!event.data) return
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 self.addEventListener('fetch', (event) => {
@@ -36,8 +47,10 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           // Put in cache for offline
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+          try {
+            const copy = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+          } catch (e) {}
           return response
         })
         .catch(() => caches.match('/index.html'))
@@ -52,10 +65,12 @@ self.addEventListener('fetch', (event) => {
       return fetch(request)
         .then((response) => {
           // Cache successful GET responses
-          if (response && response.type === 'basic' && response.status === 200) {
-            const copy = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-          }
+          try {
+            if (response && response.type === 'basic' && response.status === 200) {
+              const copy = response.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            }
+          } catch (e) {}
           return response
         })
         .catch(() => cached || new Response('', { status: 503, statusText: 'Service Unavailable' }))
