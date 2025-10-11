@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import * as React from 'react'
 import { navigate, isModifiedEvent } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
