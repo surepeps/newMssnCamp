@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 
 function useQuery() {
-  return React.useMemo(() => new URLSearchParams(window.location.search), [])
+  return useMemo(() => new URLSearchParams(window.location.search), [])
 }
 
 // Replicated helpers to match /new/:section look
@@ -187,26 +187,26 @@ const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
 
 export default function ExistingMemberForm() {
   const query = useQuery()
-  const [category, setCategory] = React.useState('')
-  const [delegate, setDelegate] = React.useState(null)
-  const [qualifications, setQualifications] = React.useState([])
-  const [activeSection, setActiveSection] = React.useState('personal')
-  const [loading, setLoading] = React.useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
-  const [showRegisteredModal, setShowRegisteredModal] = React.useState(false)
-  const [loadError, setLoadError] = React.useState('')
-  const [upgradeStarted, setUpgradeStarted] = React.useState(() => (query.get('upgrade') || '') === '1')
-  const [processing, setProcessing] = React.useState(false)
-  const [redirecting, setRedirecting] = React.useState(false)
+  const [category, setCategory] = useState('')
+  const [delegate, setDelegate] = useState(null)
+  const [qualifications, setQualifications] = useState([])
+  const [activeSection, setActiveSection] = useState('personal')
+  const [loading, setLoading] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
+  const [processing, setProcessing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // AsyncSelect controlled values
-  const [vCouncil, setVCouncil] = React.useState('')
-  const [vBranch, setVBranch] = React.useState('')
-  const [vState, setVState] = React.useState('')
-  const [vSchool, setVSchool] = React.useState('')
-  const [vClassLevel, setVClassLevel] = React.useState('')
-  const [vCourse, setVCourse] = React.useState('')
-  const [vAilments, setVAilments] = React.useState([])
+  const [vCouncil, setVCouncil] = useState('')
+  const [vBranch, setVBranch] = useState('')
+  const [vState, setVState] = useState('')
+  const [vSchool, setVSchool] = useState('')
+  const [vClassLevel, setVClassLevel] = useState('')
+  const [vCourse, setVCourse] = useState('')
+  const [vAilments, setVAilments] = useState([])
 
   const details = delegate?.details || {}
   const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
@@ -234,7 +234,7 @@ export default function ExistingMemberForm() {
     return ''
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     ;(async () => {
       try {
         const qM = (mssnId || '').trim()
@@ -269,15 +269,15 @@ export default function ExistingMemberForm() {
   }, [])
 
   const refs = {
-    personal: React.useRef(null),
-    contact: React.useRef(null),
-    emergency: React.useRef(null),
-    details: React.useRef(null),
-    education: React.useRef(null),
-    membership: React.useRef(null),
+    personal: useRef(null),
+    contact: useRef(null),
+    emergency: useRef(null),
+    details: useRef(null),
+    education: useRef(null),
+    membership: useRef(null),
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false
     const loadQualifications = async () => {
       try {
@@ -299,7 +299,7 @@ export default function ExistingMemberForm() {
     }
   }, [qualificationAudience])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -313,7 +313,7 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
-  const qualificationOptions = React.useMemo(() => {
+  const qualificationOptions = useMemo(() => {
     if (!qualifications.length) return []
     if (!qualificationAudience) return qualifications.map((item) => item.label)
     const normalizedAudience = qualificationAudience.toLowerCase()
@@ -322,7 +322,7 @@ export default function ExistingMemberForm() {
     return source.map((item) => item.label)
   }, [qualificationAudience, qualifications])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!delegate?.details) return
     const normalize = (v) => (v == null ? '' : String(v).trim())
     setVCouncil(normalize(details.area_council))
@@ -375,7 +375,7 @@ export default function ExistingMemberForm() {
     }
   }
 
-  const initialValuesEM = React.useMemo(() => buildPrefill(), [delegate, surname])
+  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
