@@ -16,9 +16,9 @@ import { Toaster } from 'sonner'
 
 function usePathRoute() {
   const getLocation = () => `${window.location.pathname}${window.location.search}` || '/'
-  const [location, setLocation] = useState(getLocation())
+  const [location, setLocation] = React.useState(getLocation())
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handlePopState = () => {
       setLocation(getLocation())
     }
