@@ -169,7 +169,6 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
                 <span className={`transition-transform ${isMobileRegOpen ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div className={`overflow-hidden transition-all ${isMobileRegOpen ? 'max-h-60' : 'max-h-0'}`}>
-                <a href="/registration" onClick={createRouteHandler('/registration')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/registration') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>Registration Status</a>
                 <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/existing') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>Existing Member</a>
                 <a href="/new" onClick={createRouteHandler('/new')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/new') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>New Member</a>
               </div>
