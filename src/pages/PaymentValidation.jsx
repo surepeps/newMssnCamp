@@ -278,7 +278,7 @@ export default function PaymentValidation() {
                   ) : null}
 
                   {detailItems.length ? (
-                    <div className="border-t border-mssn-slate/10">
+                    <div className="border-t border-mssn-slate/10 print-hide">
                       <div className="p-6 sm:p-8">
                         <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Additional details</h3>
                         <dl className="mt-4 grid gap-3 sm:grid-cols-2">

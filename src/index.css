@@ -57,15 +57,19 @@
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: auto !important;
+    width: 100% !important;
     max-width: 100% !important;
+    /* keep to one A4 page (297mm height minus margins set in @page) */
+    max-height: calc(297mm - 24mm) !important;
+    overflow: hidden !important;
     box-shadow: none !important;
     border: 0 !important;
     background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
-  .no-print {
-    display: none !important;
-  }
+  .no-print { display: none !important; }
+  .print-hide { display: none !important; }
 }
 
 @page {
