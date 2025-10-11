@@ -39,3 +39,22 @@
     color: inherit;
   }
 }
+
+/* Print styles for registration slip */
+@media print {
+  html, body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  #slip-print-area {
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 12mm;
+}
