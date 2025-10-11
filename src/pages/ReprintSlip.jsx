@@ -196,10 +196,6 @@ export default function ReprintSlip() {
 
           <form className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={handleSubmit} noValidate>
             <div>
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Verification</h2>
-                <p className="mt-2 text-sm text-mssn-slate/70">We will verify these details and return the exact registration slip associated with the payment.</p>
-              </div>
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
                   <div className="flex items-center justify-between">
