@@ -189,7 +189,7 @@ function Footer() {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
 
   return (
-    <footer className="mt-24 bg-mssn-green text-white">
+    <footer className="mt-24 bg-mssn-greenDark text-white">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="grid gap-8 md:grid-cols-3">
           <div className="space-y-4">
