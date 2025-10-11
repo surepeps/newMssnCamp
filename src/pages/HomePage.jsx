@@ -218,9 +218,9 @@ function HeroSlider() {
 }
 
 function QuickActionsBar() {
-  const [draft, setDraft] = useState(null)
+  const [draft, setDraft] = React.useState(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined
     }
@@ -257,7 +257,7 @@ function QuickActionsBar() {
     }
   }, [])
 
-  const resumeDetails = useMemo(() => {
+  const resumeDetails = React.useMemo(() => {
     if (!draft || typeof draft !== 'object') return null
     const category = typeof draft.category === 'string' ? draft.category : null
     const values = draft.values && typeof draft.values === 'object' ? draft.values : {}
@@ -279,7 +279,7 @@ function QuickActionsBar() {
     }
   }, [draft])
 
-  const resumeMeta = useMemo(() => {
+  const resumeMeta = React.useMemo(() => {
     if (!resumeDetails) return ''
     const parts = []
     if (resumeDetails.name) parts.push(resumeDetails.name)
@@ -373,12 +373,12 @@ function QuickActionsBar() {
 }
 
 function AdsSection() {
-  const [formValues, setFormValues] = useState(() => createInitialRequestValues())
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' })
+  const [formValues, setFormValues] = React.useState(() => createInitialRequestValues())
+  const [errors, setErrors] = React.useState({})
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [submissionState, setSubmissionState] = React.useState({ status: 'idle', message: '' })
 
-  const requestOptions = useMemo(
+  const requestOptions = React.useMemo(
     () => adSlots.map((slot) => ({ value: slot.id, label: slot.name, status: slot.status })),
     []
   )
