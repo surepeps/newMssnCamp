@@ -175,7 +175,7 @@ export default function CheckMssnId() {
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-        <div className="bg-radial-glow/40">
+        <div className="bg-radial-glow/40 rounded-3xl">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Check MSSN ID</span>
@@ -190,8 +190,9 @@ export default function CheckMssnId() {
               Back to home
             </button>
           </div>
+        </div>
 
-          <form className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={handleSubmit} noValidate>
+        <form className="space-y-8 px-6 pb-8 pt-6 sm:px-8" onSubmit={handleSubmit} noValidate>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Search by name, email or MSSN ID" htmlFor="search">
                 <input
@@ -250,7 +251,6 @@ export default function CheckMssnId() {
               </button>
             </div>
           </form>
-        </div>
       </div>
 
       <div className="mt-8 overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
