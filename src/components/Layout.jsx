@@ -156,32 +156,62 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           <span className="text-lg">{isNavOpen ? '✕' : '☰'}</span>
         </button>
       </div>
-      <div className={`fixed inset-0 z-50 lg:hidden ${isNavOpen ? '' : 'pointer-events-none'}`} aria-hidden={!isNavOpen}>
-        <div className={`absolute inset-0 bg-mssn-night/50 transition-opacity ${isNavOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onCloseNav} />
-        <aside className={`absolute right-0 top-0 h-full w-[20rem] max-w-[90vw] transform bg-white shadow-soft ring-1 ring-mssn-slate/10 transition-transform duration-300 ${isNavOpen ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true">
-          <div className="flex items-center justify-between border-b border-mssn-slate/10 px-5 py-4">
-            <span className="text-sm font-semibold text-mssn-slate">Menu</span>
-            <button type="button" onClick={onCloseNav} className="rounded-lg p-2 text-mssn-slate/70 transition hover:bg-mssn-mist hover:text-mssn-slate">✕</button>
-          </div>
-          <div className="flex h-[calc(100%-56px)] flex-col gap-2 overflow-y-auto p-4">
-            <a href="/" onClick={createRouteHandler('/')} className={`${isActive('/') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Home</a>
-            <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip')} className={`${isActive('/reprint-slip') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Re-print Slip</a>
-            <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id')} className={`${isActive('/check-mssn-id') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Check MSSN ID</a>
-            <div className="rounded-2xl ring-1 ring-mssn-slate/10">
-              <button type="button" onClick={() => setIsMobileRegOpen((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-mssn-slate">
-                <span>Registration</span>
-                <span className={`transition-transform ${isMobileRegOpen ? 'rotate-180' : ''}`}>▾</span>
-              </button>
-              <div className={`overflow-hidden transition-all ${isMobileRegOpen ? 'max-h-60' : 'max-h-0'}`}>
-                <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/existing') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>Existing Member</a>
-                <a href="/new" onClick={createRouteHandler('/new')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/new') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>New Member</a>
-              </div>
-            </div>
-            <a href="/contact" onClick={createRouteHandler('/contact')} className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-mssn-slate ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40">Contact Us</a>
-          </div>
-        </aside>
-      </div>
     </header>
+  )
+}
+
+function MobileNav({ isNavOpen, onCloseNav }) {
+  const [isMobileRegOpen, setIsMobileRegOpen] = React.useState(false)
+  const [path, setPath] = React.useState(window.location.pathname)
+  React.useEffect(() => {
+    const update = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', update)
+    return () => window.removeEventListener('popstate', update)
+  }, [])
+  const isActive = (href) => path === href || (href !== '/' && path.startsWith(href))
+  const shouldHandleLink = (event) => {
+    if (event.defaultPrevented || event.button !== 0 || isModifiedEvent(event)) {
+      return false
+    }
+    if (event.currentTarget instanceof HTMLAnchorElement && event.currentTarget.target === '_blank') {
+      return false
+    }
+    return true
+  }
+  const createRouteHandler = (to) => (event) => {
+    if (!shouldHandleLink(event)) {
+      return
+    }
+    event.preventDefault()
+    onCloseNav()
+    navigate(to)
+  }
+  return (
+    <div className={`fixed inset-0 z-50 lg:hidden ${isNavOpen ? '' : 'pointer-events-none'}`} aria-hidden={!isNavOpen}>
+      <div className={`absolute inset-0 bg-mssn-night/50 transition-opacity ${isNavOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onCloseNav} />
+      <aside className={`absolute right-0 top-0 h-full w-[20rem] max-w-[90vw] transform bg-white shadow-soft ring-1 ring-mssn-slate/10 transition-transform duration-300 ${isNavOpen ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true">
+        <div className="flex items-center justify-between border-b border-mssn-slate/10 px-5 py-4">
+          <span className="text-sm font-semibold text-mssn-slate">Menu</span>
+          <button type="button" onClick={onCloseNav} className="rounded-lg p-2 text-mssn-slate/70 transition hover:bg-mssn-mist hover:text-mssn-slate">✕</button>
+        </div>
+        <div className="flex h-[calc(100%-56px)] flex-col gap-2 overflow-y-auto p-4">
+          <a href="/" onClick={createRouteHandler('/')} className={`${isActive('/') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Home</a>
+          <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip')} className={`${isActive('/reprint-slip') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Re-print Slip</a>
+          <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id')} className={`${isActive('/check-mssn-id') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Check MSSN ID</a>
+          <div className="rounded-2xl ring-1 ring-mssn-slate/10">
+            <button type="button" onClick={() => setIsMobileRegOpen((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-mssn-slate">
+              <span>Registration</span>
+              <span className={`transition-transform ${isMobileRegOpen ? 'rotate-180' : ''}`}>▾</span>
+            </button>
+            <div className={`overflow-hidden transition-all ${isMobileRegOpen ? 'max-h-60' : 'max-h-0'}`}>
+              <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/existing') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>Existing Member</a>
+              <a href="/new" onClick={createRouteHandler('/new')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/new') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>New Member</a>
+            </div>
+          </div>
+          <a href="/contact" onClick={createRouteHandler('/contact')} className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-mssn-slate ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40">Contact Us</a>
+        </div>
+      </aside>
+    </div>
   )
 }
 
@@ -236,6 +266,7 @@ function Layout({ children }) {
   return (
     <div className="flex min-h-screen flex-col bg-mssn-mist text-mssn-slate">
       <Header isNavOpen={isNavOpen} onToggleNav={toggleNav} onCloseNav={closeNav} />
+      <MobileNav isNavOpen={isNavOpen} onCloseNav={closeNav} />
       <main className="flex-1">{children}</main>
       <Footer />
       {loading && <FullPageLoader />}
