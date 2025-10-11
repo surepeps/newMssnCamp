@@ -697,6 +697,24 @@ export default function HomePage() {
           <QuickActionsBar />
         </div>
       </div>
+
+      <section id="ads-placeholder" className="mx-auto mt-10 w-full max-w-6xl px-6">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
+          <h2 className="text-lg font-semibold text-mssn-slate">Place your ads here</h2>
+          <p className="mt-2 text-sm text-mssn-slate/70">Available ad slots — contact our partnerships team to reserve a slot.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-mssn-slate/20 bg-mssn-mist text-center text-mssn-slate/60">
+                <div>
+                  <div className="text-sm font-semibold">Ad slot</div>
+                  <div className="mt-1 text-xs">Place your ad here</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <PricingDiscounts />
     </div>
   )
