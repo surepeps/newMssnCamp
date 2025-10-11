@@ -586,7 +586,7 @@ export default function ExistingMemberForm() {
           <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="p-6">
             <div className="flex items-start gap-4">
-              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">✓</div>
+              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">���</div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-mssn-slate">You’re already registered</h3>
                 <p className="mt-1 text-sm text-mssn-slate/70">We found an existing registration for this MSSN ID. You can re‑print your slip now.</p>
@@ -640,6 +640,8 @@ export default function ExistingMemberForm() {
         </div>
       </div>
     )}
+  <ProcessingModal visible={processing} title="Processing…" subtitle="Please wait while we submit your registration and prepare payment." />
+  <ProcessingModal visible={redirecting} title="Redirecting to payment…" subtitle="Please hold on while we redirect you to the payment page." />
   </section>
   )
 }
