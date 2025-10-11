@@ -55,7 +55,7 @@ const quickActions = [
     id: 'reprint-slip',
     title: 'Reprint-slip',
     description: 'Reprint your registration slip anytime.',
-    href: 'https://mssnlagos.org/camp/register/reprint',
+    href: '/reprint-slip',
   },
 ]
 
