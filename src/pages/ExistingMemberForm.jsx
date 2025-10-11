@@ -422,7 +422,7 @@ export default function ExistingMemberForm() {
 
             <div className="px-6 pb-10 pt-6 sm:px-10">
               <Formik
-                initialValues={buildPrefill()}
+                initialValues={useMemo(() => buildPrefill(), [details, upgradeTarget, surname])}
                 validationSchema={buildValidationSchemaEM({
                   showCourse: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
