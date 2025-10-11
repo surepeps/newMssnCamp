@@ -496,10 +496,10 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
   }, [category, prefillValues])
 
-  const validationSchema = React.React.useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
+  const validationSchema = React.useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
 
-  const [processing, setProcessing] = React.React.useState(false)
-  const [redirecting, setRedirecting] = React.React.useState(false)
+  const [processing, setProcessing] = React.useState(false)
+  const [redirecting, setRedirecting] = React.useState(false)
 
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
@@ -782,7 +782,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
 export default function NewMember({ category }) {
   const [draft, setDraft] = React.useState(null)
-  React.React.useEffect(() => {
+  React.useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY)
       if (raw) setDraft(JSON.parse(raw))
