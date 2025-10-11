@@ -463,6 +463,11 @@ export default function ExistingMemberForm() {
                     Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
                   </div>
                 ) : null}
+                {upgradeStarted && (
+                  <div className="mt-3 rounded-2xl border border-mssn-green/30 bg-mssn-green/10 p-3 text-xs text-mssn-greenDark">
+                    Your account has been upgraded to {categoryKey==='undergraduate'?'Undergraduate':categoryKey==='secondary'?'Secondary':'Others'}.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -487,6 +492,7 @@ export default function ExistingMemberForm() {
                   }
                   const categoryApi = categoryKey === 'undergraduate' ? 'UNDERGRADUATE' : categoryKey === 'secondary' ? 'SECONDARY' : 'OTHERS'
                   const payload = {
+                    mssn_id: (mssnId || delegate?.details?.mssn_id || '').toString().trim(),
                     surname: values.surname.trim(),
                     firstname: values.firstname.trim(),
                     othername: normalize(values.othername),
