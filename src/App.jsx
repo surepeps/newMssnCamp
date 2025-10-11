@@ -7,6 +7,7 @@ import RegistrationGate from './pages/RegistrationGate.jsx'
 import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
 import ReprintSlip from './pages/ReprintSlip.jsx'
+import CheckMssnId from './pages/CheckMssnId.jsx'
 import { Toaster } from 'sonner'
 
 function usePathRoute() {
@@ -55,6 +56,7 @@ function Router() {
       render: ({ params }) => (params.action === 'edit' ? <ExistingMemberForm /> : <ExistingMemberValidate />),
     },
     { pattern: '/reprint-slip', render: () => <ReprintSlip /> },
+    { pattern: '/check-mssn-id', render: () => <CheckMssnId /> },
     { pattern: '/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '/registration', render: () => <RegistrationGate /> },
     { pattern: '/', render: () => <HomePage /> },

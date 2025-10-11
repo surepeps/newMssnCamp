@@ -96,7 +96,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
         <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
           <a href="/" onClick={createRouteHandler('/')} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Home</a>
           <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip', { closeNav: false })} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Re-print Slip</a>
-          <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Check MSSN ID</a>
+          <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id', { closeNav: false })} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Check MSSN ID</a>
           <div
             ref={registrationRef}
             className="relative"
@@ -145,7 +145,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pb-6">
           <a href="/" onClick={createRouteHandler('/')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
           <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Re-print Slip</a>
-          <a href="https://mssnlagos.org/camp/register/returning" target="_blank" rel="noreferrer" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
+          <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
           <div className="rounded-2xl bg-white p-2 ring-1 ring-mssn-slate/10">
             <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
             <a href="/registration" onClick={createRouteHandler('/registration')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
