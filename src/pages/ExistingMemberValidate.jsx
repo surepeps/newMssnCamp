@@ -79,67 +79,39 @@ export default function ExistingMemberValidate() {
         <StepProgress steps={["Validate", "Edit", "Pay"]} current={0} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <aside className="order-2 lg:order-1">
-          <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
-            <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-            <div className="p-6 sm:p-8">
-              <h1 className="text-2xl font-semibold">Verify your membership</h1>
-              <p className="mt-2 text-sm text-mssn-slate/70">
-                Enter your MSSN ID and Surname to fetch your record, then review and update your details before payment.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-mssn-slate/80">
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-mssn-green/10 text-mssn-greenDark">✓</span>
-                  Faster check-in at camp
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-mssn-green/10 text-mssn-greenDark">✓</span>
-                  Keep your contact and emergency info up to date
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-mssn-green/10 text-mssn-greenDark">✓</span>
-                  Pay securely after confirming details
-                </li>
-              </ul>
-              <div className="mt-6 rounded-2xl border border-mssn-slate/10 bg-mssn-mist/60 p-4 text-xs text-mssn-slate/80">
-                We’ll verify your details and take you to the edit page to confirm or update your information before payment.
-              </div>
-              <div className="mt-6 grid gap-3 text-sm">
-                <a
-                  href="https://mssnlagos.org/camp/register/returning"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-mssn-slate/20 bg-white px-4 py-2 font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark sm:w-auto"
-                >
-                  Don’t know your MSSN ID? Check here
-                </a>
-                <button
-                  type="button"
-                  onClick={() => navigate('/new')}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-mssn-green/10 px-4 py-2 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20 sm:w-auto"
-                >
-                  New member? Register here
-                </button>
-              </div>
+      <div className="rounded-3xl border border-mssn-slate/10 bg-white">
+        <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+        <div className="bg-radial-glow/40">
+          <div className="flex flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
+              <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">Validation</h1>
+              <p className="mt-2 text-sm text-mssn-slate/70">Enter your MSSN ID and surname to continue.</p>
             </div>
+            <a
+              href="https://mssnlagos.org/camp/register/returning"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green"
+            >
+              Don’t know your MSSN ID?
+            </a>
           </div>
-        </aside>
 
-        <div className="order-1 lg:order-2">
-          <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
-            <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
-            <div className="p-6 sm:p-8">
-              <form id="validateForm" className="grid gap-5" onSubmit={onSubmit} noValidate>
-                <h2 className="text-lg font-semibold">Existing Member Validation</h2>
-                <p className="-mt-1 text-sm text-mssn-slate/70">Enter your MSSN ID and Surname to continue.</p>
-
+          <form id="validateForm" className="mt-10 space-y-8 px-6 pb-10 sm:px-10" onSubmit={onSubmit} noValidate>
+            <div className="rounded-3xl border border-mssn-slate/10 bg-white/90 p-6 sm:p-8">
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Verification</h2>
+                <p className="mt-2 text-sm text-mssn-slate/70">We’ll verify your details and take you to the edit page to confirm or update your information before payment.</p>
                 {error ? (
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert">{error}</div>
+                  <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert" aria-live="polite">{error}</div>
                 ) : null}
-
+              </div>
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="mssnId" className="block text-sm font-semibold text-mssn-slate">MSSN ID</label>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">MSSN ID *</label>
+                  </div>
                   <input
                     id="mssnId"
                     name="mssnId"
@@ -151,13 +123,15 @@ export default function ExistingMemberValidate() {
                     value={mssnId}
                     ref={mssnRef}
                     onChange={(e) => setMssnId(formatMssn(e.target.value))}
-                    className="mt-2 w-full rounded-2xl border border-mssn-slate/20 bg-mssn-mist px-4 py-3 text-mssn-slate outline-none ring-2 ring-transparent focus:ring-mssn-green/30"
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
                     aria-invalid={Boolean(error)}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="surname" className="block text-sm font-semibold text-mssn-slate">Surname</label>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="surname" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">Surname *</label>
+                  </div>
                   <input
                     id="surname"
                     name="surname"
@@ -167,35 +141,38 @@ export default function ExistingMemberValidate() {
                     value={surname}
                     ref={surnameRef}
                     onChange={(e) => setSurname(formatSurname(e.target.value))}
-                    className="mt-2 w-full rounded-2xl border border-mssn-slate/20 bg-mssn-mist px-4 py-3 text-mssn-slate outline-none ring-2 ring-transparent focus:ring-mssn-green/30"
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
                     aria-invalid={Boolean(error)}
                   />
                 </div>
-
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition ${
-                      loading
-                        ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'
-                        : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:translate-y-[-2px]'
-                    }`}
-                  >
-                    {loading ? 'Verifying…' : 'Validate'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearForm}
-                    disabled={loading}
-                    className="inline-flex items-center justify-center rounded-full border border-mssn-slate/20 bg-white px-5 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </form>
+              </div>
             </div>
-          </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
+              >
+                {loading ? 'Verifying…' : 'Validate'}
+              </button>
+              <button
+                type="button"
+                onClick={clearForm}
+                disabled={loading}
+                className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/new')}
+                className="inline-flex items-center justify-center rounded-2xl bg-mssn-green/10 px-8 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
+              >
+                New member? Register here
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
