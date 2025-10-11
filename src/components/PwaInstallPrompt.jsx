@@ -75,8 +75,8 @@ export default function PwaInstallPrompt() {
       return
     }
 
-    if (isiOS()) {
-      // show iOS install hint (manual)
+    if (isAppleDevice()) {
+      // show iOS/macOS Safari install hint (manual)
       setShowIosHelp(true)
       return
     }
