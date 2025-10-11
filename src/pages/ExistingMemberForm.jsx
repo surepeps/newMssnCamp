@@ -190,6 +190,7 @@ export default function ExistingMemberForm() {
   const [loading, setLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
 
   // AsyncSelect controlled values
@@ -240,13 +241,15 @@ export default function ExistingMemberForm() {
             setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
-            navigate('/existing/validate')
+            const msg = res?.message || 'Unable to load record. Please check details and try again.'
+            setLoadError(msg)
           }
         } else {
           navigate('/existing/validate')
         }
-      } catch {
-        navigate('/existing/validate')
+      } catch (err) {
+        const msg = err?.message || 'Unable to load record. Please try again later.'
+        setLoadError(msg)
       } finally {
         setLoading(false)
       }
@@ -393,7 +396,7 @@ export default function ExistingMemberForm() {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      {showUpgradeModal ? null : (
+      {(showUpgradeModal || showRegisteredModal || loadError) ? null : (
         <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="bg-radial-glow/40 rounded-3xl">
@@ -558,13 +561,25 @@ export default function ExistingMemberForm() {
       </div>
     )}
 
+    {loadError && (
+      <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/40">
+        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
+          <h3 className="text-lg font-semibold text-mssn-slate">Cannot load record</h3>
+          <p className="mt-2 text-sm text-mssn-slate/70">{loadError}</p>
+          <div className="mt-4 flex justify-end gap-2">
+            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {showRegisteredModal && (
       <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/40">
         <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
           <h3 className="text-lg font-semibold text-mssn-slate">Already Registered</h3>
-          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. Would you like to re���print your slip?</p>
+          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. You can re-print your slip below.</p>
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => { setShowRegisteredModal(false) }} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Continue Editing</button>
+            <button type="button" onClick={() => navigate('/existing/validate')} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Back to Validation</button>
             <button type="button" onClick={() => navigate('/registration')} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Re‑print Slip</button>
           </div>
         </div>
