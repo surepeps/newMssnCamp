@@ -17,9 +17,26 @@ async function fetchJSON(path, options = {}) {
           if (data && (data.message || data.error)) message = data.message || data.error
         } else {
           const text = await clone.text()
-          if (text) message = text
+          if (text) {
+            try {
+              const parsed = JSON.parse(text)
+              if (parsed && (parsed.message || parsed.error)) {
+                message = parsed.message || parsed.error
+              } else {
+                message = text
+              }
+            } catch {
+              message = text
+            }
+          }
         }
       } catch {}
+      if (message.startsWith('Request failed with status')) {
+        if (res.status === 404) message = 'Record not found.'
+        else if (res.status === 400 || res.status === 422) message = 'Invalid request.'
+        else if (res.status === 429) message = 'Too many attempts. Please try again later.'
+        else if (res.status >= 500) message = 'Server error. Please try again shortly.'
+      }
       const error = new Error(message)
       error.status = res.status
       error.statusText = res.statusText
