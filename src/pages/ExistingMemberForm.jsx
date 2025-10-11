@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { RegistrationForm } from './NewMember.jsx'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
@@ -451,7 +450,148 @@ export default function ExistingMemberForm() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       {showUpgradeModal ? null : (
-        <RegistrationForm category={categoryKey} prefillValues={buildPrefill()} enableDraft={false} />
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white">
+          <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+          <div className="bg-radial-glow/40">
+            <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
+                <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">Edit</h1>
+                <p className="mt-2 text-sm text-mssn-slate/70">MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
+                {delegate?.upgraded && delegate.upgrade_details?.length ? (
+                  <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="px-6 pb-10 pt-6 sm:px-10">
+              <Formik
+                initialValues={buildPrefill()}
+                validationSchema={buildValidationSchemaEM({
+                  showCourse: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showWorkplace: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showEmergency: categoryKey === 'undergraduate' || categoryKey === 'others',
+                })}
+                enableReinitialize
+                onSubmit={async (values, helpers) => {
+                  const normalize = (input) => {
+                    if (Array.isArray(input)) return input.filter(Boolean)
+                    if (typeof input === 'string') {
+                      const trimmed = input.trim()
+                      return trimmed.length ? trimmed : undefined
+                    }
+                    return input === undefined || input === null ? undefined : input
+                  }
+                  const categoryApi = categoryKey === 'undergraduate' ? 'UNDERGRADUATE' : categoryKey === 'secondary' ? 'SECONDARY' : 'OTHERS'
+                  const payload = {
+                    surname: values.surname.trim(),
+                    firstname: values.firstname.trim(),
+                    othername: normalize(values.othername),
+                    sex: values.sex,
+                    date_of_birth: String(values.date_of_birth).trim(),
+                    area_council: values.area_council,
+                    branch: values.branch,
+                    email: normalize(values.email),
+                    tel_no: normalize(values.tel_no),
+                    resident_address: normalize(values.resident_address),
+                    marital_status: normalize(values.marital_status) || 'Single',
+                    state_of_origin: normalize(values.state_of_origin),
+                    ailments: (normalize(values.ailments) || []).join(','),
+                    pin_category: categoryApi,
+                  }
+                  payload.school = normalize(values.school)
+                  payload.class_level = normalize(values.class_level)
+                  if (categoryKey === 'undergraduate' || categoryKey === 'others') {
+                    payload.next_of_kin = normalize(values.next_of_kin)
+                    payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
+                    payload.course = normalize(values.course)
+                    payload.discipline = normalize(values.discipline)
+                    payload.workplace = normalize(values.workplace)
+                  }
+                  Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
+                  try {
+                    const res = await fetchJSON('/registration/new', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload),
+                    })
+                    const data = res?.data || {}
+                    const message = data.message || res?.message || 'Registered successfully'
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+                    const discount = data.discount_applied ? ' • discount applied' : ''
+                    toast.success(`${message}${priceInfo}${discount}`)
+                    if (data.redirect_url) {
+                      window.location.href = data.redirect_url
+                    } else {
+                      navigate('/registration')
+                    }
+                  } catch (_) {
+                  } finally {
+                    helpers.setSubmitting(false)
+                  }
+                }}
+              >
+                {(formik) => (
+                  <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
+                    <input type="hidden" name="pin_category" value={categoryKey} />
+
+                    <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
+                      <TextFieldEM formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
+                      <TextFieldEM formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
+                      <SelectFieldEM formik={formik} name="sex" label="Gender" required options={['Male','Female']} placeholder="Select gender" />
+                      <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" />
+                      <TextFieldEM formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
+                    </SectionCardEM>
+
+                    <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
+                      <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
+                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
+                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                      <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
+                      <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
+                      <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
+                    </SectionCardEM>
+
+                    <SectionCardEM title="Education & Occupation" description="Share your institution and occupation details.">
+                      <FormikAsyncSelectEM formik={formik} name="school" label="School" placeholder={categoryKey==='undergraduate'||categoryKey==='others'?'Select institution...':'Select school...'} fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })} />
+                      <FormikAsyncSelectEM formik={formik} name="class_level" label="Class Level" placeholder="Select class level..." fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })} />
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                      )}
+                    </SectionCardEM>
+
+                    {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                      <SectionCardEM title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                        <TextFieldEM formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                        <TextFieldEM formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
+                      </SectionCardEM>
+                    )}
+
+                    <SectionCardEM title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="ailments" label="Ailments" multiple placeholder="Select ailments..." fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })} className="sm:col-span-2" />
+                    </SectionCardEM>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                        {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
+                      </button>
+                    </div>
+                  </FormikForm>
+                )}
+              </Formik>
+            </div>
+          </div>
+        </div>
       )}
     {loading && (
       <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/40">
