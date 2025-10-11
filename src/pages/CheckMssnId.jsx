@@ -7,6 +7,7 @@ import { queryCouncils, queryClassLevels } from '../services/dataProvider.js'
 
 const CATEGORY_OPTIONS = ['TFL', 'SECONDARY', 'UNDERGRADUATE', 'OTHERS']
 const GENDER_OPTIONS = ['Male', 'Female']
+const STORAGE_KEY = 'check_mssn_id_state'
 
 function Field({ label, children, htmlFor, error }) {
   return (
@@ -48,6 +49,26 @@ export default function CheckMssnId() {
   const [rows, setRows] = useState([])
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, page: 1, limit: 10 })
 
+  // Load saved state once
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+      const saved = JSON.parse(raw)
+      if (saved && typeof saved === 'object') {
+        if (typeof saved.search === 'string') setSearch(saved.search)
+        if (typeof saved.gender === 'string') setGender(saved.gender)
+        if (typeof saved.category === 'string') setCategory(saved.category)
+        if (typeof saved.classLevel === 'string') setClassLevel(saved.classLevel)
+        if (typeof saved.areaCouncil === 'string') setAreaCouncil(saved.areaCouncil)
+        if (typeof saved.page === 'number') setPage(saved.page)
+        if (typeof saved.limit === 'number') setLimit(saved.limit)
+        if (Array.isArray(saved.rows)) setRows(saved.rows)
+        if (saved.pagination && typeof saved.pagination === 'object') setPagination(saved.pagination)
+      }
+    } catch {}
+  }, [])
+
   const debouncedSearch = useDebounced(search, 500)
 
   const classIdentifier = useMemo(() => {
@@ -80,10 +101,27 @@ export default function CheckMssnId() {
       const res = await fetchJSON(`/search?${params.toString()}`)
       const data = Array.isArray(res?.data) ? res.data : []
       const p = res?.pagination || { total: data.length, page: nextPage, totalPages: nextPage, limit: nextLimit }
+      const nextPg = { total: Number(p.total || 0), totalPages: Number(p.totalPages || 1), page: Number(p.page || nextPage), limit: Number(p.limit || nextLimit) }
       setRows(data)
-      setPagination({ total: Number(p.total || 0), totalPages: Number(p.totalPages || 1), page: Number(p.page || nextPage), limit: Number(p.limit || nextLimit) })
-      setPage(Number(p.page || nextPage))
-      setLimit(Number(p.limit || nextLimit))
+      setPagination(nextPg)
+      setPage(nextPg.page)
+      setLimit(nextPg.limit)
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            search,
+            gender,
+            category,
+            classLevel,
+            areaCouncil,
+            page: nextPg.page,
+            limit: nextPg.limit,
+            rows: data,
+            pagination: nextPg,
+          })
+        )
+      } catch {}
     } catch (err) {
       setError(err?.message || 'Failed to load results')
       setRows([])
@@ -135,7 +173,7 @@ export default function CheckMssnId() {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
-      <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+      <div className="overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
@@ -204,7 +242,7 @@ export default function CheckMssnId() {
               </button>
               <button
                 type="button"
-                onClick={() => { setSearch(''); setGender(''); setCategory(''); setClassLevel(''); setAreaCouncil(''); setPage(1); fetchData({ page:1, limit }) }}
+                onClick={() => { setSearch(''); setGender(''); setCategory(''); setClassLevel(''); setAreaCouncil(''); setPage(1); try{localStorage.removeItem(STORAGE_KEY)}catch{}; fetchData({ page:1, limit }) }}
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
               >
@@ -215,7 +253,7 @@ export default function CheckMssnId() {
         </div>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+      <div className="mt-8 overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="border-b border-mssn-slate/10 px-6 py-4 sm:px-8">
           <h2 className="text-base font-semibold uppercase tracking-[0.22em] text-mssn-green">Results</h2>
         </div>
