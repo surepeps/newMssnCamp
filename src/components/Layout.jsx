@@ -196,18 +196,15 @@ function Footer() {
             </div>
           </div>
           <div className="grid gap-3 text-xs sm:grid-cols-2 sm:gap-4">
-            <a href="#support" className="underline decoration-mssn-green/40 underline-offset-4">
-              Visit support hub
-            </a>
-            <a href="mailto:camp@mssnlagos.org" className="underline decoration-mssn-green/40 underline-offset-4">
-              camp@mssnlagos.org
-            </a>
-            <a href="tel:+2348130001122" className="underline decoration-mssn-green/40 underline-offset-4">
-              +234 813 000 1122
-            </a>
+            <a href="#support" className="underline decoration-mssn-green/40 underline-offset-4">Visit support hub</a>
+            <a href="/contact" onClick={(e) => { e.preventDefault(); navigate('/contact') }} className="underline decoration-mssn-green/40 underline-offset-4">Contact us</a>
+            <a href="tel:+2348130001122" className="underline decoration-mssn-green/40 underline-offset-4">+234 813 000 1122</a>
           </div>
         </div>
-        <p className="mt-8 text-xs text-white/60">&copy; {currentYear} MSSN Lagos State Area Unit. All rights reserved.</p>
+        <div className="mt-8 flex items-center justify-between">
+          <p className="text-xs text-white/60">&copy; {currentYear} MSSN Lagos State Area Unit. All rights reserved.</p>
+          <p className="text-xs text-white/60">Designed by <span className="font-semibold">MSSN Web Team</span></p>
+        </div>
       </div>
     </footer>
   )
