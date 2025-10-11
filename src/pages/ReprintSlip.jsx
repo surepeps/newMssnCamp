@@ -3,7 +3,8 @@ import { toast } from 'sonner'
 import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
-
+import { Formik, Form } from 'formik'
+import * as Yup from 'yup'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 const formatMssnId = (value) => value.replace(/\s+/g, '').toUpperCase()
@@ -74,11 +75,11 @@ const buildDetailItems = (delegate) => {
 }
 
 export default function ReprintSlip() {
-  const [mssnId, setMssnId] = React.useState('')
-  const [paymentRef, setPaymentRef] = React.useState('')
   const [delegate, setDelegate] = React.useState(null)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
+  const [initialValues, setInitialValues] = React.useState({ mssnId: '', paymentRef: '' })
+  const [displayPaymentRef, setDisplayPaymentRef] = React.useState('')
   const mssnFieldRef = React.useRef(null)
   const { settings } = useSettings()
   const camp = settings?.current_camp
@@ -88,15 +89,16 @@ export default function ReprintSlip() {
       const params = new URLSearchParams(window.location.search)
       const qM = params.get('mssnId') || ''
       const qR = params.get('paymentRef') || ''
-      if (qM) setMssnId(formatMssnId(qM))
-      if (qR) setPaymentRef(formatPaymentRef(qR))
-      if (qM && qR) {
-        // Auto fetch
+      const formattedM = formatMssnId(qM)
+      const formattedR = formatPaymentRef(qR)
+      setInitialValues({ mssnId: formattedM, paymentRef: formattedR })
+      setDisplayPaymentRef(formattedR)
+      if (formattedM && formattedR) {
         ;(async () => {
           setLoading(true)
           setError('')
           try {
-            const payload = { mssn_id: formatMssnId(qM), payment_ref: formatPaymentRef(qR) }
+            const payload = { mssn_id: formattedM, payment_ref: formattedR }
             const response = await fetchJSON('/slip/reprint', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -126,19 +128,24 @@ export default function ReprintSlip() {
     }
   }, [])
 
-  const summaryItems = React.useMemo(() => buildSummaryItems(delegate, paymentRef), [delegate, paymentRef])
+  const summaryItems = React.useMemo(() => buildSummaryItems(delegate, displayPaymentRef), [delegate, displayPaymentRef])
   const detailItems = React.useMemo(() => buildDetailItems(delegate), [delegate])
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    const formattedMssn = formatMssnId(mssnId)
-    const formattedRef = formatPaymentRef(paymentRef)
+  const validationSchema = React.useMemo(() => Yup.object({
+    mssnId: Yup.string().transform((v) => (typeof v==='string'? formatMssnId(v): v)).trim().required('Required'),
+    paymentRef: Yup.string().transform((v) => (typeof v==='string'? formatPaymentRef(v): v)).trim().required('Required'),
+  }), [])
+
+  const submit = async (values, helpers) => {
+    const formattedMssn = formatMssnId(values.mssnId)
+    const formattedRef = formatPaymentRef(values.paymentRef)
     if (!formattedMssn || !formattedRef) {
       setError('Enter both MSSN ID and payment reference to continue.')
+      helpers.setSubmitting(false)
       return
     }
-    setLoading(true)
     setError('')
+    setDisplayPaymentRef(formattedRef)
     try {
       const payload = { mssn_id: formattedMssn, payment_ref: formattedRef }
       const response = await fetchJSON('/slip/reprint', {
@@ -155,23 +162,19 @@ export default function ReprintSlip() {
       setDelegate(response.delegate)
       toast.success('Registration slip found. You can now view and print it.')
     } catch (err) {
-      if (err?.name === 'AbortError') {
-        setError('Request timed out. Please try again in a moment.')
-      } else if (err?.message) {
-        setError(err.message)
-      } else {
-        setError('Unable to fetch registration slip. Please try again later.')
-      }
+      if (err?.name === 'AbortError') setError('Request timed out. Please try again in a moment.')
+      else if (err?.message) setError(err.message)
+      else setError('Unable to fetch registration slip. Please try again later.')
     } finally {
-      setLoading(false)
+      helpers.setSubmitting(false)
     }
   }
 
-  const handleClear = () => {
-    setMssnId('')
-    setPaymentRef('')
+  const handleClear = (resetForm) => {
+    resetForm({ values: { mssnId: '', paymentRef: '' } })
     setDelegate(null)
     setError('')
+    setDisplayPaymentRef('')
     mssnFieldRef.current?.focus()
   }
 
@@ -195,89 +198,99 @@ export default function ReprintSlip() {
             </button>
           </div>
 
-          <form className="mt-6 space-y-8 px-6 pb-8 sm:px-8" onSubmit={handleSubmit} noValidate>
-            <div>
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          <Formik initialValues={initialValues} enableReinitialize validationSchema={validationSchema} validateOnMount onSubmit={submit}>
+            {(formik) => (
+              <Form className="mt-6 space-y-8 px-6 pb-8 sm:px-8" noValidate>
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
-                      MSSN ID *
-                    </label>
+                  <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="mssnId" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
+                          MSSN ID *
+                        </label>
+                        {formik.touched.mssnId && formik.errors.mssnId ? <span className="text-xs font-medium text-rose-500">{formik.errors.mssnId}</span> : null}
+                      </div>
+                      <input
+                        id="mssnId"
+                        name="mssnId"
+                        type="text"
+                        required
+                        placeholder="Enter MSSN ID"
+                        autoComplete="off"
+                        value={formik.values.mssnId}
+                        ref={mssnFieldRef}
+                        onChange={(e) => formik.setFieldValue('mssnId', formatMssnId(e.target.value))}
+                        onBlur={formik.handleBlur}
+                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${formik.touched.mssnId && formik.errors.mssnId ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="paymentRef" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
+                          Payment reference *
+                        </label>
+                        {formik.touched.paymentRef && formik.errors.paymentRef ? <span className="text-xs font-medium text-rose-500">{formik.errors.paymentRef}</span> : null}
+                      </div>
+                      <input
+                        id="paymentRef"
+                        name="paymentRef"
+                        type="text"
+                        required
+                        placeholder="Enter payment reference"
+                        autoComplete="off"
+                        value={formik.values.paymentRef}
+                        onChange={(e) => formik.setFieldValue('paymentRef', formatPaymentRef(e.target.value))}
+                        onBlur={formik.handleBlur}
+                        className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${formik.touched.paymentRef && formik.errors.paymentRef ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'}`}
+                      />
+                    </div>
                   </div>
-                  <input
-                    id="mssnId"
-                    name="mssnId"
-                    type="text"
-                    required
-                    placeholder="Enter MSSN ID"
-                    autoComplete="off"
-                    value={mssnId}
-                    ref={mssnFieldRef}
-                    onChange={(event) => setMssnId(formatMssnId(event.target.value))}
-                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${
-                      error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'
-                    }`}
-                  />
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="paymentRef" className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
-                      Payment reference *
-                    </label>
+                {error ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {error}
                   </div>
-                  <input
-                    id="paymentRef"
-                    name="paymentRef"
-                    type="text"
-                    required
-                    placeholder="Enter payment reference"
-                    autoComplete="off"
-                    value={paymentRef}
-                    onChange={(event) => setPaymentRef(formatPaymentRef(event.target.value))}
-                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 ${
-                      error ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'
-                    }`}
-                  />
+                ) : null}
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={!formik.isValid || formik.isSubmitting}
+                    className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                  >
+                    {formik.isSubmitting ? 'Fetching slip…' : 'Retrieve slip'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleClear(formik.resetForm)}
+                    disabled={formik.isSubmitting}
+                    className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/new')}
+                    className="inline-flex items-center justify-center rounded-2xl bg-mssn-green/10 px-8 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
+                  >
+                    New registration
+                  </button>
                 </div>
-              </div>
-            </div>
 
-            {error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {error}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${
-                  loading
-                    ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'
-                    : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'
-                }`}
-              >
-                {loading ? 'Fetching slip…' : 'Retrieve slip'}
-              </button>
-              <button
-                type="button"
-                onClick={handleClear}
-                disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/new')}
-                className="inline-flex items-center justify-center rounded-2xl bg-mssn-green/10 px-8 py-3 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/20"
-              >
-                New registration
-              </button>
-            </div>
-          </form>
+                {(loading || formik.isSubmitting) ? (
+                  <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/30">
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
+                      <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
+                      <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
+                      <p className="mt-1 text-sm text-mssn-slate/70">Fetching your registration slip. Please wait…</p>
+                    </div>
+                  </div>
+                ) : null}
+              </Form>
+            )}
+          </Formik>
         </div>
       </div>
 
@@ -317,7 +330,7 @@ export default function ReprintSlip() {
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-mssn-slate/10 bg-mssn-mist/70 px-4 py-3">
                   <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Payment reference</dt>
-                  <dd className="mt-1 text-sm font-semibold text-mssn-slate">{delegate?.payment_reference || paymentRef}</dd>
+                  <dd className="mt-1 text-sm font-semibold text-mssn-slate">{delegate?.payment_reference || displayPaymentRef}</dd>
                 </div>
                 {delegate?.payment_status ? (
                   <div className="rounded-xl border border-mssn-green/20 bg-mssn-green/10 px-4 py-3">
@@ -366,16 +379,6 @@ export default function ReprintSlip() {
             <div className="border-t border-mssn-slate/10 p-6 text-xs text-mssn-slate/60 sm:p-8">
               Please present this slip at the registration desk. Keep a digital or printed copy for your records.
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/30">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-soft">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
-            <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
-            <p className="mt-1 text-sm text-mssn-slate/70">Fetching your registration slip. Please wait…</p>
           </div>
         </div>
       ) : null}
