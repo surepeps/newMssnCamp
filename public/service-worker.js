@@ -2,6 +2,7 @@ const CACHE_NAME = 'mssn-pwa-v1'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
+  '/manifest.webmanifest',
   '/vite.svg',
 ]
 

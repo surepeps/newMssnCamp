@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { fetchJSON } from '../services/api.js'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -24,8 +24,8 @@ function Field({ label, children, htmlFor, error }) {
 }
 
 function useDebounced(value, delay = 400) {
-  const [v, setV] = React.useState(value)
-  React.useEffect(() => {
+  const [v, setV] = useState(value)
+  useEffect(() => {
     const t = setTimeout(() => setV(value), delay)
     return () => clearTimeout(t)
   }, [value, delay])
@@ -36,21 +36,21 @@ export default function CheckMssnId() {
   const { settings } = useSettings()
   const currentCampCode = settings?.current_camp?.camp_code || ''
 
-  const [search, setSearch] = React.useState('')
-  const [gender, setGender] = React.useState('')
-  const [category, setCategory] = React.useState('')
-  const [classLevel, setClassLevel] = React.useState('')
-  const [areaCouncil, setAreaCouncil] = React.useState('')
+  const [search, setSearch] = useState('')
+  const [gender, setGender] = useState('')
+  const [category, setCategory] = useState('')
+  const [classLevel, setClassLevel] = useState('')
+  const [areaCouncil, setAreaCouncil] = useState('')
 
-  const [page, setPage] = React.useState(1)
-  const [limit, setLimit] = React.useState(10)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState('')
-  const [rows, setRows] = React.useState([])
-  const [pagination, setPagination] = React.useState({ total: 0, totalPages: 1, page: 1, limit: 10 })
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [rows, setRows] = useState([])
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1, page: 1, limit: 10 })
 
   // Load saved state once
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (!raw) return
@@ -71,7 +71,7 @@ export default function CheckMssnId() {
 
   const debouncedSearch = useDebounced(search, 500)
 
-  const classIdentifier = React.useMemo(() => {
+  const classIdentifier = useMemo(() => {
     const cat = String(category || '').toUpperCase()
     if (cat === 'SECONDARY') return 'S'
     if (cat === 'UNDERGRADUATE') return 'U'
@@ -79,7 +79,7 @@ export default function CheckMssnId() {
     return 'O'
   }, [category])
 
-  React.useEffect(() => {
+  useEffect(() => {
     setClassLevel('')
   }, [classIdentifier])
 
@@ -132,7 +132,7 @@ export default function CheckMssnId() {
   }
 
   // Auto fetch when filters change (except page/limit handled by controls)
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData({ page: 1, limit })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, gender, category, classLevel, areaCouncil])

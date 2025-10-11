@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
@@ -6,6 +6,7 @@ import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLeve
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
+import { useSettings } from '../context/SettingsContext.jsx'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -63,7 +64,7 @@ function CategoryCard({ id, title, description, onClick }) {
 }
 
 function useOutsideClick(ref, handler) {
-  React.useEffect(() => {
+  useEffect(() => {
     const listener = (e) => {
       if (!ref.current || ref.current.contains(e.target)) return
       handler()
@@ -74,9 +75,9 @@ function useOutsideClick(ref, handler) {
 }
 
 function useDebouncedValue(value, delay = 250) {
-  const [debouncedValue, setDebouncedValue] = React.useState(value)
+  const [debouncedValue, setDebouncedValue] = useState(value)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timeout = setTimeout(() => setDebouncedValue(value), delay)
     return () => clearTimeout(timeout)
   }, [value, delay])
@@ -94,18 +95,18 @@ function AsyncSelect({
   onBlur,
   invalid = false,
 }) {
-  const containerRef = React.useRef(null)
-  const [open, setOpen] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const containerRef = useRef(null)
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
-  const [items, setItems] = React.useState([])
-  const [page, setPage] = React.useState(1)
-  const [totalPages, setTotalPages] = React.useState(1)
-  const [loading, setLoading] = React.useState(false)
-  const prevOpen = React.useRef(false)
+  const [items, setItems] = useState([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const prevOpen = useRef(false)
 
   const normalizedValue = multiple ? (Array.isArray(value) ? value.filter(Boolean) : []) : (value || '')
-  const selectedLabels = React.useMemo(() => {
+  const selectedLabels = useMemo(() => {
     if (multiple) return normalizedValue
     return normalizedValue ? [normalizedValue] : []
   }, [multiple, normalizedValue])
@@ -127,7 +128,7 @@ function AsyncSelect({
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setItems([])
       setPage(1)
@@ -137,7 +138,7 @@ function AsyncSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, debouncedSearch])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (prevOpen.current && !open) {
       onBlur?.()
     }
@@ -383,7 +384,7 @@ function buildValidationSchema(config, extras = {}) {
 
 function DraftSaver({ formik, category }) {
   const debounced = useDebouncedValue(formik.values, 400)
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const values = debounced || {}
       const hasAnyFilled = Object.entries(values).some(([key, rawValue]) => {
@@ -433,9 +434,15 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const showEmergency = isUG || isOthers
   const showHighestQualification = isUG || isOthers
 
-  const [qualifications, setQualifications] = React.useState([])
+  const { settings } = useSettings()
+  const camp = settings?.current_camp
+  const priceOriginal = category === 'undergraduate' ? camp?.prices?.undergraduate : category === 'secondary' ? camp?.prices?.secondary : category === 'others' ? camp?.prices?.others : null
+  const priceDiscounted = category === 'undergraduate' ? camp?.discounts?.price_und : category === 'secondary' ? camp?.discounts?.price_sec : category === 'others' ? camp?.discounts?.price_oth : null
+  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+
+  const [qualifications, setQualifications] = useState([])
   const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
@@ -450,7 +457,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return () => { cancelled = true }
   }, [qualificationAudience])
 
-  const qualificationOptions = React.useMemo(() => {
+  const qualificationOptions = useMemo(() => {
     if (!qualifications.length) return []
     if (!qualificationAudience) return qualifications.map((item) => item.label)
     const normalizedAudience = qualificationAudience.toLowerCase()
@@ -459,7 +466,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return source.map((item) => item.label)
   }, [qualificationAudience, qualifications])
 
-  const initialValues = React.useMemo(() => {
+  const initialValues = useMemo(() => {
     const base = {
       surname: '',
       firstname: '',
@@ -496,10 +503,10 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
   }, [category, prefillValues])
 
-  const validationSchema = React.useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
+  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
 
-  const [processing, setProcessing] = React.useState(false)
-  const [redirecting, setRedirecting] = React.useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
@@ -603,9 +610,14 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{config.label}</h1>
             </div>
-            <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
-              Change category
-            </a>
+            <div className="flex items-center gap-3">
+              {finalPrice != null ? (
+                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+              ) : null}
+              <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
+                Change category
+              </a>
+            </div>
           </div>
 
         </div>
@@ -781,8 +793,8 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 }
 
 export default function NewMember({ category }) {
-  const [draft, setDraft] = React.useState(null)
-  React.useEffect(() => {
+  const [draft, setDraft] = useState(null)
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY)
       if (raw) setDraft(JSON.parse(raw))

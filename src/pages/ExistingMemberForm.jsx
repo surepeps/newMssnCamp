@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
@@ -10,14 +10,16 @@ import {
   querySchools,
   queryClassLevels,
   queryCourses,
+  queryQualifications,
 } from '../services/dataProvider.js'
+import { useSettings } from '../context/SettingsContext.jsx'
 import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 
 function useQuery() {
-  return React.useMemo(() => new URLSearchParams(window.location.search), [])
+  return useMemo(() => new URLSearchParams(window.location.search), [])
 }
 
 // Replicated helpers to match /new/:section look
@@ -41,7 +43,8 @@ function TextFieldEM({ formik, name, label, type = 'text', required = false, pla
   const id = `${name}-field`
   const val = formik.values[name]
   const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
-  const invalid = (required && isEmpty(val)) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && isEmpty(val)) || hasError
   const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
 
   return (
@@ -80,7 +83,8 @@ function SelectFieldEM({ formik, name, label, options, required = false, placeho
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-select`
   const value = formik.values[name]
-  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && (!value || String(value).trim() === '')) || hasError
   return (
     <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
       <select
@@ -107,7 +111,8 @@ function FormikAsyncSelectEM({ formik, name, label, required = false, className,
   const error = formik.touched[name] && formik.errors[name]
   const val = formik.values[name]
   const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
-  const invalid = (required && isEmpty) || (!!error)
+  const hasError = Boolean(formik.errors?.[name])
+  const invalid = (required && isEmpty) || hasError
   return (
     <FieldShellEM label={label} required={required} error={error} className={className}>
       <AsyncSelect
@@ -182,26 +187,26 @@ const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
 
 export default function ExistingMemberForm() {
   const query = useQuery()
-  const [category, setCategory] = React.useState('')
-  const [delegate, setDelegate] = React.useState(null)
-  const [qualifications, setQualifications] = React.useState([])
-  const [activeSection, setActiveSection] = React.useState('personal')
-  const [loading, setLoading] = React.useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
-  const [showRegisteredModal, setShowRegisteredModal] = React.useState(false)
-  const [loadError, setLoadError] = React.useState('')
-  const [upgradeStarted, setUpgradeStarted] = React.useState(() => (query.get('upgrade') || '') === '1')
-  const [processing, setProcessing] = React.useState(false)
-  const [redirecting, setRedirecting] = React.useState(false)
+  const [category, setCategory] = useState('')
+  const [delegate, setDelegate] = useState(null)
+  const [qualifications, setQualifications] = useState([])
+  const [activeSection, setActiveSection] = useState('personal')
+  const [loading, setLoading] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
+  const [processing, setProcessing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // AsyncSelect controlled values
-  const [vCouncil, setVCouncil] = React.useState('')
-  const [vBranch, setVBranch] = React.useState('')
-  const [vState, setVState] = React.useState('')
-  const [vSchool, setVSchool] = React.useState('')
-  const [vClassLevel, setVClassLevel] = React.useState('')
-  const [vCourse, setVCourse] = React.useState('')
-  const [vAilments, setVAilments] = React.useState([])
+  const [vCouncil, setVCouncil] = useState('')
+  const [vBranch, setVBranch] = useState('')
+  const [vState, setVState] = useState('')
+  const [vSchool, setVSchool] = useState('')
+  const [vClassLevel, setVClassLevel] = useState('')
+  const [vCourse, setVCourse] = useState('')
+  const [vAilments, setVAilments] = useState([])
 
   const details = delegate?.details || {}
   const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
@@ -210,6 +215,12 @@ export default function ExistingMemberForm() {
   const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
   const categoryKey = targetCategory || currentCategoryLower || 'secondary'
   const qualificationAudience = categoryKey === 'undergraduate' ? 'Undergraduate' : categoryKey === 'others' ? 'Others' : ''
+
+  const { settings } = useSettings()
+  const camp = settings?.current_camp
+  const priceOriginal = categoryKey === 'undergraduate' ? camp?.prices?.undergraduate : categoryKey === 'secondary' ? camp?.prices?.secondary : camp?.prices?.others
+  const priceDiscounted = categoryKey === 'undergraduate' ? camp?.discounts?.price_und : categoryKey === 'secondary' ? camp?.discounts?.price_sec : camp?.discounts?.price_oth
+  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
@@ -223,7 +234,7 @@ export default function ExistingMemberForm() {
     return ''
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     ;(async () => {
       try {
         const qM = (mssnId || '').trim()
@@ -239,7 +250,7 @@ export default function ExistingMemberForm() {
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
             if (cat) setCategory(cat)
-            setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
+            setShowUpgradeModal(Boolean(res.delegate?.upgraded))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
             const msg = res?.message || 'Unable to load record. Please check details and try again.'
@@ -258,15 +269,15 @@ export default function ExistingMemberForm() {
   }, [])
 
   const refs = {
-    personal: React.useRef(null),
-    contact: React.useRef(null),
-    emergency: React.useRef(null),
-    details: React.useRef(null),
-    education: React.useRef(null),
-    membership: React.useRef(null),
+    personal: useRef(null),
+    contact: useRef(null),
+    emergency: useRef(null),
+    details: useRef(null),
+    education: useRef(null),
+    membership: useRef(null),
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false
     const loadQualifications = async () => {
       try {
@@ -288,7 +299,7 @@ export default function ExistingMemberForm() {
     }
   }, [qualificationAudience])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -302,7 +313,7 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
-  const qualificationOptions = React.useMemo(() => {
+  const qualificationOptions = useMemo(() => {
     if (!qualifications.length) return []
     if (!qualificationAudience) return qualifications.map((item) => item.label)
     const normalizedAudience = qualificationAudience.toLowerCase()
@@ -311,7 +322,7 @@ export default function ExistingMemberForm() {
     return source.map((item) => item.label)
   }, [qualificationAudience, qualifications])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!delegate?.details) return
     const normalize = (v) => (v == null ? '' : String(v).trim())
     setVCouncil(normalize(details.area_council))
@@ -364,7 +375,7 @@ export default function ExistingMemberForm() {
     }
   }
 
-  const initialValuesEM = React.useMemo(() => buildPrefill(), [delegate, surname])
+  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -377,6 +388,12 @@ export default function ExistingMemberForm() {
                 <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
                 <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{delegate?.details?.pin_category} FORM</h1>
                 <p className="mt-2 text-sm text-mssn-slate/70">MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {finalPrice != null ? (
+                    <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+                  ) : null}
+                  <a href="/" onClick={(e)=>{e.preventDefault(); navigate('/')}} className="text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">Back to Home</a>
+                </div>
                 {delegate?.upgraded && delegate.upgrade_details?.length ? (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                     Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
@@ -499,7 +516,14 @@ export default function ExistingMemberForm() {
                         <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
-                        <SelectFieldEM formik={formik} name="highest_qualification" label="Highest Qualification" required options={qualificationOptions} placeholder="Select qualification..." />
+                        <FormikAsyncSelectEM
+                          formik={formik}
+                          name="highest_qualification"
+                          label="Highest Qualification"
+                          required
+                          placeholder="Select qualification..."
+                          fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
+                        />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
                         <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />

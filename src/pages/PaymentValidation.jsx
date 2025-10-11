@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -79,14 +79,14 @@ export default function PaymentValidation() {
     params.get('tx') ||
     ''
 
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState('')
-  const [delegate, setDelegate] = React.useState(null)
-  const [transaction, setTransaction] = React.useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [delegate, setDelegate] = useState(null)
+  const [transaction, setTransaction] = useState(null)
   const { settings } = useSettings()
   const camp = settings?.current_camp
 
-  React.useEffect(() => {
+  useEffect(() => {
     const validate = async () => {
       setLoading(true)
       setError('')
@@ -117,10 +117,10 @@ export default function PaymentValidation() {
     validate()
   }, [reference])
 
-  const summaryItems = React.useMemo(() => buildSummaryItems(delegate, reference), [delegate, reference])
-  const detailItems = React.useMemo(() => buildDetailItems(delegate), [delegate])
+  const summaryItems = useMemo(() => buildSummaryItems(delegate, reference), [delegate, reference])
+  const detailItems = useMemo(() => buildDetailItems(delegate), [delegate])
 
-  const txAmount = React.useMemo(() => {
+  const txAmount = useMemo(() => {
     const amt = transaction?.amount
     if (amt == null) return null
     const value = Number(amt)
