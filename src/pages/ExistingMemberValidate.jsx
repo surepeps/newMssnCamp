@@ -9,6 +9,8 @@ export default function ExistingMemberValidate() {
   const [surname, setSurname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [pendingDelegate, setPendingDelegate] = useState(null)
   const mssnRef = useRef(null)
   const surnameRef = useRef(null)
 
@@ -57,9 +59,15 @@ export default function ExistingMemberValidate() {
         toast.error(msg)
       } else {
         localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
-        toast.success('Record found. Proceed to edit your details.')
-        const qs = new URLSearchParams({ mssnId: payload.mssn_id, surname: payload.surname }).toString()
-        navigate(`/existing/edit?${qs}`)
+        const needsUpgrade = Boolean(res?.delegate?.upgraded)
+        if (needsUpgrade) {
+          setPendingDelegate(res.delegate)
+          setShowUpgradeModal(true)
+        } else {
+          toast.success('Record found. Proceed to edit your details.')
+          const qs = new URLSearchParams({ mssnId: payload.mssn_id, surname: payload.surname }).toString()
+          navigate(`/existing/edit?${qs}`)
+        }
       }
     } catch (err) {
       let msg = 'Unable to verify at the moment. Please try again later.'
@@ -192,6 +200,28 @@ export default function ExistingMemberValidate() {
             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-mssn-green border-t-transparent" />
             <h3 className="mt-4 text-base font-semibold text-mssn-slate">Processing</h3>
             <p className="mt-1 text-sm text-mssn-slate/70">Verifying your details. Please wait…</p>
+          </div>
+        </div>
+      )}
+
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-[1002] grid place-items-center bg-black/40">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
+            <h3 className="text-lg font-semibold text-mssn-slate">Upgrade Required</h3>
+            <p className="mt-2 text-sm text-mssn-slate/70">This account needs to be upgraded before proceeding. Please upgrade to the appropriate category to continue.</p>
+            {pendingDelegate?.upgrade_details?.length ? (
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                {pendingDelegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
+              </div>
+            ) : null}
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Cancel</button>
+              <button type="button" onClick={() => {
+                const qs = new URLSearchParams({ mssnId: mssnId.replace(/\s+/g,'').toUpperCase(), surname: surname.replace(/\s{2,}/g,' ').trim().toUpperCase(), upgrade: '1' }).toString()
+                setShowUpgradeModal(false)
+                navigate(`/existing/edit?${qs}`)
+              }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
+            </div>
           </div>
         </div>
       )}

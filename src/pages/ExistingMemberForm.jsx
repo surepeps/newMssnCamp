@@ -13,6 +13,9 @@ import {
   queryClassLevels,
   queryCourses,
 } from '../services/dataProvider.js'
+import { Formik, Form as FormikForm } from 'formik'
+import * as Yup from 'yup'
+import { toast } from 'sonner'
 
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
 
@@ -88,6 +91,163 @@ function SectionCard({ title, description, columns = 'sm:grid-cols-2', children 
   )
 }
 
+// Replicated helpers to match /new/:section look
+function FieldShellEM({ label, required, error, htmlFor, children, className }) {
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between">
+        <label htmlFor={htmlFor} className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70">
+          {label}
+          {required ? ' *' : ''}
+        </label>
+        {error ? <span className="text-xs font-medium text-rose-500">{error}</span> : null}
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  )
+}
+
+function TextFieldEM({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-field`
+  const val = formik.values[name]
+  const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
+  const invalid = (required && isEmpty(val)) || (!!error)
+  const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
+
+  return (
+    <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
+      {as === 'textarea' ? (
+        <textarea
+          id={id}
+          name={name}
+          rows={rows}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={`${baseClass} resize-none`}
+          required={required}
+        />
+      ) : (
+        <input
+          id={id}
+          name={name}
+          type={type}
+          value={formik.values[name]}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          className={baseClass}
+          min={type === 'number' ? '1' : undefined}
+          required={required}
+        />
+      )}
+    </FieldShellEM>
+  )
+}
+
+function SelectFieldEM({ formik, name, label, options, required = false, placeholder = 'Select...', className }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const id = `${name}-select`
+  const value = formik.values[name]
+  const invalid = (required && (!value || String(value).trim() === '')) || (!!error)
+  return (
+    <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
+      <select
+        id={id}
+        name={name}
+        value={formik.values[name]}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        required={required}
+        className={`w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </FieldShellEM>
+  )
+}
+
+function FormikAsyncSelectEM({ formik, name, label, required = false, className, ...props }) {
+  const error = formik.touched[name] && formik.errors[name]
+  const val = formik.values[name]
+  const isEmpty = Array.isArray(val) ? val.length === 0 : !val || String(val).trim() === ''
+  const invalid = (required && isEmpty) || (!!error)
+  return (
+    <FieldShellEM label={label} required={required} error={error} className={className}>
+      <AsyncSelect
+        {...props}
+        value={formik.values[name]}
+        onChange={(val) => formik.setFieldValue(name, val)}
+        onBlur={() => formik.setFieldTouched(name, true)}
+        invalid={invalid}
+      />
+    </FieldShellEM>
+  )
+}
+
+function SectionCardEM({ title, description, columns = 'sm:grid-cols-2', children }) {
+  return (
+    <div className="bg-white/90">
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{title}</h2>
+        {description ? <p className="mt-2 text-sm text-mssn-slate/70">{description}</p> : null}
+      </div>
+      <div className={`mt-6 grid gap-5 ${columns}`}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace }) {
+  const optionalString = Yup.string().transform((value) => {
+    if (typeof value !== 'string') return value
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : null
+  })
+
+  const shape = {
+    surname: Yup.string().trim().required('Required'),
+    firstname: Yup.string().trim().required('Required'),
+    othername: optionalString.nullable(),
+    sex: Yup.string().required('Required'),
+    date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
+    area_council: Yup.string().required('Required'),
+    branch: Yup.string().required('Required'),
+    email: optionalString.nullable().email('Enter a valid email'),
+    tel_no: optionalString.nullable(),
+    resident_address: optionalString.nullable(),
+    marital_status: optionalString.nullable(),
+    state_of_origin: optionalString.nullable(),
+    school: optionalString.nullable(),
+    class_level: optionalString.nullable(),
+    ailments: Yup.array().of(Yup.string()),
+  }
+  if (showEmergency) {
+    shape.next_of_kin = optionalString.nullable()
+    shape.next_of_kin_tel = optionalString.nullable()
+  }
+  if (showCourse) {
+    shape.course = optionalString.nullable()
+  }
+  if (showDiscipline) {
+    shape.discipline = optionalString.nullable()
+  }
+  if (showWorkplace) {
+    shape.workplace = optionalString.nullable()
+  }
+  return Yup.object(shape)
+}
+
+const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
+
 export default function ExistingMemberForm() {
   const query = useQuery()
   const [category, setCategory] = useState('')
@@ -98,6 +258,7 @@ export default function ExistingMemberForm() {
   const [loading, setLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRegisteredModal, setShowRegisteredModal] = useState(false)
+  const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
@@ -129,7 +290,7 @@ export default function ExistingMemberForm() {
           setDelegate(data)
           const cat = mapCategory(data?.details?.pin_category || data?.details?.pin_cat)
           if (cat) setCategory(cat)
-          setShowUpgradeModal(Boolean(data?.upgraded))
+          setShowUpgradeModal(Boolean(data?.upgraded) && !((query.get('upgrade') || '') === '1'))
           setShowRegisteredModal(Boolean(data?.alreadyRegistered))
           return
         }
@@ -147,7 +308,7 @@ export default function ExistingMemberForm() {
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
             if (cat) setCategory(cat)
-            setShowUpgradeModal(Boolean(res.delegate?.upgraded))
+            setShowUpgradeModal(Boolean(res.delegate?.upgraded) && !((query.get('upgrade') || '') === '1'))
             setShowRegisteredModal(Boolean(res.delegate?.alreadyRegistered))
           } else {
             navigate('/existing/validate')
@@ -250,6 +411,43 @@ export default function ExistingMemberForm() {
   const schoolIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'U'
   const classIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'O'
 
+  const toInfo = delegate?.upgrade_details?.[0]?.to || {}
+  const targetPin = String(toInfo?.pin_category || '').toUpperCase()
+  const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : (targetPin === 'SECONDARY' || targetPin === 'TFL') ? 'secondary' : (targetPin ? 'others' : '')
+  const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
+  const categoryKey = targetCategory || currentCategoryLower || 'secondary'
+
+  const buildPrefill = () => {
+    const sx = (d.sex || '').toString().trim().toLowerCase()
+    const parseA = (v) => {
+      const s = (v == null ? '' : String(v)).trim()
+      if (!s) return []
+      return s.toLowerCase() === 'none' ? [] : s.split(',').map((s) => s.trim()).filter(Boolean)
+    }
+    return {
+      surname: d.surname || surname || '',
+      firstname: d.firstname || '',
+      othername: d.othername || '',
+      sex: sx === 'male' ? 'Male' : sx === 'female' ? 'Female' : '',
+      date_of_birth: d.date_of_birth || '',
+      area_council: d.area_council || '',
+      branch: d.branch || '',
+      email: d.email || '',
+      tel_no: d.tel_no || '',
+      resident_address: d.resident_address || '',
+      marital_status: d.marital_status || 'Single',
+      state_of_origin: d.state_of_origin || '',
+      school: d.school || '',
+      class_level: toInfo.class_level || d.class_level || '',
+      ailments: parseA(d.ailments),
+      course: d.course || '',
+      next_of_kin: d.next_of_kin || '',
+      next_of_kin_tel: d.next_of_kin_tel || '',
+      discipline: d.discipline || '',
+      workplace: d.workplace || ''
+    }
+  }
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="mb-6">
@@ -272,291 +470,418 @@ export default function ExistingMemberForm() {
           </div>
 
           <div className="px-6 pb-10 pt-6 sm:px-10">
-            <SectionNav active={activeSection} onJump={jumpTo} />
-            <div className="mt-6 grid gap-6">
-              <CategoryHints rules={rules} />
-            </div>
+            {upgradeStarted ? (
+              <Formik
+                initialValues={buildPrefill()}
+                validationSchema={buildValidationSchemaEM({
+                  showCourse: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showWorkplace: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showEmergency: categoryKey === 'undergraduate' || categoryKey === 'others',
+                })}
+                enableReinitialize
+                onSubmit={async (values, helpers) => {
+                  const normalize = (input) => {
+                    if (Array.isArray(input)) return input.filter(Boolean)
+                    if (typeof input === 'string') {
+                      const trimmed = input.trim()
+                      return trimmed.length ? trimmed : undefined
+                    }
+                    return input === undefined || input === null ? undefined : input
+                  }
+                  const categoryApi = categoryKey === 'undergraduate' ? 'UNDERGRADUATE' : categoryKey === 'secondary' ? 'SECONDARY' : 'OTHERS'
+                  const payload = {
+                    surname: values.surname.trim(),
+                    firstname: values.firstname.trim(),
+                    othername: normalize(values.othername),
+                    sex: values.sex,
+                    date_of_birth: String(values.date_of_birth).trim(),
+                    area_council: values.area_council,
+                    branch: values.branch,
+                    email: normalize(values.email),
+                    tel_no: normalize(values.tel_no),
+                    resident_address: normalize(values.resident_address),
+                    marital_status: normalize(values.marital_status) || 'Single',
+                    state_of_origin: normalize(values.state_of_origin),
+                    ailments: (normalize(values.ailments) || []).join(','),
+                    pin_category: categoryApi,
+                  }
+                  payload.school = normalize(values.school)
+                  payload.class_level = normalize(values.class_level)
+                  if (categoryKey === 'undergraduate' || categoryKey === 'others') {
+                    payload.next_of_kin = normalize(values.next_of_kin)
+                    payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
+                    payload.course = normalize(values.course)
+                    payload.discipline = normalize(values.discipline)
+                    payload.workplace = normalize(values.workplace)
+                  }
+                  Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
+                  try {
+                    const res = await fetchJSON('/registration/new', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload),
+                    })
+                    const data = res?.data || {}
+                    const message = data.message || res?.message || 'Registered successfully'
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
+                    const discount = data.discount_applied ? ' • discount applied' : ''
+                    toast.success(`${message}${priceInfo}${discount}`)
+                    if (data.redirect_url) {
+                      window.location.href = data.redirect_url
+                    } else {
+                      navigate('/registration')
+                    }
+                  } catch (_) {
+                  } finally {
+                    helpers.setSubmitting(false)
+                  }
+                }}
+              >
+                {(formik) => (
+                  <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
+                    <input type="hidden" name="pin_category" value={categoryKey} />
 
-            <form id="updForm" className="mt-6 space-y-10" data-parsley-validate onSubmit={onSubmit} noValidate>
-              <div id="personal" ref={refs.personal}>
-                <SectionCard title="Personal details" description="Tell us a little about who you are.">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Surname *</label>
-                    </div>
-                    <input name="surname" type="text" required placeholder="Enter surname" defaultValue={d.surname || surname} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Firstname *</label>
-                    </div>
-                    <input name="firstname" type="text" required placeholder="Enter firstname" defaultValue={d.firstname || ''} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Gender *</label>
-                    </div>
-                    <input name="gender" type="text" required readOnly placeholder="Gender" defaultValue={genderDisplay} className={`${inputClass} ${inputDisabledClass}`} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Age *</label>
-                    </div>
-                    <input name="age" type="number" min="0" required placeholder="Enter age" defaultValue={d.date_of_birth || ''} className={inputClass} />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Othername</label>
-                    </div>
-                    <input name="othername" type="text" placeholder="Enter other names" defaultValue={d.othername || ''} className={inputClass} />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Category *</label>
-                    </div>
-                    <select name="category" required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
-                      <option value="" disabled>Select category</option>
-                      {CATEGORY_OPTIONS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Resident Address *</label>
-                    </div>
-                    <textarea name="address" required rows={3} placeholder="Enter residential address" defaultValue={d.resident_address || ''} className={`${inputClass} resize-none`}></textarea>
-                  </div>
-                </SectionCard>
-              </div>
+                    <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
+                      <TextFieldEM formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
+                      <TextFieldEM formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
+                      <SelectFieldEM formik={formik} name="sex" label="Gender" required options={['Male','Female']} placeholder="Select gender" />
+                      <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" />
+                      <TextFieldEM formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
+                    </SectionCardEM>
 
-              <div id="contact" ref={refs.contact}>
-                <SectionCard title="Contact & location" description="How can we reach you and where are you based?">
-                  {rules.email.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Email Address{rules.email.required ? ' *' : ''}</label>
-                      </div>
-                      <input name="email" type="email" required={rules.email.required} placeholder="name@email.com" defaultValue={d.email || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="email" value="-------" />
-                  )}
+                    <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
+                      <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
+                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
+                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                      <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
+                      <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
+                      <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
+                    </SectionCardEM>
 
-                  {rules.phone.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Phone Number{rules.phone.required ? ' *' : ''}</label>
-                      </div>
-                      <input name="phone" type="text" required={rules.phone.required} placeholder="Enter phone number" defaultValue={d.tel_no || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="phone" value="-------" />
-                  )}
-                </SectionCard>
-              </div>
+                    <SectionCardEM title="Education & Occupation" description="Share your institution and occupation details.">
+                      <FormikAsyncSelectEM formik={formik} name="school" label="School" placeholder={categoryKey==='undergraduate'||categoryKey==='others'?'Select institution...':'Select school...'} fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })} />
+                      <FormikAsyncSelectEM formik={formik} name="class_level" label="Class Level" placeholder="Select class level..." fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })} />
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <TextFieldEM formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                      )}
+                    </SectionCardEM>
 
-              <div id="emergency" ref={refs.emergency}>
-                <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?">
-                  {rules.nextOfKin.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Next of Kin{rules.nextOfKin.required ? ' *' : ''}</label>
-                      </div>
-                      <input name="nextOfKin" type="text" required={rules.nextOfKin.required} placeholder="Enter next of kin" defaultValue={d.next_of_kin || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="nextOfKin" value="------" />
-                  )}
-
-                  {rules.nextOfKinPhone.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Next of Kin Phone Number{rules.nextOfKinPhone.required ? ' *' : ''}</label>
-                      </div>
-                      <input name="nextOfKinPhone" type="text" required={rules.nextOfKinPhone.required} placeholder="Enter phone number" defaultValue={d.next_of_kin_tel || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="nextOfKinPhone" value="------" />
-                  )}
-                </SectionCard>
-              </div>
-
-              <div id="details" ref={refs.details}>
-                <SectionCard title="Personal details" description="Additional personal information for records.">
-                  {rules.maritalStatus.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Marital Status{rules.maritalStatus.required ? ' *' : ''}</label>
-                      </div>
-                      <select name="maritalStatus" required={rules.maritalStatus.required} defaultValue={d.marital_status || ''} className={inputClass}>
-                        <option value="" disabled>Select marital status</option>
-                        {maritalStatuses.map((m) => (
-                          <option key={m.value ?? m} value={m.value ?? m}>{m.label ?? m}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <HiddenInput name="maritalStatus" value={rules.maritalStatus.defaultValue || 'Single'} />
-                  )}
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>State of Origin *</label>
-                    </div>
-                    <AsyncSelect
-                      value={vState}
-                      onChange={setVState}
-                      placeholder="Select state..."
-                      fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="state" value={vState} />
-                  </div>
-                </SectionCard>
-              </div>
-
-              <div id="education" ref={refs.education}>
-                <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>School *</label>
-                    </div>
-                    {rules.school.mode === 'text' ? (
-                      <input name="school" type="text" required placeholder="Enter school name" defaultValue={d.school || ''} className={inputClass} />
-                    ) : (
-                      <>
-                        <AsyncSelect
-                          value={vSchool}
-                          onChange={setVSchool}
-                          placeholder={category === 'Undergraduate' || category === 'Others' ? 'Select institution...' : 'Select school...'}
-                          fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })}
-                        />
-                        <HiddenInput name="school" value={vSchool} />
-                      </>
+                    {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                      <SectionCardEM title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                        <TextFieldEM formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                        <TextFieldEM formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
+                      </SectionCardEM>
                     )}
-                  </div>
 
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Class Level *</label>
+                    <SectionCardEM title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
+                      <FormikAsyncSelectEM formik={formik} name="ailments" label="Ailments" multiple placeholder="Select ailments..." fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })} className="sm:col-span-2" />
+                    </SectionCardEM>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                        {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
+                      </button>
                     </div>
-                    <AsyncSelect
-                      value={vClassLevel}
-                      onChange={setVClassLevel}
-                      placeholder="Select class level..."
-                      fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })}
-                    />
-                    <HiddenInput name="classLevel" value={vClassLevel} />
-                  </div>
+                  </FormikForm>
+                )}
+              </Formik>
+            ) : (
+              <>
+                <SectionNav active={activeSection} onJump={jumpTo} />
+                <div className="mt-6 grid gap-6">
+                  <CategoryHints rules={rules} />
+                </div>
 
-                  {rules.course.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Course{rules.course.required ? ' *' : ''}</label>
+                <form id="updForm" className="mt-6 space-y-10" data-parsley-validate onSubmit={onSubmit} noValidate>
+                  <div id="personal" ref={refs.personal}>
+                    <SectionCard title="Personal details" description="Tell us a little about who you are.">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Surname *</label>
+                        </div>
+                        <input name="surname" type="text" required placeholder="Enter surname" defaultValue={d.surname || surname} className={inputClass} />
                       </div>
-                      <AsyncSelect
-                        value={vCourse}
-                        onChange={setVCourse}
-                        placeholder="Select course..."
-                        fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
-                      />
-                      <HiddenInput name="course" value={vCourse || '------'} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="course" value="------" />
-                  )}
-
-                  {rules.highestQualification.visible ? (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Highest Qualification{rules.highestQualification.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Firstname *</label>
+                        </div>
+                        <input name="firstname" type="text" required placeholder="Enter firstname" defaultValue={d.firstname || ''} className={inputClass} />
                       </div>
-                      <select name="highestQualification" required={rules.highestQualification.required} defaultValue={d.highest_qualification || ''} className={inputClass}>
-                        <option value="" disabled>Select highest qualification</option>
-                        {qualifications.map((q) => (
-                          <option key={q.value ?? q} value={q.value ?? q}>{q.label ?? q}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <HiddenInput name="highestQualification" value="------" />
-                  )}
-
-                  {rules.discipline.visible ? (
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Discipline / Occupation{rules.discipline.required ? ' *' : ''}</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Gender *</label>
+                        </div>
+                        <input name="gender" type="text" required readOnly placeholder="Gender" defaultValue={genderDisplay} className={`${inputClass} ${inputDisabledClass}`} />
                       </div>
-                      <input name="discipline" type="text" required={rules.discipline.required} placeholder="Enter discipline or occupation" defaultValue={d.discipline || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="discipline" value="------" />
-                  )}
-
-                  {rules.organisation.visible ? (
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between">
-                        <label className={labelClass}>Organisation / Workplace</label>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Age *</label>
+                        </div>
+                        <input name="age" type="number" min="0" required placeholder="Enter age" defaultValue={d.date_of_birth || ''} className={inputClass} />
                       </div>
-                      <input name="organisation" type="text" placeholder="Enter organisation / work place" defaultValue={d.workplace || ''} className={inputClass} />
-                    </div>
-                  ) : (
-                    <HiddenInput name="organisation" value="------" />
-                  )}
-                </SectionCard>
-              </div>
-
-              <div id="membership" ref={refs.membership}>
-                <SectionCard title="MSSN Membership Details" description="Your council, branch and health details." columns="sm:grid-cols-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Area Council</label>
-                    </div>
-                    <AsyncSelect
-                      value={vCouncil}
-                      onChange={setVCouncil}
-                      placeholder="Select council..."
-                      fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="council" value={vCouncil} />
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Othername</label>
+                        </div>
+                        <input name="othername" type="text" placeholder="Enter other names" defaultValue={d.othername || ''} className={inputClass} />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Category *</label>
+                        </div>
+                        <select name="category" required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+                          <option value="" disabled>Select category</option>
+                          {CATEGORY_OPTIONS.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Resident Address *</label>
+                        </div>
+                        <textarea name="address" required rows={3} placeholder="Enter residential address" defaultValue={d.resident_address || ''} className={`${inputClass} resize-none`}></textarea>
+                      </div>
+                    </SectionCard>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Branch</label>
-                    </div>
-                    <input name="branch" value={vBranch} onChange={(e) => setVBranch(e.target.value)} placeholder="Enter branch (optional)" className={inputClass} />
+                  <div id="contact" ref={refs.contact}>
+                    <SectionCard title="Contact & location" description="How can we reach you and where are you based?">
+                      {rules.email.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Email Address{rules.email.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="email" type="email" required={rules.email.required} placeholder="name@email.com" defaultValue={d.email || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="email" value="-------" />
+                      )}
+
+                      {rules.phone.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Phone Number{rules.phone.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="phone" type="text" required={rules.phone.required} placeholder="Enter phone number" defaultValue={d.tel_no || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="phone" value="-------" />
+                      )}
+                    </SectionCard>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Ailments</label>
-                    </div>
-                    <AsyncSelect
-                      value={vAilments}
-                      onChange={setVAilments}
-                      multiple
-                      placeholder="Select ailments..."
-                      fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
-                    />
-                    <HiddenInput name="ailments" value={vAilments.join(',')} />
+                  <div id="emergency" ref={refs.emergency}>
+                    <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?">
+                      {rules.nextOfKin.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Next of Kin{rules.nextOfKin.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="nextOfKin" type="text" required={rules.nextOfKin.required} placeholder="Enter next of kin" defaultValue={d.next_of_kin || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="nextOfKin" value="------" />
+                      )}
+
+                      {rules.nextOfKinPhone.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Next of Kin Phone Number{rules.nextOfKinPhone.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="nextOfKinPhone" type="text" required={rules.nextOfKinPhone.required} placeholder="Enter phone number" defaultValue={d.next_of_kin_tel || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="nextOfKinPhone" value="------" />
+                      )}
+                    </SectionCard>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClass}>Numbers of Camp Previously Attended</label>
-                    </div>
-                    <input name="previousCamps" type="text" readOnly placeholder="—" defaultValue={d.camp_attendance ?? ''} className={`${inputClass} ${inputDisabledClass}`} />
-                  </div>
-                </SectionCard>
-              </div>
+                  <div id="details" ref={refs.details}>
+                    <SectionCard title="Personal details" description="Additional personal information for records.">
+                      {rules.maritalStatus.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Marital Status{rules.maritalStatus.required ? ' *' : ''}</label>
+                          </div>
+                          <select name="maritalStatus" required={rules.maritalStatus.required} defaultValue={d.marital_status || ''} className={inputClass}>
+                            <option value="" disabled>Select marital status</option>
+                            {maritalStatuses.map((m) => (
+                              <option key={m.value ?? m} value={m.value ?? m}>{m.label ?? m}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <HiddenInput name="maritalStatus" value={rules.maritalStatus.defaultValue || 'Single'} />
+                      )}
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button type="submit" disabled={Boolean(delegate?.upgraded)} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${delegate?.upgraded ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}>
-                  Register & Pay
-                </button>
-              </div>
-            </form>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>State of Origin *</label>
+                        </div>
+                        <AsyncSelect
+                          value={vState}
+                          onChange={setVState}
+                          placeholder="Select state..."
+                          fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
+                        />
+                        <HiddenInput name="state" value={vState} />
+                      </div>
+                    </SectionCard>
+                  </div>
+
+                  <div id="education" ref={refs.education}>
+                    <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>School *</label>
+                        </div>
+                        {rules.school.mode === 'text' ? (
+                          <input name="school" type="text" required placeholder="Enter school name" defaultValue={d.school || ''} className={inputClass} />
+                        ) : (
+                          <>
+                            <AsyncSelect
+                              value={vSchool}
+                              onChange={setVSchool}
+                              placeholder={category === 'Undergraduate' || category === 'Others' ? 'Select institution...' : 'Select school...'}
+                              fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })}
+                            />
+                            <HiddenInput name="school" value={vSchool} />
+                          </>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Class Level *</label>
+                        </div>
+                        <AsyncSelect
+                          value={vClassLevel}
+                          onChange={setVClassLevel}
+                          placeholder="Select class level..."
+                          fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })}
+                        />
+                        <HiddenInput name="classLevel" value={vClassLevel} />
+                      </div>
+
+                      {rules.course.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Course{rules.course.required ? ' *' : ''}</label>
+                          </div>
+                          <AsyncSelect
+                            value={vCourse}
+                            onChange={setVCourse}
+                            placeholder="Select course..."
+                            fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                          />
+                          <HiddenInput name="course" value={vCourse || '------'} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="course" value="------" />
+                      )}
+
+                      {rules.highestQualification.visible ? (
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Highest Qualification{rules.highestQualification.required ? ' *' : ''}</label>
+                          </div>
+                          <select name="highestQualification" required={rules.highestQualification.required} defaultValue={d.highest_qualification || ''} className={inputClass}>
+                            <option value="" disabled>Select highest qualification</option>
+                            {qualifications.map((q) => (
+                              <option key={q.value ?? q} value={q.value ?? q}>{q.label ?? q}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <HiddenInput name="highestQualification" value="------" />
+                      )}
+
+                      {rules.discipline.visible ? (
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Discipline / Occupation{rules.discipline.required ? ' *' : ''}</label>
+                          </div>
+                          <input name="discipline" type="text" required={rules.discipline.required} placeholder="Enter discipline or occupation" defaultValue={d.discipline || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="discipline" value="------" />
+                      )}
+
+                      {rules.organisation.visible ? (
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center justify-between">
+                            <label className={labelClass}>Organisation / Workplace</label>
+                          </div>
+                          <input name="organisation" type="text" placeholder="Enter organisation / work place" defaultValue={d.workplace || ''} className={inputClass} />
+                        </div>
+                      ) : (
+                        <HiddenInput name="organisation" value="------" />
+                      )}
+                    </SectionCard>
+                  </div>
+
+                  <div id="membership" ref={refs.membership}>
+                    <SectionCard title="MSSN Membership Details" description="Your council, branch and health details." columns="sm:grid-cols-2">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Area Council</label>
+                        </div>
+                        <AsyncSelect
+                          value={vCouncil}
+                          onChange={setVCouncil}
+                          placeholder="Select council..."
+                          fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
+                        />
+                        <HiddenInput name="council" value={vCouncil} />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Branch</label>
+                        </div>
+                        <input name="branch" value={vBranch} onChange={(e) => setVBranch(e.target.value)} placeholder="Enter branch (optional)" className={inputClass} />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Ailments</label>
+                        </div>
+                        <AsyncSelect
+                          value={vAilments}
+                          onChange={setVAilments}
+                          multiple
+                          placeholder="Select ailments..."
+                          fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
+                        />
+                        <HiddenInput name="ailments" value={vAilments.join(',')} />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Numbers of Camp Previously Attended</label>
+                        </div>
+                        <input name="previousCamps" type="text" readOnly placeholder="—" defaultValue={d.camp_attendance ?? ''} className={`${inputClass} ${inputDisabledClass}`} />
+                      </div>
+                    </SectionCard>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <button type="submit" disabled={Boolean(delegate?.upgraded)} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${delegate?.upgraded ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-gradient-to-r from-mssn-green to-mssn-greenDark text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}>
+                      Register & Pay
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -595,11 +920,7 @@ export default function ExistingMemberForm() {
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => setShowUpgradeModal(false)} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Close</button>
-            <button type="button" onClick={() => {
-              const toPin = (delegate?.upgrade_details?.[0]?.to?.pin_category || '').toUpperCase()
-              const path = toPin === 'SECONDARY' ? '/new/secondary' : toPin === 'UNDERGRADUATE' ? '/new/undergraduate' : toPin === 'TFL' ? '/new/secondary' : '/new/others'
-              navigate(path)
-            }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
+            <button type="button" onClick={() => { setUpgradeStarted(true); setShowUpgradeModal(false) }} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Start Upgrade</button>
           </div>
         </div>
       </div>
