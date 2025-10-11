@@ -575,9 +575,15 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
       if (data.redirect_url) {
-        window.location.href = data.redirect_url
+        setRedirecting(true)
+        setTimeout(() => {
+          window.location.href = data.redirect_url
+        }, 700)
       } else {
-        navigate('/registration')
+        setRedirecting(true)
+        setTimeout(() => {
+          navigate('/registration')
+        }, 700)
       }
     } catch (err) {
       // Error toast handled globally in fetchJSON
