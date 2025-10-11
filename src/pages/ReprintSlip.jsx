@@ -310,15 +310,15 @@ export default function ReprintSlip() {
 
           <div id="slip-print-area" className="mx-auto w-full rounded-3xl bg-white ring-1 ring-mssn-slate/10">
             <div className="border-b border-mssn-slate/10 p-6 sm:p-8">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3 sm:items-center">
+                <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-white ring-1 ring-mssn-slate/10 sm:h-14 sm:w-14">
+                  <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-contain p-1" />
+                </div>
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">{camp?.camp_code || 'CAMP'}</span>
                   <h3 className="text-xl font-semibold text-mssn-slate">{camp?.camp_title || 'Camp MSSN Lagos'}</h3>
                   {camp?.camp_theme ? <p className="text-sm text-mssn-slate/70">{camp.camp_theme}</p> : null}
                   {camp?.camp_date ? <p className="text-sm text-mssn-slate/70">{camp.camp_date}</p> : null}
-                </div>
-                <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-white ring-1 ring-mssn-slate/10 sm:h-16 sm:w-16">
-                  <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-contain p-1" />
                 </div>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
