@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import StepProgress from '../components/StepProgress.jsx'
+import AsyncSelect from '../components/AsyncSelect.jsx'
 import {
-  fetchStates,
   fetchMaritalStatuses,
-  fetchCourses,
   fetchHighestQualifications,
-  fetchAilments,
-  fetchCouncils,
-  fetchBranches,
-  fetchSchoolsSecondary,
-  fetchSchoolsUndergrad,
-  fetchClassLevels,
+  queryStates,
+  queryAilments,
+  queryCouncils,
+  querySchools,
+  queryClassLevels,
+  queryCourses,
 } from '../services/dataProvider.js'
 
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
@@ -91,17 +90,18 @@ export default function ExistingMemberForm() {
   const query = useQuery()
   const [category, setCategory] = useState('')
   const [delegate, setDelegate] = useState(null)
-  const [states, setStates] = useState([])
   const [maritalStatuses, setMaritalStatuses] = useState([])
-  const [courses, setCourses] = useState([])
   const [qualifications, setQualifications] = useState([])
-  const [ailments, setAilments] = useState([])
-  const [councils, setCouncils] = useState([])
-  const [branches, setBranches] = useState([])
-  const [schoolsSec, setSchoolsSec] = useState([])
-  const [schoolsUnd, setSchoolsUnd] = useState([])
-  const [classLevels, setClassLevels] = useState([])
   const [activeSection, setActiveSection] = useState('personal')
+
+  // AsyncSelect controlled values
+  const [vCouncil, setVCouncil] = useState('')
+  const [vBranch, setVBranch] = useState('')
+  const [vState, setVState] = useState('')
+  const [vSchool, setVSchool] = useState('')
+  const [vClassLevel, setVClassLevel] = useState('')
+  const [vCourse, setVCourse] = useState('')
+  const [vAilments, setVAilments] = useState([])
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
@@ -138,35 +138,14 @@ export default function ExistingMemberForm() {
 
   useEffect(() => {
     ;(async () => {
-      const [st, ms, crs, hq, al, co, br, ss, su] = await Promise.all([
-        fetchStates(),
+      const [ms, hq] = await Promise.all([
         fetchMaritalStatuses(),
-        fetchCourses(),
         fetchHighestQualifications(),
-        fetchAilments(),
-        fetchCouncils(),
-        fetchBranches(),
-        fetchSchoolsSecondary(),
-        fetchSchoolsUndergrad(),
       ])
-      setStates(st)
       setMaritalStatuses(ms)
-      setCourses(crs)
       setQualifications(hq)
-      setAilments(al)
-      setCouncils(co)
-      setBranches(br)
-      setSchoolsSec(ss)
-      setSchoolsUnd(su)
     })()
   }, [])
-
-  useEffect(() => {
-    ;(async () => {
-      const levels = await fetchClassLevels(category)
-      setClassLevels(levels)
-    })()
-  }, [category])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -213,6 +192,9 @@ export default function ExistingMemberForm() {
   const labelClass = 'text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-mssn-slate/70'
   const inputClass = 'mt-2 w-full rounded-xl border border-mssn-slate/20 bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2 focus:border-mssn-green focus:ring-mssn-green/25'
   const inputDisabledClass = 'cursor-not-allowed bg-mssn-mist text-mssn-slate/50'
+
+  const schoolIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'U'
+  const classIdentifier = category === 'Secondary' ? 'S' : category === 'Undergraduate' ? 'U' : 'O'
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -368,12 +350,13 @@ export default function ExistingMemberForm() {
                     <div className="flex items-center justify-between">
                       <label className={labelClass}>State of Origin *</label>
                     </div>
-                    <select name="state" required className={inputClass}>
-                      <option value="" disabled>Select state</option>
-                      {states.map((s) => (
-                        <option key={s.value ?? s} value={s.value ?? s}>{s.label ?? s}</option>
-                      ))}
-                    </select>
+                    <AsyncSelect
+                      value={vState}
+                      onChange={setVState}
+                      placeholder="Select state..."
+                      fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
+                    />
+                    <HiddenInput name="state" value={vState} />
                   </div>
                 </SectionCard>
               </div>
@@ -387,12 +370,15 @@ export default function ExistingMemberForm() {
                     {rules.school.mode === 'text' ? (
                       <input name="school" type="text" required placeholder="Enter school name" className={inputClass} />
                     ) : (
-                      <select name="school" required className={inputClass}>
-                        <option value="" disabled>Select school</option>
-                        {(category === 'Secondary' ? schoolsSec : schoolsUnd).map((s) => (
-                          <option key={s.value ?? s} value={s.value ?? s}>{s.label ?? s}</option>
-                        ))}
-                      </select>
+                      <>
+                        <AsyncSelect
+                          value={vSchool}
+                          onChange={setVSchool}
+                          placeholder={category === 'Undergraduate' || category === 'Others' ? 'Select institution...' : 'Select school...'}
+                          fetchPage={({ page, search }) => querySchools({ identifier: schoolIdentifier, page, limit: 20, search })}
+                        />
+                        <HiddenInput name="school" value={vSchool} />
+                      </>
                     )}
                   </div>
 
@@ -400,12 +386,13 @@ export default function ExistingMemberForm() {
                     <div className="flex items-center justify-between">
                       <label className={labelClass}>Class Level *</label>
                     </div>
-                    <select name="classLevel" required className={inputClass}>
-                      <option value="" disabled>Select class level</option>
-                      {classLevels.map((c) => (
-                        <option key={c.value ?? c} value={c.value ?? c}>{c.label ?? c}</option>
-                      ))}
-                    </select>
+                    <AsyncSelect
+                      value={vClassLevel}
+                      onChange={setVClassLevel}
+                      placeholder="Select class level..."
+                      fetchPage={({ page, search }) => queryClassLevels({ identifier: classIdentifier, page, limit: 20, search })}
+                    />
+                    <HiddenInput name="classLevel" value={vClassLevel} />
                   </div>
 
                   {rules.course.visible ? (
@@ -413,12 +400,13 @@ export default function ExistingMemberForm() {
                       <div className="flex items-center justify-between">
                         <label className={labelClass}>Course{rules.course.required ? ' *' : ''}</label>
                       </div>
-                      <select name="course" required={rules.course.required} className={inputClass}>
-                        <option value="" disabled>Select course</option>
-                        {courses.map((c) => (
-                          <option key={c.value ?? c} value={c.value ?? c}>{c.label ?? c}</option>
-                        ))}
-                      </select>
+                      <AsyncSelect
+                        value={vCourse}
+                        onChange={setVCourse}
+                        placeholder="Select course..."
+                        fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                      />
+                      <HiddenInput name="course" value={vCourse || '------'} />
                     </div>
                   ) : (
                     <HiddenInput name="course" value="------" />
@@ -470,36 +458,34 @@ export default function ExistingMemberForm() {
                     <div className="flex items-center justify-between">
                       <label className={labelClass}>Area Council</label>
                     </div>
-                    <select name="council" className={inputClass}>
-                      <option value="">Select council (optional)</option>
-                      {councils.map((c) => (
-                        <option key={c.value ?? c} value={c.value ?? c}>{c.label ?? c}</option>
-                      ))}
-                    </select>
+                    <AsyncSelect
+                      value={vCouncil}
+                      onChange={setVCouncil}
+                      placeholder="Select council..."
+                      fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
+                    />
+                    <HiddenInput name="council" value={vCouncil} />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between">
                       <label className={labelClass}>Branch</label>
                     </div>
-                    <select name="branch" className={inputClass}>
-                      <option value="">Select branch (optional)</option>
-                      {branches.map((b) => (
-                        <option key={b.value ?? b} value={b.value ?? b}>{b.label ?? b}</option>
-                      ))}
-                    </select>
+                    <input name="branch" value={vBranch} onChange={(e) => setVBranch(e.target.value)} placeholder="Enter branch (optional)" className={inputClass} />
                   </div>
 
                   <div className="sm:col-span-2">
                     <div className="flex items-center justify-between">
-                      <label className={labelClass}>Ailments *</label>
+                      <label className={labelClass}>Ailments</label>
                     </div>
-                    <select name="ailments" required className={inputClass}>
-                      <option value="" disabled>Select ailment</option>
-                      {ailments.map((a) => (
-                        <option key={a.value ?? a} value={a.value ?? a}>{a.label ?? a}</option>
-                      ))}
-                    </select>
+                    <AsyncSelect
+                      value={vAilments}
+                      onChange={setVAilments}
+                      multiple
+                      placeholder="Select ailments..."
+                      fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
+                    />
+                    <HiddenInput name="ailments" value={vAilments.join(',')} />
                   </div>
 
                   <div className="sm:col-span-2">
