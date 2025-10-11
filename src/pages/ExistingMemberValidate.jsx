@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { navigate } from '../utils/navigation.js'
-import StepProgress from '../components/StepProgress.jsx'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 
@@ -96,12 +95,8 @@ export default function ExistingMemberValidate() {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-12">
-      <div className="mb-6">
-        <StepProgress steps={["Validate", "Edit", "Pay"]} current={0} />
-      </div>
-
-      <div className="rounded-3xl border border-mssn-slate/10 bg-white">
-        <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
+      <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div>
