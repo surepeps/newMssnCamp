@@ -100,13 +100,17 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
         <a
           href="/"
-          className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/20 transition hover:bg-white"
+          className="flex items-center gap-3 rounded-3xl bg-gradient-to-r from-white/90 to-white/80 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/10 transition hover:shadow-glow"
           onClick={createRouteHandler('/')}
         >
-          <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover shadow-soft ring-1 ring-white/40" />
+          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white">
+            <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute -bottom-2 -right-2 h-6 w-6 rounded-full bg-mssn-green/80 ring-2 ring-white/70" />
+          </div>
           <span className="flex flex-col text-left">
             <span className="text-xs uppercase tracking-[0.18em] text-mssn-greenDark">MSSN Lagos</span>
-            <span className="text-base">Camp Experience Portal</span>
+            <span className="text-base font-semibold">Camp Experience</span>
+            <span className="text-xs text-mssn-slate/60">Portal</span>
           </span>
         </a>
         <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
