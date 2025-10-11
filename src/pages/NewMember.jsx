@@ -434,6 +434,12 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const showEmergency = isUG || isOthers
   const showHighestQualification = isUG || isOthers
 
+  const { settings } = useSettings()
+  const camp = settings?.current_camp
+  const priceOriginal = category === 'undergraduate' ? camp?.prices?.undergraduate : category === 'secondary' ? camp?.prices?.secondary : category === 'others' ? camp?.prices?.others : null
+  const priceDiscounted = category === 'undergraduate' ? camp?.discounts?.price_und : category === 'secondary' ? camp?.discounts?.price_sec : category === 'others' ? camp?.discounts?.price_oth : null
+  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+
   const [qualifications, setQualifications] = React.useState([])
   const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
   React.useEffect(() => {
