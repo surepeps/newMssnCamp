@@ -78,10 +78,14 @@ export async function queryAilments({ page = 1, limit = 20, search = '' } = {}) 
   return cachedResponse('ailments', cacheStore.ailments, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('ailment_name', rawSearch)
-    const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: r.ailment_id, label: r.ailment_name })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/ailments?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: r.ailment_id, label: r.ailment_name })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 
@@ -94,10 +98,14 @@ export async function queryCouncils({ page = 1, limit = 20, search = '' } = {}) 
   return cachedResponse('councils', cacheStore.councils, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('councilName', rawSearch)
-    const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: String(r.councilID), label: r.councilName })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/councils?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: String(r.councilID), label: r.councilName })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 
@@ -110,10 +118,14 @@ export async function querySchools({ identifier = 'S', page = 1, limit = 20, sea
   return cachedResponse('schools', cacheStore.schools, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), school_identifier: identifier })
     if (rawSearch) params.set('school_name', rawSearch)
-    const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: r.school_id, label: r.school_name })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/schools?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: r.school_id, label: r.school_name })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 
@@ -126,10 +138,14 @@ export async function queryClassLevels({ identifier = 'S', page = 1, limit = 20,
   return cachedResponse('classLevels', cacheStore.classLevels, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit), class_identifier: identifier })
     if (rawSearch) params.set('class_name', rawSearch)
-    const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: r.class_id, label: r.class_name })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/class-levels?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: r.class_id, label: r.class_name })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 
@@ -142,10 +158,14 @@ export async function queryStates({ page = 1, limit = 20, search = '' } = {}) {
   return cachedResponse('states', cacheStore.states, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('state', rawSearch)
-    const res = await fetchJSON(`/basic-needs/states?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: r.state_id, label: r.state })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/states?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: r.state_id, label: r.state })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 
@@ -169,10 +189,14 @@ export async function queryCourses({ page = 1, limit = 20, search = '' } = {}) {
   return cachedResponse('courses', cacheStore.courses, key, async () => {
     const params = new URLSearchParams({ page: String(normalizedPage), limit: String(normalizedLimit) })
     if (rawSearch) params.set('course_name', rawSearch)
-    const res = await fetchJSON(`/basic-needs/courses?${params.toString()}`)
-    const records = res?.data?.records || []
-    const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
-    return { items: records.map((r) => ({ value: r.course_id, label: r.course_name })), page: pg.page, totalPages: pg.totalPages }
+    try {
+      const res = await fetchJSON(`/basic-needs/courses?${params.toString()}`)
+      const records = res?.data?.records || []
+      const pg = res?.data?.pagination || { totalPages: normalizedPage, page: normalizedPage }
+      return { items: records.map((r) => ({ value: r.course_id, label: r.course_name })), page: pg.page, totalPages: pg.totalPages }
+    } catch (err) {
+      return { items: [], page: normalizedPage, totalPages: normalizedPage }
+    }
   })
 }
 

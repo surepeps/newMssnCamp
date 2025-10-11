@@ -75,6 +75,49 @@ export default function AsyncSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, debouncedSearch])
 
+  // Prefetch current value so the label is shown even if the dropdown hasn't been opened
+  useEffect(() => {
+    let mounted = true
+    const ensureValueLoaded = async () => {
+      try {
+        if (disabled) return
+        if (multiple) {
+          const vals = Array.isArray(value) ? value.filter(Boolean) : []
+          if (!vals.length) return
+          const missing = vals.filter((v) => !items.some((it) => String(it.label) === String(v)))
+          if (!missing.length) return
+          const res = await fetchPage({ page: 1, search: missing.join(' ') })
+          if (!mounted) return
+          const newItems = res.items || []
+          setItems((prev) => {
+            const merged = [...prev]
+            newItems.forEach((it) => {
+              if (!merged.some((m) => String(m.label) === String(it.label))) merged.push(it)
+            })
+            return merged
+          })
+        } else {
+          if (!value) return
+          if (items.some((it) => String(it.label) === String(value))) return
+          const res = await fetchPage({ page: 1, search: String(value) })
+          if (!mounted) return
+          const newItems = res.items || []
+          setItems((prev) => {
+            const merged = [...prev]
+            newItems.forEach((it) => {
+              if (!merged.some((m) => String(m.label) === String(it.label))) merged.push(it)
+            })
+            return merged
+          })
+        }
+      } catch (_) {}
+    }
+    ensureValueLoaded()
+    return () => {
+      mounted = false
+    }
+  }, [value, multiple, disabled, fetchPage])
+
   useEffect(() => {
     if (prevOpen.current && !open) {
       onBlur?.()
