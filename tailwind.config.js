@@ -7,6 +7,7 @@ export default {
         mssn: {
           green: '#2ecc71',
           greenDark: '#27ae60',
+          footer: '#0d5239',
           night: '#0f1d1f',
           slate: '#1a2a2f',
           mist: '#eef2ed',
