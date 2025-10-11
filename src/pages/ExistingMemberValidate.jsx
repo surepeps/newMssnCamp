@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import * as React from 'react'
 import { navigate, createNavigationHandler } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
@@ -6,16 +6,16 @@ import { toast } from 'sonner'
 const goToCheckMssnId = createNavigationHandler('/check-mssn-id')
 
 export default function ExistingMemberValidate() {
-  const [mssnId, setMssnId] = useState('')
-  const [surname, setSurname] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [pendingDelegate, setPendingDelegate] = useState(null)
-  const mssnRef = useRef(null)
-  const surnameRef = useRef(null)
+  const [mssnId, setMssnId] = React.useState('')
+  const [surname, setSurname] = React.useState('')
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
+  const [pendingDelegate, setPendingDelegate] = React.useState(null)
+  const mssnRef = React.useRef(null)
+  const surnameRef = React.useRef(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const qMssn = params.get('mssnId') || ''

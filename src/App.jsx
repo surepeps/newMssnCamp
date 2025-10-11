@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import * as React from 'react'
 import Layout from './components/Layout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import ExistingMemberValidate from './pages/ExistingMemberValidate.jsx'
@@ -8,13 +8,17 @@ import RegistrationBoundary from './components/RegistrationBoundary.jsx'
 import NewMember from './pages/NewMember.jsx'
 import ReprintSlip from './pages/ReprintSlip.jsx'
 import CheckMssnId from './pages/CheckMssnId.jsx'
+import ContactUs from './pages/ContactUs.jsx'
+import PaymentValidation from './pages/PaymentValidation.jsx'
+import NotFound from './pages/NotFound.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Toaster } from 'sonner'
 
 function usePathRoute() {
   const getLocation = () => `${window.location.pathname}${window.location.search}` || '/'
-  const [location, setLocation] = useState(getLocation())
+  const [location, setLocation] = React.useState(getLocation())
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handlePopState = () => {
       setLocation(getLocation())
     }
@@ -57,6 +61,8 @@ function Router() {
     },
     { pattern: '/reprint-slip', render: () => <ReprintSlip /> },
     { pattern: '/check-mssn-id', render: () => <CheckMssnId /> },
+    { pattern: '/payment/validate', render: () => <PaymentValidation /> },
+    { pattern: '/contact', render: () => <ContactUs /> },
     { pattern: '/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '/registration', render: () => <RegistrationGate /> },
     { pattern: '/', render: () => <HomePage /> },
@@ -68,14 +74,16 @@ function Router() {
       return route.render({ params })
     }
   }
-  return <HomePage />
+  return <NotFound />
 }
 
 function App() {
   return (
     <Layout>
       <RegistrationBoundary />
-      <Router />
+      <ErrorBoundary>
+        <Router />
+      </ErrorBoundary>
       <Toaster richColors position="top-center" closeButton />
     </Layout>
   )

@@ -1,12 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import * as React from 'react'
 import { fetchJSON } from '../services/api.js'
 
-const SettingsContext = createContext({ settings: null, loading: true, error: null, refresh: () => {} })
+const SettingsContext = React.createContext({ settings: null, loading: true, error: null, refresh: () => {} })
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [settings, setSettings] = React.useState(null)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState(null)
 
   const load = async () => {
     setLoading(true)
@@ -22,15 +22,15 @@ export function SettingsProvider({ children }) {
     }
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     load()
   }, [])
 
-  const value = useMemo(() => ({ settings, loading, error, refresh: load }), [settings, loading, error])
+  const value = React.useMemo(() => ({ settings, loading, error, refresh: load }), [settings, loading, error])
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }
 
 export function useSettings() {
-  return useContext(SettingsContext)
+  return React.useContext(SettingsContext)
 }

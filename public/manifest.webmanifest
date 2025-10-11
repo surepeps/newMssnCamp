@@ -1,0 +1,13 @@
+{
+  "name": "MSSN Camp Experience Portal",
+  "short_name": "MSSN Camp",
+  "description": "Registration portal for MSSN Lagos State Camp Experience",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef2ed",
+  "theme_color": "#2ecc71",
+  "icons": [
+    { "src": "https://cdn.builder.io/api/v1/image/assets%2F9b65378ce6fc4cb89c41a2a7662eba98%2Fc345152eb01d40d0ac8693ca29f774f3?format=webp&width=800", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://cdn.builder.io/api/v1/image/assets%2F9b65378ce6fc4cb89c41a2a7662eba98%2Fc345152eb01d40d0ac8693ca29f774f3?format=webp&width=800", "sizes": "512x512", "type": "image/png" }
+  ]
+}

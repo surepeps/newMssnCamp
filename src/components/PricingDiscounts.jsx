@@ -2,7 +2,20 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import { isValidDate } from '../utils/registration.js'
 
 function PriceCard({ label, original, discounted, quota }) {
-  const hasDiscount = discounted != null && Number(discounted) < Number(original)
+  const origNum = original == null ? null : Number(original)
+  const hasDiscount = discounted != null && origNum != null && Number(discounted) < origNum
+  const available = origNum != null && origNum > 0
+
+  if (!available) {
+    return (
+      <div className="rounded-2xl border border-mssn-slate/10 bg-mssn-mist p-4 opacity-70">
+        <div className="text-xs text-mssn-slate/60">{label}</div>
+        <div className="mt-4 text-sm font-semibold text-rose-600">Not available</div>
+        <div className="mt-2 text-xs text-mssn-slate/60">This category is currently not available or has been cancelled.</div>
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-2xl border border-mssn-slate/10 bg-white p-4">
       <div className="text-xs text-mssn-slate/60">{label}</div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import * as React from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
 import { fetchJSON } from '../services/api.js'
@@ -14,11 +14,12 @@ import {
 import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'sonner'
+import ProcessingModal from '../components/ProcessingModal.jsx'
 
 const CATEGORY_OPTIONS = ['TFL', 'Secondary', 'Undergraduate', 'Others']
 
 function useQuery() {
-  return useMemo(() => new URLSearchParams(window.location.search), [])
+  return React.useMemo(() => new URLSearchParams(window.location.search), [])
 }
 
 // Replicated helpers to match /new/:section look
@@ -183,24 +184,26 @@ const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
 
 export default function ExistingMemberForm() {
   const query = useQuery()
-  const [category, setCategory] = useState('')
-  const [delegate, setDelegate] = useState(null)
-  const [qualifications, setQualifications] = useState([])
-  const [activeSection, setActiveSection] = useState('personal')
-  const [loading, setLoading] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [showRegisteredModal, setShowRegisteredModal] = useState(false)
-  const [loadError, setLoadError] = useState('')
-  const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
+  const [category, setCategory] = React.useState('')
+  const [delegate, setDelegate] = React.useState(null)
+  const [qualifications, setQualifications] = React.useState([])
+  const [activeSection, setActiveSection] = React.useState('personal')
+  const [loading, setLoading] = React.useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
+  const [showRegisteredModal, setShowRegisteredModal] = React.useState(false)
+  const [loadError, setLoadError] = React.useState('')
+  const [upgradeStarted, setUpgradeStarted] = React.useState(() => (query.get('upgrade') || '') === '1')
+  const [processing, setProcessing] = React.useState(false)
+  const [redirecting, setRedirecting] = React.useState(false)
 
   // AsyncSelect controlled values
-  const [vCouncil, setVCouncil] = useState('')
-  const [vBranch, setVBranch] = useState('')
-  const [vState, setVState] = useState('')
-  const [vSchool, setVSchool] = useState('')
-  const [vClassLevel, setVClassLevel] = useState('')
-  const [vCourse, setVCourse] = useState('')
-  const [vAilments, setVAilments] = useState([])
+  const [vCouncil, setVCouncil] = React.useState('')
+  const [vBranch, setVBranch] = React.useState('')
+  const [vState, setVState] = React.useState('')
+  const [vSchool, setVSchool] = React.useState('')
+  const [vClassLevel, setVClassLevel] = React.useState('')
+  const [vCourse, setVCourse] = React.useState('')
+  const [vAilments, setVAilments] = React.useState([])
 
   const details = delegate?.details || {}
   const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
@@ -222,7 +225,7 @@ export default function ExistingMemberForm() {
     return ''
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     ;(async () => {
       try {
         const qM = (mssnId || '').trim()
@@ -257,15 +260,15 @@ export default function ExistingMemberForm() {
   }, [])
 
   const refs = {
-    personal: useRef(null),
-    contact: useRef(null),
-    emergency: useRef(null),
-    details: useRef(null),
-    education: useRef(null),
-    membership: useRef(null),
+    personal: React.useRef(null),
+    contact: React.useRef(null),
+    emergency: React.useRef(null),
+    details: React.useRef(null),
+    education: React.useRef(null),
+    membership: React.useRef(null),
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     let cancelled = false
     const loadQualifications = async () => {
       try {
@@ -287,7 +290,7 @@ export default function ExistingMemberForm() {
     }
   }, [qualificationAudience])
 
-  useEffect(() => {
+  React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -301,7 +304,7 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
-  const qualificationOptions = useMemo(() => {
+  const qualificationOptions = React.useMemo(() => {
     if (!qualifications.length) return []
     if (!qualificationAudience) return qualifications.map((item) => item.label)
     const normalizedAudience = qualificationAudience.toLowerCase()
@@ -310,7 +313,7 @@ export default function ExistingMemberForm() {
     return source.map((item) => item.label)
   }, [qualificationAudience, qualifications])
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!delegate?.details) return
     const normalize = (v) => (v == null ? '' : String(v).trim())
     setVCouncil(normalize(details.area_council))
@@ -396,7 +399,7 @@ export default function ExistingMemberForm() {
     }
   }
 
-  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
+  const initialValuesEM = React.useMemo(() => buildPrefill(), [delegate, surname])
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -472,6 +475,7 @@ export default function ExistingMemberForm() {
                   }
                   Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
                   try {
+                    setProcessing(true)
                     const res = await fetchJSON('/registration/new', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -479,17 +483,24 @@ export default function ExistingMemberForm() {
                     })
                     const data = res?.data || {}
                     const message = data.message || res?.message || 'Registered successfully'
-                    const priceInfo = typeof data.price !== 'undefined' ? ` • ���${Number(data.price).toFixed(2)}` : ''
+                    const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
                     if (data.redirect_url) {
-                      window.location.href = data.redirect_url
+                      setRedirecting(true)
+                      setTimeout(() => {
+                        window.location.href = data.redirect_url
+                      }, 700)
                     } else {
-                      navigate('/registration')
+                      setRedirecting(true)
+                      setTimeout(() => {
+                        navigate('/registration')
+                      }, 700)
                     }
                   } catch (_) {
                   } finally {
                     helpers.setSubmitting(false)
+                    setProcessing(false)
                   }
                 }}
               >
@@ -583,7 +594,7 @@ export default function ExistingMemberForm() {
           <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="p-6">
             <div className="flex items-start gap-4">
-              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">✓</div>
+              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">���</div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-mssn-slate">You’re already registered</h3>
                 <p className="mt-1 text-sm text-mssn-slate/70">We found an existing registration for this MSSN ID. You can re‑print your slip now.</p>
@@ -637,6 +648,8 @@ export default function ExistingMemberForm() {
         </div>
       </div>
     )}
+  <ProcessingModal visible={processing} title="Processing…" subtitle="Please wait while we submit your registration and prepare payment." />
+  <ProcessingModal visible={redirecting} title="Redirecting to payment…" subtitle="Please hold on while we redirect you to the payment page." />
   </section>
   )
 }

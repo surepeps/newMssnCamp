@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import * as React from 'react'
 import { isModifiedEvent, navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import FullPageLoader from './FullPageLoader.jsx'
+import PwaInstallPrompt from './PwaInstallPrompt.jsx'
+import WhatsAppWidget from './WhatsAppWidget.jsx'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
-  const registrationRef = useRef(null)
-  const closeTimeoutRef = useRef(null)
+  const [isRegistrationOpen, setIsRegistrationOpen] = React.useState(false)
+  const registrationRef = React.useRef(null)
+  const closeTimeoutRef = React.useRef(null)
 
   const clearCloseTimeout = () => {
     if (closeTimeoutRef.current) {
@@ -77,20 +79,38 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
     navigate(path, { replace })
   }
 
-  useEffect(() => () => clearCloseTimeout(), [])
+  React.useEffect(() => () => clearCloseTimeout(), [])
+
+  const [isMobileRegOpen, setIsMobileRegOpen] = React.useState(false)
+  const [path, setPath] = React.useState(window.location.pathname)
+  React.useEffect(() => {
+    const update = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', update)
+    return () => window.removeEventListener('popstate', update)
+  }, [])
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onCloseNav() }
+    if (isNavOpen) window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isNavOpen])
+  const isActive = (href) => path === href || (href !== '/' && path.startsWith(href))
 
   return (
     <header className="sticky top-0 z-40 border-b border-mssn-slate/10 bg-white/80 backdrop-blur">
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
         <a
           href="/"
-          className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/20 transition hover:bg-white"
+          className="flex items-center gap-3 rounded-3xl bg-gradient-to-r from-white/90 to-white/80 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/10 transition hover:shadow-glow"
           onClick={createRouteHandler('/')}
         >
-          <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover shadow-soft ring-1 ring-white/40" />
+          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white">
+            <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute -bottom-2 -right-2 h-6 w-6 rounded-full bg-mssn-green/80 ring-2 ring-white/70" />
+          </div>
           <span className="flex flex-col text-left">
             <span className="text-xs uppercase tracking-[0.18em] text-mssn-greenDark">MSSN Lagos</span>
-            <span className="text-base">Camp Experience Portal</span>
+            <span className="text-base font-semibold">Camp Experience</span>
+            <span className="text-xs text-mssn-slate/60">Portal</span>
           </span>
         </a>
         <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
@@ -120,12 +140,11 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
                 isRegistrationOpen ? 'visible translate-y-1 opacity-100' : 'invisible -translate-y-1 opacity-0 pointer-events-none'
               }`}
             >
-              <a href="/registration" onClick={createRouteHandler('/registration', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
               <a href="/existing/validate" onClick={createRouteHandler('/existing/validate', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
               <a href="/new" onClick={createRouteHandler('/new', { closeNav: false })} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
             </div>
           </div>
-          <a href="mailto:camp@mssnlagos.org" className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
+          <a href="/contact" onClick={createRouteHandler('/contact', { closeNav: false })} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Contact Us</a>
         </nav>
         <button
           type="button"
@@ -134,65 +153,81 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           aria-expanded={isNavOpen}
           onClick={onToggleNav}
         >
-          <span className="text-lg">☰</span>
+          <span className="text-lg">{isNavOpen ? '✕' : '☰'}</span>
         </button>
       </div>
-      <nav
-        className={`lg:hidden transition-all duration-300 ${
-          isNavOpen ? 'max-h-[720px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pb-6">
-          <a href="/" onClick={createRouteHandler('/')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Home</a>
-          <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Re-print Slip</a>
-          <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id')} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Check MSSN ID</a>
-          <div className="rounded-2xl bg-white p-2 ring-1 ring-mssn-slate/10">
-            <div className="px-3 py-2 text-sm font-semibold text-mssn-slate">Registration</div>
-            <a href="/registration" onClick={createRouteHandler('/registration')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Registration Status</a>
-            <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">Existing Member</a>
-            <a href="/new" onClick={createRouteHandler('/new')} className="block rounded-xl px-3 py-2 text-sm text-mssn-slate hover:bg-mssn-mist">New Member</a>
+      <div className={`fixed inset-0 z-50 lg:hidden ${isNavOpen ? '' : 'pointer-events-none'}`} aria-hidden={!isNavOpen}>
+        <div className={`absolute inset-0 bg-mssn-night/50 transition-opacity ${isNavOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onCloseNav} />
+        <aside className={`absolute right-0 top-0 h-full w-[20rem] max-w-[90vw] transform bg-white shadow-soft ring-1 ring-mssn-slate/10 transition-transform duration-300 ${isNavOpen ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true">
+          <div className="flex items-center justify-between border-b border-mssn-slate/10 px-5 py-4">
+            <span className="text-sm font-semibold text-mssn-slate">Menu</span>
+            <button type="button" onClick={onCloseNav} className="rounded-lg p-2 text-mssn-slate/70 transition hover:bg-mssn-mist hover:text-mssn-slate">✕</button>
           </div>
-          <a href="mailto:camp@mssnlagos.org" onClick={onCloseNav} className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mssn-slate shadow-sm ring-1 ring-mssn-slate/10">Contact Us</a>
-        </div>
-      </nav>
+          <div className="flex h-[calc(100%-56px)] flex-col gap-2 overflow-y-auto p-4">
+            <a href="/" onClick={createRouteHandler('/')} className={`${isActive('/') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Home</a>
+            <a href="/reprint-slip" onClick={createRouteHandler('/reprint-slip')} className={`${isActive('/reprint-slip') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Re-print Slip</a>
+            <a href="/check-mssn-id" onClick={createRouteHandler('/check-mssn-id')} className={`${isActive('/check-mssn-id') ? 'bg-mssn-green/10 text-mssn-greenDark' : 'bg-white text-mssn-slate'} rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40`}>Check MSSN ID</a>
+            <div className="rounded-2xl ring-1 ring-mssn-slate/10">
+              <button type="button" onClick={() => setIsMobileRegOpen((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-mssn-slate">
+                <span>Registration</span>
+                <span className={`transition-transform ${isMobileRegOpen ? 'rotate-180' : ''}`}>▾</span>
+              </button>
+              <div className={`overflow-hidden transition-all ${isMobileRegOpen ? 'max-h-60' : 'max-h-0'}`}>
+                <a href="/existing/validate" onClick={createRouteHandler('/existing/validate')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/existing') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>Existing Member</a>
+                <a href="/new" onClick={createRouteHandler('/new')} className={`block px-4 py-2 text-sm hover:bg-mssn-mist ${isActive('/new') ? 'bg-mssn-mist text-mssn-greenDark' : 'text-mssn-slate'}`}>New Member</a>
+              </div>
+            </div>
+            <a href="/contact" onClick={createRouteHandler('/contact')} className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-mssn-slate ring-1 ring-mssn-slate/10 hover:ring-mssn-green/40">Contact Us</a>
+          </div>
+        </aside>
+      </div>
     </header>
   )
 }
 
 function Footer() {
-  const currentYear = useMemo(() => new Date().getFullYear(), [])
+  const currentYear = React.useMemo(() => new Date().getFullYear(), [])
 
   return (
-    <footer className="mt-24 bg-mssn-night">
-      <div className="mx-auto w-full max-w-6xl px-6 py-12 text-white/80">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-center gap-3">
+    <footer className="mt-24 bg-mssn-footer text-white">
+      <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="space-y-4">
             <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover" />
-            <div>
-              <p className="text-sm font-semibold text-white">Muslim Students’ Society of Nigeria, Lagos State Area Unit</p>
-              <p className="text-xs text-white/70">Strengthening faith, education, and community impact across Lagos.</p>
-            </div>
+            <p className="text-sm font-semibold">Muslim Students’ Society of Nigeria, Lagos State Area Unit</p>
           </div>
-          <div className="grid gap-3 text-xs sm:grid-cols-2 sm:gap-4">
-            <a href="#support" className="underline decoration-mssn-green/40 underline-offset-4">
-              Visit support hub
-            </a>
-            <a href="mailto:camp@mssnlagos.org" className="underline decoration-mssn-green/40 underline-offset-4">
-              camp@mssnlagos.org
-            </a>
-            <a href="tel:+2348130001122" className="underline decoration-mssn-green/40 underline-offset-4">
-              +234 813 000 1122
-            </a>
+
+          <div>
+            <h4 className="text-sm font-semibold text-white">Quick links</h4>
+            <ul className="mt-3 space-y-2 text-sm text-white/95">
+              <li><a href="/" onClick={(e)=>{e.preventDefault(); navigate('/')}} className="hover:underline">Home</a></li>
+              <li><a href="/new" onClick={(e)=>{e.preventDefault(); navigate('/new')}} className="hover:underline">New Member</a></li>
+              <li><a href="/existing/validate" onClick={(e)=>{e.preventDefault(); navigate('/existing/validate')}} className="hover:underline">Existing Member</a></li>
+              <li><a href="/reprint-slip" onClick={(e)=>{e.preventDefault(); navigate('/reprint-slip')}} className="hover:underline">Re-print Slip</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold text-white">Contact</h4>
+            <ul className="mt-3 space-y-2 text-sm text-white/95">
+              <li><a href="mailto:camp@mssnlagos.org" className="hover:underline">camp@mssnlagos.org</a></li>
+              <li><a href="tel:+2348130001122" className="hover:underline">+234 813 000 1122</a></li>
+              <li className="mt-2 text-xs text-white/80">Office: Lagos State Area Unit</li>
+            </ul>
           </div>
         </div>
-        <p className="mt-8 text-xs text-white/60">&copy; {currentYear} MSSN Lagos State Area Unit. All rights reserved.</p>
+
+        <div className="mt-8 border-t border-white/20 pt-6 text-sm text-white/90 flex flex-col items-center justify-between gap-3 md:flex-row">
+          <div>© {currentYear} MSSN Lagos State Area Unit. All rights reserved.</div>
+          <div className="text-xs">Built with care for our students &amp; community.</div>
+        </div>
       </div>
     </footer>
   )
 }
 
 function Layout({ children }) {
-  const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isNavOpen, setIsNavOpen] = React.useState(false)
   const { loading } = useSettings()
 
   const toggleNav = () => setIsNavOpen((prev) => !prev)
@@ -204,6 +239,8 @@ function Layout({ children }) {
       <main className="flex-1">{children}</main>
       <Footer />
       {loading && <FullPageLoader />}
+      <PwaInstallPrompt />
+      <WhatsAppWidget />
     </div>
   )
 }

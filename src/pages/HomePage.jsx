@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import * as React from 'react'
 import { navigate, isModifiedEvent } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
@@ -202,15 +202,18 @@ function HeroSlider() {
         <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-24">
+        <div className="max-w-3xl">
+          <div className="mb-4 h-0.5 w-20 rounded-full bg-white/40" />
+        </div>
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
           {camp?.camp_code || 'CAMP'}
         </span>
-        <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{campTitle}</h1>
+        <h1 className="text-4xl font-extrabold leading-tight text-white drop-shadow-2xl sm:text-5xl lg:text-6xl">{campTitle}</h1>
         {camp?.camp_theme && (
-          <p className="max-w-2xl text-lg text-white/90 lg:text-xl">{camp.camp_theme}</p>
+          <p className="max-w-2xl text-lg text-white/95 lg:text-xl drop-shadow-lg">{camp.camp_theme}</p>
         )}
         {camp?.camp_date && (
-          <p className="text-sm text-white/80">{camp.camp_date}</p>
+          <p className="text-sm text-white/90">{camp.camp_date}</p>
         )}
       </div>
     </section>
@@ -218,9 +221,9 @@ function HeroSlider() {
 }
 
 function QuickActionsBar() {
-  const [draft, setDraft] = useState(null)
+  const [draft, setDraft] = React.useState(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined
     }
@@ -257,7 +260,7 @@ function QuickActionsBar() {
     }
   }, [])
 
-  const resumeDetails = useMemo(() => {
+  const resumeDetails = React.useMemo(() => {
     if (!draft || typeof draft !== 'object') return null
     const category = typeof draft.category === 'string' ? draft.category : null
     const values = draft.values && typeof draft.values === 'object' ? draft.values : {}
@@ -279,7 +282,7 @@ function QuickActionsBar() {
     }
   }, [draft])
 
-  const resumeMeta = useMemo(() => {
+  const resumeMeta = React.useMemo(() => {
     if (!resumeDetails) return ''
     const parts = []
     if (resumeDetails.name) parts.push(resumeDetails.name)
@@ -373,12 +376,12 @@ function QuickActionsBar() {
 }
 
 function AdsSection() {
-  const [formValues, setFormValues] = useState(() => createInitialRequestValues())
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' })
+  const [formValues, setFormValues] = React.useState(() => createInitialRequestValues())
+  const [errors, setErrors] = React.useState({})
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [submissionState, setSubmissionState] = React.useState({ status: 'idle', message: '' })
 
-  const requestOptions = useMemo(
+  const requestOptions = React.useMemo(
     () => adSlots.map((slot) => ({ value: slot.id, label: slot.name, status: slot.status })),
     []
   )
@@ -697,7 +700,25 @@ export default function HomePage() {
           <QuickActionsBar />
         </div>
       </div>
+
       <PricingDiscounts />
+
+      <section id="ads-placeholder" className="mx-auto mt-10 w-full max-w-6xl px-6">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
+          <h2 className="text-lg font-semibold text-mssn-slate">Place your ads here</h2>
+          <p className="mt-2 text-sm text-mssn-slate/70">Available ad slots — contact our partnerships team to reserve a slot.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-mssn-slate/20 bg-mssn-mist text-center text-mssn-slate/60">
+                <div>
+                  <div className="text-sm font-semibold">Ad slot</div>
+                  <div className="mt-1 text-xs">Place your ad here</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

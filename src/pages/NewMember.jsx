@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import * as React from 'react'
 import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, fetchHighestQualifications } from '../services/dataProvider.js'
+import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, queryQualifications, fetchHighestQualifications } from '../services/dataProvider.js'
 import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
+import ProcessingModal from '../components/ProcessingModal.jsx'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -62,7 +63,7 @@ function CategoryCard({ id, title, description, onClick }) {
 }
 
 function useOutsideClick(ref, handler) {
-  useEffect(() => {
+  React.useEffect(() => {
     const listener = (e) => {
       if (!ref.current || ref.current.contains(e.target)) return
       handler()
@@ -73,9 +74,9 @@ function useOutsideClick(ref, handler) {
 }
 
 function useDebouncedValue(value, delay = 250) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
+  const [debouncedValue, setDebouncedValue] = React.useState(value)
 
-  useEffect(() => {
+  React.useEffect(() => {
     const timeout = setTimeout(() => setDebouncedValue(value), delay)
     return () => clearTimeout(timeout)
   }, [value, delay])
@@ -93,18 +94,18 @@ function AsyncSelect({
   onBlur,
   invalid = false,
 }) {
-  const containerRef = useRef(null)
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState('')
+  const containerRef = React.useRef(null)
+  const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
-  const [items, setItems] = useState([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const prevOpen = useRef(false)
+  const [items, setItems] = React.useState([])
+  const [page, setPage] = React.useState(1)
+  const [totalPages, setTotalPages] = React.useState(1)
+  const [loading, setLoading] = React.useState(false)
+  const prevOpen = React.useRef(false)
 
   const normalizedValue = multiple ? (Array.isArray(value) ? value.filter(Boolean) : []) : (value || '')
-  const selectedLabels = useMemo(() => {
+  const selectedLabels = React.useMemo(() => {
     if (multiple) return normalizedValue
     return normalizedValue ? [normalizedValue] : []
   }, [multiple, normalizedValue])
@@ -126,7 +127,7 @@ function AsyncSelect({
     }
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (open) {
       setItems([])
       setPage(1)
@@ -136,7 +137,7 @@ function AsyncSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, debouncedSearch])
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (prevOpen.current && !open) {
       onBlur?.()
     }
@@ -382,7 +383,7 @@ function buildValidationSchema(config, extras = {}) {
 
 function DraftSaver({ formik, category }) {
   const debounced = useDebouncedValue(formik.values, 400)
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       const values = debounced || {}
       const hasAnyFilled = Object.entries(values).some(([key, rawValue]) => {
@@ -432,9 +433,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const showEmergency = isUG || isOthers
   const showHighestQualification = isUG || isOthers
 
-  const [qualifications, setQualifications] = useState([])
+  const [qualifications, setQualifications] = React.useState([])
   const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
-  useEffect(() => {
+  React.useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
@@ -449,7 +450,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return () => { cancelled = true }
   }, [qualificationAudience])
 
-  const qualificationOptions = useMemo(() => {
+  const qualificationOptions = React.useMemo(() => {
     if (!qualifications.length) return []
     if (!qualificationAudience) return qualifications.map((item) => item.label)
     const normalizedAudience = qualificationAudience.toLowerCase()
@@ -458,7 +459,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return source.map((item) => item.label)
   }, [qualificationAudience, qualifications])
 
-  const initialValues = useMemo(() => {
+  const initialValues = React.useMemo(() => {
     const base = {
       surname: '',
       firstname: '',
@@ -495,7 +496,10 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     return prefillValues && typeof prefillValues === 'object' ? { ...base, ...prefillValues } : base
   }, [category, prefillValues])
 
-  const validationSchema = useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
+  const validationSchema = React.useMemo(() => buildValidationSchema(config, { showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification }), [config, showCourse, showDiscipline, showWorkplace, showEmergency, showHighestQualification])
+
+  const [processing, setProcessing] = React.useState(false)
+  const [redirecting, setRedirecting] = React.useState(false)
 
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
@@ -558,6 +562,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     })
 
     try {
+      setProcessing(true)
       const res = await fetchJSON('/registration/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,14 +575,21 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
       if (data.redirect_url) {
-        window.location.href = data.redirect_url
+        setRedirecting(true)
+        setTimeout(() => {
+          window.location.href = data.redirect_url
+        }, 700)
       } else {
-        navigate('/registration')
+        setRedirecting(true)
+        setTimeout(() => {
+          navigate('/registration')
+        }, 700)
       }
     } catch (err) {
       // Error toast handled globally in fetchJSON
     } finally {
       helpers.setSubmitting(false)
+      setProcessing(false)
     }
   }
 
@@ -704,13 +716,13 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       />
                     ) : null}
                     {showHighestQualification ? (
-                      <SelectField
+                      <FormikAsyncSelect
                         formik={formik}
                         name="highest_qualification"
                         label="Highest Qualification"
                         required
-                        options={qualificationOptions}
                         placeholder="Select qualification..."
+                        fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
                       />
                     ) : null}
                     {showDiscipline ? (
@@ -761,14 +773,16 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
               </Form>
             )}
           </Formik>
+      <ProcessingModal visible={processing} title="Processing payment…" subtitle="Please wait while we submit your registration and prepare payment." />
+      <ProcessingModal visible={redirecting} title="Redirecting to payment…" subtitle="Please hold on while we redirect you to the payment page." />
       </div>
     </section>
   )
 }
 
 export default function NewMember({ category }) {
-  const [draft, setDraft] = useState(null)
-  useEffect(() => {
+  const [draft, setDraft] = React.useState(null)
+  React.useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY)
       if (raw) setDraft(JSON.parse(raw))
