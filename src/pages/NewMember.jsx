@@ -610,9 +610,14 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">New Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">{config.label}</h1>
             </div>
-            <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
-              Change category
-            </a>
+            <div className="flex items-center gap-3">
+              {finalPrice != null ? (
+                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+              ) : null}
+              <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
+                Change category
+              </a>
+            </div>
           </div>
 
         </div>
