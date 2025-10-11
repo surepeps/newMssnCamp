@@ -82,7 +82,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
   React.useEffect(() => () => clearCloseTimeout(), [])
 
   const [isMobileRegOpen, setIsMobileRegOpen] = React.useState(false)
-  const [path, setPath] = useState(window.location.pathname)
+  const [path, setPath] = React.useState(window.location.pathname)
   React.useEffect(() => {
     const update = () => setPath(window.location.pathname)
     window.addEventListener('popstate', update)
