@@ -9,7 +9,6 @@ export default function ExistingMemberValidate() {
   const [surname, setSurname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [allError, setAllError] = useState('')
   const mssnRef = useRef(null)
   const surnameRef = useRef(null)
 
@@ -48,9 +47,6 @@ export default function ExistingMemberValidate() {
       }
     } catch (err) {
       let msg = 'Unable to verify at the moment. Please try again later.'
-      msg = err.message
-      setAllError(err);
-      setError(msg)
       if (err?.name === 'AbortError') {
         msg = 'Request timed out. Please check your internet connection and try again.'
       } else if (err?.message) {
@@ -88,11 +84,6 @@ export default function ExistingMemberValidate() {
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">Existing Member</span>
               <h1 className="mt-2 text-3xl font-semibold text-mssn-slate">Validation</h1>
               <p className="mt-2 text-sm text-mssn-slate/70">Enter your MSSN ID and surname to continue.</p>
-              <div>
-                {
-                allError
-              }
-              </div>
             </div>
             <a
               href="https://mssnlagos.org/camp/register/returning"
