@@ -295,6 +295,15 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
+  const qualificationOptions = useMemo(() => {
+    if (!qualifications.length) return []
+    if (!qualificationAudience) return qualifications.map((item) => item.label)
+    const normalizedAudience = qualificationAudience.toLowerCase()
+    const filtered = qualifications.filter((item) => String(item.who || '').trim().toLowerCase() === normalizedAudience)
+    const source = filtered.length ? filtered : qualifications
+    return source.map((item) => item.label)
+  }, [qualificationAudience, qualifications])
+
   useEffect(() => {
     const det = delegate?.details
     if (!det) return
