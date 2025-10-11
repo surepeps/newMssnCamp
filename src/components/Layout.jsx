@@ -8,9 +8,9 @@ import WhatsAppWidget from './WhatsAppWidget.jsx'
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
-  const registrationRef = useRef(null)
-  const closeTimeoutRef = useRef(null)
+  const [isRegistrationOpen, setIsRegistrationOpen] = React.useState(false)
+  const registrationRef = React.useRef(null)
+  const closeTimeoutRef = React.useRef(null)
 
   const clearCloseTimeout = () => {
     if (closeTimeoutRef.current) {
@@ -79,16 +79,16 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
     navigate(path, { replace })
   }
 
-  useEffect(() => () => clearCloseTimeout(), [])
+  React.useEffect(() => () => clearCloseTimeout(), [])
 
-  const [isMobileRegOpen, setIsMobileRegOpen] = useState(false)
+  const [isMobileRegOpen, setIsMobileRegOpen] = React.useState(false)
   const [path, setPath] = useState(window.location.pathname)
-  useEffect(() => {
+  React.useEffect(() => {
     const update = () => setPath(window.location.pathname)
     window.addEventListener('popstate', update)
     return () => window.removeEventListener('popstate', update)
   }, [])
-  useEffect(() => {
+  React.useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onCloseNav() }
     if (isNavOpen) window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -186,7 +186,7 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
 }
 
 function Footer() {
-  const currentYear = useMemo(() => new Date().getFullYear(), [])
+  const currentYear = React.useMemo(() => new Date().getFullYear(), [])
 
   return (
     <footer className="mt-24 bg-gradient-to-tr from-mssn-slate to-mssn-night text-white">
@@ -238,7 +238,7 @@ function Footer() {
 }
 
 function Layout({ children }) {
-  const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isNavOpen, setIsNavOpen] = React.useState(false)
   const { loading } = useSettings()
 
   const toggleNav = () => setIsNavOpen((prev) => !prev)
