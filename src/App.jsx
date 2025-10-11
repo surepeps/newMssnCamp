@@ -59,6 +59,7 @@ function Router() {
     },
     { pattern: '/reprint-slip', render: () => <ReprintSlip /> },
     { pattern: '/check-mssn-id', render: () => <CheckMssnId /> },
+    { pattern: '/payment/validate', render: () => <PaymentValidation /> },
     { pattern: '/contact', render: () => <ContactUs /> },
     { pattern: '/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '/registration', render: () => <RegistrationGate /> },
