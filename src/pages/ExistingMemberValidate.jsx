@@ -47,7 +47,18 @@ export default function ExistingMemberValidate() {
         navigate(`/existing/edit?${qs}`)
       }
     } catch (err) {
-      const msg = err?.message || 'Unable to verify at the moment. Please try again later.'
+      let msg = 'Unable to verify at the moment. Please try again later.'
+      if (err?.name === 'AbortError') {
+        msg = 'Request timed out. Please check your internet connection and try again.'
+      } else if (typeof err?.status === 'number') {
+        if (err.status === 400 || err.status === 422) msg = 'Invalid details provided. Please check MSSN ID and Surname.'
+        else if (err.status === 404) msg = 'Record not found. Please confirm your details.'
+        else if (err.status === 429) msg = 'Too many attempts. Please wait a moment and try again.'
+        else if (err.status >= 500) msg = 'Server error. Please try again shortly.'
+        else msg = err.message || msg
+      } else if (err?.message) {
+        msg = err.message
+      }
       setError(msg)
     } finally {
       toast.dismiss(t)
