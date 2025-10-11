@@ -28,7 +28,6 @@ export default function ExistingMemberValidate() {
     }
     setLoading(true)
     setError('')
-    const t = toast.loading('Verifying details…')
     try {
       const payload = { mssn_id: formatMssn(mssnId), surname: formatSurname(surname) }
       const res = await fetchJSON('/registration/fetch', {
