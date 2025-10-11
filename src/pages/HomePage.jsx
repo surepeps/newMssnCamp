@@ -694,7 +694,6 @@ export default function HomePage() {
     <div>
       <HeroSlider />
       <div className="mx-auto w-full max-w-6xl px-6">
-        <ResumeRegistrationBanner />
         <div className="-mt-10 lg:-mt-14">
           <QuickActionsBar />
         </div>
