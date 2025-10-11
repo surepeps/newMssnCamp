@@ -709,13 +709,13 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       />
                     ) : null}
                     {showHighestQualification ? (
-                      <SelectField
+                      <FormikAsyncSelect
                         formik={formik}
                         name="highest_qualification"
                         label="Highest Qualification"
                         required
-                        options={qualificationOptions}
                         placeholder="Select qualification..."
+                        fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
                       />
                     ) : null}
                     {showDiscipline ? (
