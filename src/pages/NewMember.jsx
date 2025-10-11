@@ -446,7 +446,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     let cancelled = false
     const load = async () => {
       try {
-        const list = await fetchHighestQualifications({ who: qualificationAudience })
+        const list = await fetchHighestQualifications()
         if (!cancelled) setQualifications(Array.isArray(list) ? list : [])
       } catch {
         if (!cancelled) setQualifications([])
@@ -456,15 +456,6 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
     else setQualifications([])
     return () => { cancelled = true }
   }, [qualificationAudience])
-
-  const qualificationOptions = useMemo(() => {
-    if (!qualifications.length) return []
-    if (!qualificationAudience) return qualifications.map((item) => item.label)
-    const normalizedAudience = qualificationAudience.toLowerCase()
-    const filtered = qualifications.filter((item) => String(item.who || '').trim().toLowerCase() === normalizedAudience)
-    const source = filtered.length ? filtered : qualifications
-    return source.map((item) => item.label)
-  }, [qualificationAudience, qualifications])
 
   const initialValues = useMemo(() => {
     const base = {
@@ -734,7 +725,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                         label="Highest Qualification"
                         required
                         placeholder="Select qualification..."
-                        fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
+                        fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search })}
                       />
                     ) : null}
                     {showDiscipline ? (

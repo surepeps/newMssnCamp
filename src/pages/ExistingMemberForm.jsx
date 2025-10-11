@@ -281,7 +281,7 @@ export default function ExistingMemberForm() {
     let cancelled = false
     const loadQualifications = async () => {
       try {
-        const list = await fetchHighestQualifications({ who: qualificationAudience })
+        const list = await fetchHighestQualifications()
         if (!cancelled) {
           setQualifications(Array.isArray(list) ? list : [])
         }
@@ -522,7 +522,7 @@ export default function ExistingMemberForm() {
                           label="Highest Qualification"
                           required
                           placeholder="Select qualification..."
-                          fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search, who: qualificationAudience })}
+                          fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search})}
                         />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
