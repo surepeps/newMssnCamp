@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 
-function isiOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
+function isAppleDevice() {
+  const ua = navigator.userAgent || navigator.vendor || ''
+  const isiOS = /iphone|ipad|ipod/i.test(ua)
+  const isMacTouch = /mac/i.test(ua) && (navigator.maxTouchPoints || 0) > 1
+  return isiOS || isMacTouch
+}
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true)
 }
 
 export default function PwaInstallPrompt() {
