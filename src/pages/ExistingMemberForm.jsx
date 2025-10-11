@@ -136,7 +136,7 @@ function SectionCardEM({ title, description, columns = 'sm:grid-cols-2', childre
   )
 }
 
-function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace }) {
+function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, showWorkplace, showHighestQualification }) {
   const optionalString = Yup.string().transform((value) => {
     if (typeof value !== 'string') return value
     const trimmed = value.trim()
@@ -166,6 +166,9 @@ function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, sh
   }
   if (showCourse) {
     shape.course = optionalString.nullable()
+  }
+  if (showHighestQualification) {
+    shape.highest_qualification = optionalString.nullable().required('Required')
   }
   if (showDiscipline) {
     shape.discipline = optionalString.nullable()
@@ -380,6 +383,7 @@ export default function ExistingMemberForm() {
       class_level: toInfo.class_level || d.class_level || '',
       ailments: parseA(d.ailments),
       course: d.course || '',
+      highest_qualification: d.highest_qualification || '',
       next_of_kin: d.next_of_kin || '',
       next_of_kin_tel: d.next_of_kin_tel || '',
       discipline: d.discipline || '',
@@ -419,6 +423,7 @@ export default function ExistingMemberForm() {
                   showDiscipline: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showWorkplace: categoryKey === 'undergraduate' || categoryKey === 'others',
                   showEmergency: categoryKey === 'undergraduate' || categoryKey === 'others',
+                  showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
                 onSubmit={async (values, helpers) => {
@@ -454,6 +459,7 @@ export default function ExistingMemberForm() {
                     payload.next_of_kin = normalize(values.next_of_kin)
                     payload.next_of_kin_tel = normalize(values.next_of_kin_tel)
                     payload.course = normalize(values.course)
+                    payload.highest_qualification = normalize(values.highest_qualification)
                     payload.discipline = normalize(values.discipline)
                     payload.workplace = normalize(values.workplace)
                   }
@@ -509,6 +515,9 @@ export default function ExistingMemberForm() {
                         <FormikAsyncSelectEM formik={formik} name="course" label="Course" placeholder="Select course..." fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })} />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
+                        <SelectFieldEM formik={formik} name="highest_qualification" label="Highest Qualification" required options={qualificationOptions} placeholder="Select qualification..." />
+                      )}
+                      {(categoryKey==='undergraduate'||categoryKey==='others') && (
                         <TextFieldEM formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
                       )}
                       {(categoryKey==='undergraduate'||categoryKey==='others') && (
@@ -553,7 +562,7 @@ export default function ExistingMemberForm() {
       <div className="fixed inset-0 z-[1001] grid place-items-center bg-black/40">
         <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
           <h3 className="text-lg font-semibold text-mssn-slate">Already Registered</h3>
-          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. Would you like to re‑print your slip?</p>
+          <p className="mt-2 text-sm text-mssn-slate/70">Our records show you have already registered. Would you like to re���print your slip?</p>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => { setShowRegisteredModal(false) }} className="rounded-xl border border-mssn-slate/20 px-4 py-2 text-sm font-semibold text-mssn-slate">Continue Editing</button>
             <button type="button" onClick={() => navigate('/registration')} className="rounded-xl bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Re‑print Slip</button>
