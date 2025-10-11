@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { fetchJSON } from '../services/api.js'
 import { navigate } from '../utils/navigation.js'
+import { useSettings } from '../context/SettingsContext.jsx'
 
-const STORAGE_KEY = 'reprint_slip_last'
 
 const formatMssnId = (value) => value.replace(/\s+/g, '').toUpperCase()
 const formatPaymentRef = (value) => value.replace(/\s+/g, '').toUpperCase()
@@ -79,19 +79,10 @@ export default function ReprintSlip() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const mssnFieldRef = useRef(null)
+  const { settings } = useSettings()
+  const camp = settings?.current_camp
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const data = JSON.parse(raw)
-        if (data?.mssn_id) setMssnId(formatMssnId(String(data.mssn_id)))
-        if (data?.payment_ref) setPaymentRef(formatPaymentRef(String(data.payment_ref)))
-        if (data?.delegate && typeof data.delegate === 'object') {
-          setDelegate(data.delegate)
-        }
-      }
-    } catch {}
     mssnFieldRef.current?.focus()
   }, [])
 
@@ -123,17 +114,6 @@ export default function ReprintSlip() {
       }
       setDelegate(response.delegate)
       toast.success('Registration slip found. You can now view and print it.')
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            mssn_id: formattedMssn,
-            payment_ref: formattedRef,
-            delegate: response.delegate,
-            fetched_at: Date.now(),
-          }),
-        )
-      } catch {}
     } catch (err) {
       if (err?.name === 'AbortError') {
         setError('Request timed out. Please try again in a moment.')
@@ -152,15 +132,12 @@ export default function ReprintSlip() {
     setPaymentRef('')
     setDelegate(null)
     setError('')
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {}
     mssnFieldRef.current?.focus()
   }
 
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-12">
-      <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+      <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white no-print">
         <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
         <div className="bg-radial-glow/40">
           <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
@@ -270,11 +247,11 @@ export default function ReprintSlip() {
 
       {delegate ? (
         <div className="mt-10 space-y-8">
-          <div className="rounded-3xl border border-mssn-green/20 bg-white/95 p-6 shadow-soft">
+          <div className="rounded-3xl border border-mssn-green/20 bg-white/95 p-6 shadow-soft no-print">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold uppercase tracking-[0.22em] text-mssn-green">Registration slip</h2>
-                <p className="mt-1 text-sm text-mssn-slate/70">Save or print this slip for camp entry verification.</p>
+                <p className="mt-1 text-sm text-mssn-slate/70">Save or download this slip for camp entry verification.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -282,7 +259,7 @@ export default function ReprintSlip() {
                   onClick={() => window.print()}
                   className="inline-flex items-center justify-center rounded-full border border-mssn-green/40 px-4 py-2 text-sm font-semibold text-mssn-greenDark transition hover:bg-mssn-green/10"
                 >
-                  Print slip
+                  Download PDF
                 </button>
                 <button
                   type="button"
@@ -293,9 +270,26 @@ export default function ReprintSlip() {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div id="slip-print-area" className="mx-auto w-full rounded-3xl bg-white ring-1 ring-mssn-slate/10">
+            <div className="border-b border-mssn-slate/10 p-6 sm:p-8">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">{camp?.camp_code || 'CAMP'}</span>
+                  <h3 className="text-xl font-semibold text-mssn-slate">{camp?.camp_title || 'Camp MSSN Lagos'}</h3>
+                  {camp?.camp_theme ? <p className="text-sm text-mssn-slate/70">{camp.camp_theme}</p> : null}
+                  {camp?.camp_date ? <p className="text-sm text-mssn-slate/70">{camp.camp_date}</p> : null}
+                </div>
+                <div className="mt-2 sm:mt-0 text-right">
+                  <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Payment reference</div>
+                  <div className="mt-1 text-sm font-semibold text-mssn-slate">{delegate.payment_reference || paymentRef}</div>
+                </div>
+              </div>
+            </div>
 
             {summaryItems.length ? (
-              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+              <dl className="grid gap-3 p-6 sm:grid-cols-2 sm:p-8">
                 {summaryItems.map((item) => (
                   <div key={item.label} className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
                     <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">{item.label}</dt>
@@ -306,24 +300,30 @@ export default function ReprintSlip() {
             ) : null}
 
             {detailItems.length ? (
-              <div className="mt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Additional details</h3>
-                <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {detailItems.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3">
-                      <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">{item.label}</dt>
-                      <dd className="mt-1 text-sm font-semibold text-mssn-slate">
-                        {item.href ? (
-                          <a href={item.href} className="text-mssn-greenDark underline decoration-mssn-green/40 underline-offset-4">{item.value}</a>
-                        ) : (
-                          <span>{item.value}</span>
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+              <div className="border-t border-mssn-slate/10">
+                <div className="p-6 sm:p-8">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">Additional details</h3>
+                  <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {detailItems.map((item) => (
+                      <div key={item.label} className="rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3">
+                        <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">{item.label}</dt>
+                        <dd className="mt-1 text-sm font-semibold text-mssn-slate">
+                          {item.href ? (
+                            <a href={item.href} className="text-mssn-greenDark underline decoration-mssn-green/40 underline-offset-4">{item.value}</a>
+                          ) : (
+                            <span>{item.value}</span>
+                          )}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
               </div>
             ) : null}
+
+            <div className="border-t border-mssn-slate/10 p-6 text-xs text-mssn-slate/60 sm:p-8">
+              Please present this slip at the registration desk. Keep a digital or printed copy for your records.
+            </div>
           </div>
         </div>
       ) : null}

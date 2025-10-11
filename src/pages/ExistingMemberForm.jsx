@@ -215,16 +215,6 @@ export default function ExistingMemberForm() {
   useEffect(() => {
     ;(async () => {
       try {
-        const raw = localStorage.getItem('existing_member_delegate')
-        if (raw) {
-          const data = JSON.parse(raw)
-          setDelegate(data)
-          const cat = mapCategory(data?.details?.pin_category || data?.details?.pin_cat)
-          if (cat) setCategory(cat)
-          setShowUpgradeModal(Boolean(data?.upgraded) && !((query.get('upgrade') || '') === '1'))
-          setShowRegisteredModal(Boolean(data?.alreadyRegistered))
-          return
-        }
         const qM = (mssnId || '').trim()
         const qS = (surname || '').trim()
         if (qM && qS) {
@@ -235,7 +225,6 @@ export default function ExistingMemberForm() {
             body: JSON.stringify({ mssn_id: qM, surname: qS }),
           })
           if (res?.success && res?.delegate?.details) {
-            localStorage.setItem('existing_member_delegate', JSON.stringify(res.delegate))
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
             if (cat) setCategory(cat)
