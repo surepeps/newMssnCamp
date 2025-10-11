@@ -821,8 +821,8 @@ export default function NewMember({ category }) {
           ) : null}
           <div className="mt-5 grid gap-6 lg:grid-cols-3">
             <CategoryCard id="secondary" title="Secondary" description="For junior and senior secondary students." onClick={() => { navigate('/new/secondary') }} />
-            <CategoryCard id="undergraduate" title="Undergraduate" description="For university, polytechnic and college students." onClick={() => { navigate('/new/undergraduate') }} />
-            <CategoryCard id="others" title="Others" description="For non-students and general participants." onClick={() => { navigate('/new/others') }} />
+            <CategoryCard id="undergraduate" title="Undergraduate" description="For admission seekers, university, polytechnic, and college students." onClick={() => { navigate('/new/undergraduate') }} />
+            <CategoryCard id="others" title="Others" description="For workers, professionals, and other non-student participants." onClick={() => { navigate('/new/others') }} />
           </div>
         </div>
       </section>

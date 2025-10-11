@@ -9,22 +9,23 @@ const quickActions = [
   {
     id: 'new-member',
     title: 'New Member',
-    description: 'Create your profile and pay securely online.',
+    description: 'Register as a new camper and complete your payment online.',
     href: '/new',
   },
   {
     id: 'existing-member',
     title: 'Existing Member',
-    description: 'Retrieve MSSN ID, update records, reserve your bunk.',
+    description: 'Verify your MSSN ID, update your information, and confirm your camp attendance.',
     href: '/existing/validate',
   },
   {
     id: 'reprint-slip',
-    title: 'Reprint-slip',
-    description: 'Reprint your registration slip anytime.',
+    title: 'Reprint Slip',
+    description: 'Reprint your camp registration slip or payment receipt anytime.',
     href: '/reprint-slip',
   },
 ]
+
 
 const CATEGORY_LABELS = {
   secondary: 'Secondary',
