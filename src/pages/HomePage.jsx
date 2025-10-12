@@ -262,21 +262,24 @@ export default function HomePage() {
 
   const [selectedAmount, setSelectedAmount] = React.useState(null)
   const [customAmount, setCustomAmount] = React.useState('')
+  const [frequency, setFrequency] = React.useState('one-time')
 
   const openAdModal = (slot) => {
     setActiveAdSlot(slot)
     setShowAdModal(true)
   }
 
+  const formatNGN = (v) => `₦${Number(v).toLocaleString()}`
+
   const handleDonate = () => {
-    const amt = selectedAmount || Number(customAmount || 0)
-    if (!amt || Number.isNaN(Number(amt)) || Number(amt) <= 0) {
+    const amt = Number(selectedAmount || customAmount || 0)
+    if (!amt || Number.isNaN(amt) || amt <= 0) {
       toast.error('Please enter or select a valid donation amount')
       return
     }
     // In a real app we'd call the payments API here
-    toast.success(`Thank you for your donation of ₦${Number(amt).toLocaleString()}`)
-    console.log('Donate:', amt)
+    toast.success(`Thank you for your ${frequency === 'monthly' ? 'monthly' : 'one‑time'} donation of ${formatNGN(amt)}`)
+    console.log('Donate:', { amount: amt, frequency })
     setSelectedAmount(null)
     setCustomAmount('')
   }
