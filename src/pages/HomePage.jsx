@@ -341,43 +341,55 @@ export default function HomePage() {
 
       <section id="donate" className="mx-auto mt-8 w-full max-w-6xl px-6">
         <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
-          <h2 className="text-lg font-semibold text-mssn-slate">Support our cause — Donate</h2>
-          <p className="mt-2 text-sm text-mssn-slate/70">Your donations help us run events, provide materials, and support students. Choose an amount or enter a custom amount.</p>
+          <div className="sm:flex sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-mssn-slate">Support our cause</h2>
+              <p className="mt-2 text-sm text-mssn-slate/70">Your contribution helps fund scholarships, materials, and outreach. Pick an amount, choose one‑time or monthly, or enter a custom amount.</p>
 
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-3">
-              {[5000, 10000, 20000].map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setSelectedAmount(amt)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${selectedAmount === amt ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate bg-white'}`}
-                >
-                  ₦{amt.toLocaleString()}
-                </button>
-              ))}
+              <div className="mt-4 flex items-center gap-3" role="radiogroup" aria-label="Donation frequency">
+                <button type="button" onClick={() => setFrequency('one-time')} aria-pressed={frequency === 'one-time'} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${frequency === 'one-time' ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate'}`}>One‑time</button>
+                <button type="button" onClick={() => setFrequency('monthly')} aria-pressed={frequency === 'monthly'} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${frequency === 'monthly' ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate'}`}>Monthly</button>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {[2000,5000,10000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => { setSelectedAmount(amt); setCustomAmount('') }}
+                    aria-pressed={selectedAmount === amt}
+                    className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${selectedAmount === amt ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate bg-white'}`}
+                    aria-label={`Donate ${amt} naira`}
+                  >
+                    <span className="text-sm">{formatNGN(amt)}</span>
+                    <span className="text-xs text-mssn-slate/60">{frequency === 'monthly' ? 'per month' : ''}</span>
+                  </button>
+                ))}
+              </div>
+
             </div>
 
-            <div className="flex items-center gap-3">
-              <div>
-                <label htmlFor="custom-amount" className="sr-only">Custom amount</label>
-                <input
-                  id="custom-amount"
-                  type="number"
-                  min="0"
-                  value={customAmount}
-                  onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null) }}
-                  placeholder="Custom amount (NGN)"
-                  className="w-40 rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm"
-                />
+            <div className="mt-6 sm:mt-0 sm:ml-6 sm:w-80">
+              <div className="rounded-2xl border border-mssn-slate/10 bg-mssn-mist p-4">
+                <label htmlFor="custom-amount" className="block text-sm font-medium text-mssn-slate/80">Custom amount (NGN)</label>
+                <div className="mt-2 flex items-center gap-2">
+                  <input id="custom-amount" type="number" min="0" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null) }} placeholder="e.g. 7500" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+                </div>
+
+                <div className="mt-4 text-sm text-mssn-slate/70">Summary:</div>
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-sm font-medium text-mssn-slate">Amount</div>
+                  <div className="text-sm font-semibold text-mssn-slate">{(selectedAmount || customAmount) ? formatNGN(selectedAmount || customAmount) : '—'}</div>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-sm font-medium text-mssn-slate">Frequency</div>
+                  <div className="text-sm text-mssn-slate">{frequency === 'monthly' ? 'Monthly' : 'One‑time'}</div>
+                </div>
+
+                <div className="mt-4 text-right">
+                  <button type="button" onClick={handleDonate} className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark">Donate now</button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleDonate}
-                className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
-              >
-                Donate
-              </button>
             </div>
           </div>
         </div>
