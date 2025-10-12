@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import * as React from 'react'
 
 function isAppleDevice() {
   const ua = navigator.userAgent || navigator.vendor || ''
@@ -11,14 +11,14 @@ function isStandalone() {
 }
 
 export default function PwaInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [visible, setVisible] = useState(false)
-  const [installed, setInstalled] = useState(false)
-  const [showIosHelp, setShowIosHelp] = useState(false)
-  const [updateAvailable, setUpdateAvailable] = useState(false)
-  const [swRegistration, setSwRegistration] = useState(null)
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null)
+  const [visible, setVisible] = React.useState(false)
+  const [installed, setInstalled] = React.useState(false)
+  const [showIosHelp, setShowIosHelp] = React.useState(false)
+  const [updateAvailable, setUpdateAvailable] = React.useState(false)
+  const [swRegistration, setSwRegistration] = React.useState(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handler = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
