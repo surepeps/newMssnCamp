@@ -10,6 +10,7 @@ import ReprintSlip from './pages/ReprintSlip.jsx'
 import CheckMssnId from './pages/CheckMssnId.jsx'
 import ContactUs from './pages/ContactUs.jsx'
 import PaymentValidation from './pages/PaymentValidation.jsx'
+import DonationValidation from './pages/DonationValidation.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Toaster } from 'sonner'
@@ -62,6 +63,7 @@ function Router() {
     { pattern: '/reprint-slip', render: () => <ReprintSlip /> },
     { pattern: '/check-mssn-id', render: () => <CheckMssnId /> },
     { pattern: '/payment/validate', render: () => <PaymentValidation /> },
+    { pattern: '/donation/validate', render: () => <DonationValidation /> },
     { pattern: '/contact', render: () => <ContactUs /> },
     { pattern: '/registration/:section', render: () => <RegistrationGate /> },
     { pattern: '/registration', render: () => <RegistrationGate /> },
