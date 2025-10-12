@@ -219,9 +219,8 @@ export default function ExistingMemberForm() {
 
   const { settings } = useSettings()
   const camp = settings?.current_camp
-  const priceOriginal = categoryKey === 'undergraduate' ? camp?.prices?.undergraduate : categoryKey === 'secondary' ? camp?.prices?.secondary : camp?.prices?.others
-  const priceDiscounted = categoryKey === 'undergraduate' ? camp?.discounts?.price_und : categoryKey === 'secondary' ? camp?.discounts?.price_sec : camp?.discounts?.price_oth
-  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+  const priceInfo = getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey }) || {}
+  const finalPrice = priceInfo?.final
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
