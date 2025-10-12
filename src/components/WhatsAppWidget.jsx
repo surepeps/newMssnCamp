@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 
 export default function WhatsAppWidget({ phone = '+2348130001122' }) {
   const [open, setOpen] = React.useState(false)
