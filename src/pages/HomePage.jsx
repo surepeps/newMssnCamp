@@ -319,20 +319,83 @@ export default function HomePage() {
       </section>
 
       {showAdModal ? (
-        <div className="fixed inset-0 z-[1200] grid place-items-center bg-black/40">
-          <div className="mx-4 w-full max-w-2xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
-            <div className="flex items-start justify-between gap-4">
+        <div className="fixed inset-0 z-[1200] grid place-items-center" role="dialog" aria-modal="true" aria-labelledby="ad-modal-title">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowAdModal(false)} />
+          <div className="relative z-10 mx-4 w-full max-w-3xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
+            <div className="flex items-start gap-6">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-mssn-slate">How to place an ad (Slot {activeAdSlot})</h3>
-                <p className="mt-2 text-sm text-mssn-slate/70">To reserve this ad slot, please contact our partnerships team at <a className="text-mssn-green underline" href="mailto:partners@mssnlagos.org">partners@mssnlagos.org</a> or call <span className="font-mono">+234 813 000 1122</span>. Provide the slot number, desired dates, and creative specifications (image: 1200×600px, max 200KB, format PNG/JPG).</p>
-                <ul className="mt-3 list-inside list-disc text-sm text-mssn-slate/70">
-                  <li>Include target dates and any campaign notes.</li>
-                  <li>We accept bank transfers and online payment links.</li>
-                  <li>Creative must be provided at least 48 hours before start date.</li>
-                </ul>
+                <h3 id="ad-modal-title" className="text-lg font-semibold text-mssn-slate">How to place an ad — Slot {activeAdSlot}</h3>
+                <p className="mt-3 text-sm text-mssn-slate/70">Thank you for your interest in advertising with MSSN Lagos. Below are the simple steps to reserve an ad slot and submit your creative.</p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-mssn-slate">Steps to reserve</h4>
+                    <ol className="mt-2 list-inside list-decimal text-sm text-mssn-slate/70">
+                      <li>Contact our partnerships team with the <strong>slot number</strong>, desired dates, and campaign brief.</li>
+                      <li>Confirm availability and payment options.</li>
+                      <li>Send your creative assets and final instructions at least 48 hours before start date.</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-mssn-slate">Creative requirements</h4>
+                    <ul className="mt-2 list-inside list-disc text-sm text-mssn-slate/70">
+                      <li>Recommended size: <strong>1200×600px</strong> (1:0.5)</li>
+                      <li>File types: <strong>PNG, JPG</strong></li>
+                      <li>Max file size: <strong>200 KB</strong></li>
+                      <li>Include a clear call-to-action and tracking link (optional)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-mssn-slate/70">If you need design help, we can provide a template or assist for a fee. Contact us with your requirements and we'll respond with a quote.</div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <a href="mailto:partners@mssnlagos.org" className="inline-flex items-center gap-2 rounded-full border border-mssn-slate/10 px-4 py-2 text-sm font-semibold text-mssn-slate hover:bg-mssn-mist">Email partnerships</a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = `Ad slot ${activeAdSlot} inquiry`
+                      const body = `Hello,%0A%0AI would like to enquire about reserving ad slot ${activeAdSlot}.%0A%0ADesired dates:%0ACampaign brief:%0A%0ARegards,`;
+                      window.location.href = `mailto:partners@mssnlagos.org?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white hover:bg-mssn-greenDark"
+                  >
+                    Request quote
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // copy quick instructions to clipboard
+                      try {
+                        const txt = `Slot ${activeAdSlot} - specs: 1200x600px PNG/JPG up to 200KB. Contact partners@mssnlagos.org to reserve.`
+                        navigator.clipboard.writeText(txt)
+                        toast.success('Ad brief copied to clipboard')
+                      } catch (e) {
+                        toast.error('Unable to copy to clipboard')
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-mssn-slate/10 px-4 py-2 text-sm font-semibold text-mssn-slate hover:bg-mssn-mist"
+                  >
+                    Copy brief
+                  </button>
+                </div>
+
               </div>
-              <div className="flex-shrink-0">
-                <button type="button" onClick={() => setShowAdModal(false)} className="rounded-full border border-mssn-slate/20 px-3 py-2 text-sm font-semibold text-mssn-slate">Close</button>
+
+              <div className="w-40 flex-shrink-0">
+                <div className="rounded-2xl bg-mssn-mist p-3 text-center">
+                  <div className="text-xs font-semibold text-mssn-slate">Preview</div>
+                  <div className="mt-3 h-24 w-full overflow-hidden rounded-lg bg-white shadow-inner">
+                    <img alt="Ad sample" src="https://via.placeholder.com/1200x600.png?text=Ad+preview" className="h-full w-full object-cover" />
+                  </div>
+                  <div className="mt-3 text-xs text-mssn-slate/70">1200×600px • PNG/JPG • ≤200KB</div>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <button type="button" onClick={() => setShowAdModal(false)} className="text-sm font-semibold text-mssn-slate/80 underline">Close</button>
+                </div>
               </div>
             </div>
           </div>
