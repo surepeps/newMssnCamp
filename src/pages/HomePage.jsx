@@ -42,7 +42,7 @@ function HeroSlider() {
   return (
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
-        <img src={bgImage} alt={campTitle} className="h-full w-full object-cover" />
+        <img src={'https://umarah.mssnlagos.net/static/media/theme.ffef174d588ed7b0ac8e.jpg'} alt={campTitle} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-20 sm:py-24">
