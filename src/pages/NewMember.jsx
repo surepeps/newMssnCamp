@@ -7,6 +7,7 @@ import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
+import { getCategoryInfo } from '../utils/registration.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -176,7 +177,22 @@ function AsyncSelect({
           multiple ? (
             <span className="flex flex-wrap gap-1">
               {selectedLabels.map((l, i) => (
-                <span key={i} className="rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">{l}</span>
+                <span key={`${l}-${i}`} className="inline-flex items-center gap-1 rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">
+                  <span>{l}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${l}`}
+                    className="rounded-full p-0.5 text-mssn-slate/60 hover:bg-mssn-slate/10 hover:text-mssn-slate"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const next = normalizedValue.filter((v) => v !== l)
+                      onChange(next)
+                      onBlur?.()
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
               ))}
             </span>
           ) : (
@@ -436,9 +452,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
   const { settings } = useSettings()
   const camp = settings?.current_camp
-  const priceOriginal = category === 'undergraduate' ? camp?.prices?.undergraduate : category === 'secondary' ? camp?.prices?.secondary : category === 'others' ? camp?.prices?.others : null
-  const priceDiscounted = category === 'undergraduate' ? camp?.discounts?.price_und : category === 'secondary' ? camp?.discounts?.price_sec : category === 'others' ? camp?.discounts?.price_oth : null
-  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+  const categoryKeyForPrice = category === 'undergraduate' ? 'undergraduate' : category === 'secondary' ? 'secondary' : 'others'
+  const priceInfo = getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: categoryKeyForPrice }) || {}
+  const finalPrice = priceInfo?.final
 
   const [qualifications, setQualifications] = useState([])
   const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
@@ -603,7 +619,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             </div>
             <div className="flex items-center gap-3">
               {finalPrice != null ? (
-                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">
+                  Amount: ₦{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
+                </span>
               ) : null}
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
                 Change category

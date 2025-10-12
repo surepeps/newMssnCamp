@@ -156,7 +156,22 @@ export default function AsyncSelect({
           multiple ? (
             <span className="flex flex-wrap gap-1">
               {selectedLabels.map((l, i) => (
-                <span key={i} className="rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">{l}</span>
+                <span key={`${l}-${i}`} className="inline-flex items-center gap-1 rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">
+                  <span>{l}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${l}`}
+                    className="rounded-full p-0.5 text-mssn-slate/60 hover:bg-mssn-slate/10 hover:text-mssn-slate"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const next = normalizedValue.filter((v) => v !== l)
+                      onChange(next)
+                      onBlur?.()
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
               ))}
             </span>
           ) : (

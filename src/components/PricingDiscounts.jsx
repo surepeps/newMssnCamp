@@ -1,9 +1,11 @@
 import { useSettings } from '../context/SettingsContext.jsx'
-import { isValidDate } from '../utils/registration.js'
+import { isValidDate, getCategoryInfo } from '../utils/registration.js'
 
-function PriceCard({ label, original, discounted }) {
-  const origNum = original == null ? null : Number(original)
-  const hasDiscount = discounted != null && origNum != null && Number(discounted) < origNum
+function PriceCard({ label, info }) {
+  const origNum = info?.original == null ? null : Number(info.original)
+  const finalPrice = info?.final
+  const finalNum = finalPrice == null ? null : Number(finalPrice)
+  const hasDiscount = info?.discountActive && info?.discounted != null && origNum != null && Number(info.discounted) < origNum
   const available = origNum != null && origNum > 0
 
   if (!available) {
@@ -23,13 +25,16 @@ function PriceCard({ label, original, discounted }) {
       <div className="text-xs text-mssn-slate/60">{label}</div>
       <div className="mt-1 flex items-baseline gap-2">
         <div className="text-2xl font-bold text-mssn-slate">
-          ₦{Number(hasDiscount ? discounted : original).toFixed(2)}
+          ₦{Number(finalNum ?? origNum).toFixed(2)}
         </div>
         {hasDiscount && (
           <div className="text-sm text-mssn-slate/50 line-through">
-            ₦{Number(original).toFixed(2)}
+            ₦{Number(origNum).toFixed(2)}
           </div>
         )}
+      </div>
+      <div className="mt-2 text-xs text-mssn-slate/60">
+        {typeof info.quota === 'number' ? (`${info.used}/${info.quota} registered • ${info.remaining} remaining`) : 'Quota: N/A'}
       </div>
     </div>
   )
@@ -57,10 +62,10 @@ export default function PricingDiscounts() {
         </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <PriceCard label="TFL" original={camp.prices?.tfl} discounted={camp.discounts?.price_tfl} quota={camp.quotas?.tfl} />
-        <PriceCard label="Secondary" original={camp.prices?.secondary} discounted={camp.discounts?.price_sec} quota={camp.quotas?.secondary} />
-        <PriceCard label="Undergraduate" original={camp.prices?.undergraduate} discounted={camp.discounts?.price_und} quota={camp.quotas?.undergraduate} />
-        <PriceCard label="Others" original={camp.prices?.others} discounted={camp.discounts?.price_oth} quota={camp.quotas?.others} />
+        <PriceCard label="TFL" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'tfl' })} />
+        <PriceCard label="Secondary" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'secondary' })} />
+        <PriceCard label="Undergraduate" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'undergraduate' })} />
+        <PriceCard label="Others" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'others' })} />
       </div>
     </section>
   )

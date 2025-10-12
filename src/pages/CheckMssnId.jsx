@@ -63,8 +63,9 @@ export default function CheckMssnId() {
         if (typeof saved.areaCouncil === 'string') setAreaCouncil(saved.areaCouncil)
         if (typeof saved.page === 'number') setPage(saved.page)
         if (typeof saved.limit === 'number') setLimit(saved.limit)
-        if (Array.isArray(saved.rows)) setRows(saved.rows)
-        if (saved.pagination && typeof saved.pagination === 'object') setPagination(saved.pagination)
+        // Only restore previously fetched rows if both mandatory fields were present
+        if (Array.isArray(saved.rows) && saved.search && saved.areaCouncil) setRows(saved.rows)
+        if (saved.pagination && typeof saved.pagination === 'object' && saved.search && saved.areaCouncil) setPagination(saved.pagination)
       }
     } catch {}
   }, [])
@@ -83,9 +84,21 @@ export default function CheckMssnId() {
     setClassLevel('')
   }, [classIdentifier])
 
+  const canSearch = useMemo(() => {
+    return Boolean((debouncedSearch || '').trim() && areaCouncil)
+  }, [debouncedSearch, areaCouncil])
+
   const fetchData = async (opts = {}) => {
     const nextPage = opts.page || page
     const nextLimit = opts.limit || limit
+    const q = (debouncedSearch || '').trim()
+    if (!q || !areaCouncil) {
+      // Do not perform any search unless both mandatory fields are present
+      setRows([])
+      setPagination({ total: 0, totalPages: 1, page: 1, limit: nextLimit })
+      setPage(1)
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -133,9 +146,15 @@ export default function CheckMssnId() {
 
   // Auto fetch when filters change (except page/limit handled by controls)
   useEffect(() => {
-    fetchData({ page: 1, limit })
+    if ((debouncedSearch || '').trim() && areaCouncil) {
+      fetchData({ page: 1, limit })
+    } else {
+      // clear results if mandatory fields are missing
+      setRows([])
+      setPagination({ total: 0, totalPages: 1, page: 1, limit })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, gender, category, classLevel, areaCouncil])
+  }, [debouncedSearch, gender, category, classLevel, areaCouncil, limit])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -236,23 +255,27 @@ export default function CheckMssnId() {
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                disabled={loading}
-                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
+                disabled={!canSearch || loading}
+                className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${!canSearch || loading ? 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60' : 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark'}`}
               >
                 {loading ? 'Searching…' : 'Search'}
               </button>
               <button
                 type="button"
-                onClick={() => { setSearch(''); setGender(''); setCategory(''); setClassLevel(''); setAreaCouncil(''); setPage(1); try{localStorage.removeItem(STORAGE_KEY)}catch{}; fetchData({ page:1, limit }) }}
+                onClick={() => { setSearch(''); setGender(''); setCategory(''); setClassLevel(''); setAreaCouncil(''); setPage(1); try{localStorage.removeItem(STORAGE_KEY)}catch{}; setRows([]); setPagination({ total: 0, totalPages: 1, page: 1, limit }) }}
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
               >
                 Clear
               </button>
             </div>
+            {!canSearch ? (
+              <div className="mt-3 text-sm text-mssn-slate/70">Please enter a name, email or MSSN ID and select an area council to enable search.</div>
+            ) : null}
           </form>
       </div>
 
+      {canSearch ? (
       <div className="mt-8 overflow-visible rounded-3xl border border-mssn-slate/10 bg-white">
         <div className="border-b border-mssn-slate/10 px-6 py-4 sm:px-8">
           <h2 className="text-base font-semibold uppercase tracking-[0.22em] text-mssn-green">Results</h2>
@@ -327,6 +350,12 @@ export default function CheckMssnId() {
           </div>
         </div>
       </div>
+      ) : (
+      <div className="mt-8 overflow-visible rounded-3xl border border-mssn-slate/10 bg-white px-6 py-8 text-center">
+        <h2 className="text-base font-semibold uppercase tracking-[0.22em] text-mssn-green">Results</h2>
+        <div className="mt-4 text-sm text-mssn-slate/70">No data will be shown until you enter a name, email or MSSN ID and select an area council.</div>
+      </div>
+      )}
     </section>
   )
 }
