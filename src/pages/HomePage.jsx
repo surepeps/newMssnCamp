@@ -45,7 +45,7 @@ function HeroSlider() {
         <img src={bgImage} alt={campTitle} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-20 sm:py-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:py-24">
         <div className="max-w-3xl">
           <div className="mb-4 h-0.5 w-20 rounded-full bg-white/40" />
         </div>
