@@ -89,7 +89,7 @@ export default function PwaInstallPrompt() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-mssn-green/20">
-            <Logo size={40} compact className="h-full w-full" />
+            <img src="https://camp.mssnlagos.net/assets/thumbnail_large.png" alt="MSSN Lagos" className="h-full w-full object-cover" />
           </div>
           <div>
             <div className="text-sm font-semibold text-mssn-slate">Install MSSN Camp Portal</div>
