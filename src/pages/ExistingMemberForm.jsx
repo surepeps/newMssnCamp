@@ -12,6 +12,7 @@ import {
   queryCourses,
   queryQualifications,
 } from '../services/dataProvider.js'
+import { getCategoryInfo } from '../utils/registration.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
