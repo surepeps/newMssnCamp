@@ -42,21 +42,58 @@ function HeroSlider() {
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-mssn-night/95 via-mssn-night/75 to-mssn-green/50" />
+        <svg className="absolute right-0 top-0 h-full w-1/2 opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          <defs>
+            <linearGradient id="hgrad" x1="0" x2="1">
+              <stop offset="0%" stopColor="#2ecc71" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#0f1d1f" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" fill="url(#hgrad)" />
+        </svg>
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pt-16 pb-20 sm:pt-20 sm:pb-24">
-        <div className="max-w-3xl">
-          <div className="mb-4 h-0.5 w-20 rounded-full bg-white/40" />
+
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pt-12 pb-18 sm:pt-16 sm:pb-20">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 items-center">
+          <div>
+            <div className="mb-3 flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-mssn-green">{camp?.camp_code || 'CAMP'}</span>
+              {camp?.camp_date ? (
+                <span className="text-xs text-white/80">{camp.camp_date}</span>
+              ) : null}
+            </div>
+
+            <h1 className="text-4xl font-extrabold leading-tight text-white drop-shadow-2xl sm:text-5xl lg:text-6xl">{campTitle}</h1>
+
+            {camp?.camp_theme && (
+              <p className="mt-4 max-w-2xl text-lg text-white/95 lg:text-xl drop-shadow-lg">{camp.camp_theme}</p>
+            )}
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new') }} className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-mssn-night shadow-soft transition hover:shadow-glow">Register</a>
+              <a href="/existing/validate" onClick={(e) => { e.preventDefault(); navigate('/existing/validate') }} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/5">Check MSSN ID</a>
+            </div>
+
+            <p className="mt-6 text-sm text-white/80 max-w-xl">Join other students for an engaging and transformative camp experience. Use the quick actions below to get started.</p>
+          </div>
+
+          <div className="order-first lg:order-last">
+            <div className="hidden lg:block">
+              <div className="rounded-3xl bg-white/6 p-6 shadow-soft ring-1 ring-white/6">
+                <h3 className="text-sm font-semibold text-white">Camp highlights</h3>
+                <ul className="mt-3 space-y-2 text-sm text-white/80">
+                  <li>• Inspiring talks and workshops</li>
+                  <li>• Community service and bonding</li>
+                  <li>• Sports, arts, and skill-building</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-4 lg:hidden">
+              <div className="rounded-2xl bg-white/6 px-4 py-3 text-sm text-white/90">{camp?.camp_theme || 'Join us for an unforgettable experience'}</div>
+            </div>
+          </div>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-mssn-green">
-          {camp?.camp_code || 'CAMP'}
-        </span>
-        <h1 className="text-4xl font-extrabold leading-tight text-white drop-shadow-2xl sm:text-5xl lg:text-6xl">{campTitle}</h1>
-        {camp?.camp_theme && (
-          <p className="max-w-2xl text-lg text-white/95 lg:text-xl drop-shadow-lg">{camp.camp_theme}</p>
-        )}
-        {camp?.camp_date && (
-          <p className="text-sm text-white/90">{camp.camp_date}</p>
-        )}
       </div>
     </section>
   )
