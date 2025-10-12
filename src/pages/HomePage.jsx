@@ -411,11 +411,11 @@ export default function HomePage() {
 
               <div className="mt-4 flex items-center gap-3" role="radiogroup" aria-label="Donation frequency">
                 <button type="button" onClick={() => setFrequency('one-time')} aria-pressed={frequency === 'one-time'} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${frequency === 'one-time' ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate'}`}>One‑time</button>
-                <button type="button" onClick={() => setFrequency('monthly')} aria-pressed={frequency === 'monthly'} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${frequency === 'monthly' ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate'}`}>Monthly</button>
+                <button type="button" disabled aria-pressed={false} className={`rounded-full px-4 py-2 text-sm font-semibold transition opacity-50 cursor-not-allowed border border-mssn-slate/10 text-mssn-slate`}>Monthly (disabled)</button>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {[2000,5000,10000].map((amt) => (
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[1000,2000,5000,10000,20000,50000].map((amt) => (
                   <button
                     key={amt}
                     type="button"
@@ -450,13 +450,50 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-4 text-right">
-                  <button type="button" onClick={handleDonate} className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark">Donate now</button>
+                  <button type="button" onClick={openDonateModal} className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark">Donate now</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+      {/* donate modal and processing */}
+      {showDonateModal ? (
+        <div className="fixed inset-0 z-[1201] grid place-items-center" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDonateModal(false)} />
+          <div className="relative z-10 mx-4 w-full max-w-xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
+            <h3 id="donate-modal-title" className="text-lg font-semibold text-mssn-slate">Complete donation</h3>
+            <p className="mt-2 text-sm text-mssn-slate/70">Provide your details to initiate the payment. We will redirect you to the payment provider once the donation is created.</p>
+
+            <div className="mt-4 grid gap-3">
+              <label className="text-sm text-mssn-slate">Full name (optional)</label>
+              <input type="text" value={donorName} onChange={(e) => setDonorName(e.target.value)} placeholder="e.g. Hassan Tijani" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+
+              <label className="mt-2 text-sm text-mssn-slate">Email (required)</label>
+              <input type="email" value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+
+              <label className="mt-2 text-sm text-mssn-slate">Phone (optional)</label>
+              <input type="tel" value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} placeholder="+2348123456789" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+
+              <label className="mt-2 text-sm text-mssn-slate">Message (optional)</label>
+              <textarea value={donorMessage} onChange={(e) => setDonorMessage(e.target.value)} placeholder="Keep up the great work!" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" rows={3} />
+
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} />
+                <span className="text-sm text-mssn-slate">Donate anonymously</span>
+              </label>
+
+              <div className="mt-4 flex items-center justify-end gap-3">
+                <button type="button" onClick={() => setShowDonateModal(false)} className="rounded-full border border-mssn-slate/10 px-4 py-2 text-sm font-semibold text-mssn-slate">Cancel</button>
+                <button type="button" onClick={submitDonation} className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Donate &amp; Pay</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <ProcessingModal visible={donating} title="Processing donation…" subtitle="Creating donation and redirecting to payment provider." />
+
     </div>
   )
 }
