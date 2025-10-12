@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import Logo from './Logo.jsx'
+
 function isAppleDevice() {
   const ua = navigator.userAgent || navigator.vendor || ''
   const isiOS = /iphone|ipad|ipod/i.test(ua)
