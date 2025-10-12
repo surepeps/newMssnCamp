@@ -266,6 +266,15 @@ export default function HomePage() {
   const [customAmount, setCustomAmount] = React.useState('')
   const [frequency, setFrequency] = React.useState('one-time')
 
+  const [showDonateModal, setShowDonateModal] = React.useState(false)
+  const [donating, setDonating] = React.useState(false)
+
+  const [donorName, setDonorName] = React.useState('')
+  const [donorEmail, setDonorEmail] = React.useState('')
+  const [donorPhone, setDonorPhone] = React.useState('')
+  const [donorMessage, setDonorMessage] = React.useState('')
+  const [isAnonymous, setIsAnonymous] = React.useState(false)
+
   const openAdModal = (slot) => {
     setActiveAdSlot(slot)
     setShowAdModal(true)
@@ -273,17 +282,60 @@ export default function HomePage() {
 
   const formatNGN = (v) => `₦${Number(v).toLocaleString()}`
 
-  const handleDonate = () => {
+  const openDonateModal = () => {
     const amt = Number(selectedAmount || customAmount || 0)
     if (!amt || Number.isNaN(amt) || amt <= 0) {
-      toast.error('Please enter or select a valid donation amount')
+      toast.error('Please select or enter a donation amount before continuing')
       return
     }
-    // In a real app we'd call the payments API here
-    toast.success(`Thank you for your ${frequency === 'monthly' ? 'monthly' : 'one‑time'} donation of ${formatNGN(amt)}`)
-    console.log('Donate:', { amount: amt, frequency })
-    setSelectedAmount(null)
-    setCustomAmount('')
+    if (frequency === 'monthly') {
+      toast.error('Monthly donations are temporarily disabled. Please choose one‑time.')
+      return
+    }
+    setShowDonateModal(true)
+  }
+
+  const submitDonation = async () => {
+    const amt = Number(selectedAmount || customAmount || 0)
+    if (!donorEmail || !amt) {
+      toast.error('Please provide a valid email and amount')
+      return
+    }
+    const payload = {
+      donor_name: donorName || '',
+      donor_email: donorEmail,
+      donor_phone: donorPhone || null,
+      donation_type: frequency,
+      amount: Number(amt),
+      message: donorMessage || null,
+      is_anonymous: Boolean(isAnonymous),
+    }
+    setDonating(true)
+    try {
+      const res = await fetchJSON('/donation/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      setDonating(false)
+      setShowDonateModal(false)
+      toast.success(res.message || 'Donation created successfully. Proceed to payment.')
+      const paymentUrl = res?.data?.payment_url
+      if (paymentUrl) {
+        window.open(paymentUrl, '_blank')
+      }
+      // reset fields
+      setSelectedAmount(null)
+      setCustomAmount('')
+      setDonorName('')
+      setDonorEmail('')
+      setDonorPhone('')
+      setDonorMessage('')
+      setIsAnonymous(false)
+    } catch (e) {
+      setDonating(false)
+      toast.error(e?.message || 'Unable to initiate donation')
+    }
   }
 
   return (
