@@ -3,6 +3,8 @@ import { navigate, isModifiedEvent } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
 import { toast } from 'sonner'
+import { fetchJSON } from '../services/api.js'
+import ProcessingModal from '../components/ProcessingModal.jsx'
 
 const DRAFT_KEY = 'new_member_draft'
 
