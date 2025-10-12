@@ -390,7 +390,7 @@ export default function ExistingMemberForm() {
                 <p className="mt-2 text-sm text-mssn-slate/70">MSSN ID: <span className="font-semibold">{mssnId}</span>, Surname: <span className="font-semibold">{surname}</span></p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {finalPrice != null ? (
-                    <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+                    <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}</span>
                   ) : null}
                   <a href="/" onClick={(e)=>{e.preventDefault(); navigate('/')}} className="text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">Back to Home</a>
                 </div>
