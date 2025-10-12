@@ -7,6 +7,7 @@ import { fetchJSON } from '../services/api.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
+import { getCategoryInfo } from '../utils/registration.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
