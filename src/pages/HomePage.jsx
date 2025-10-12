@@ -2,6 +2,7 @@ import * as React from 'react'
 import { navigate, isModifiedEvent } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import PricingDiscounts from '../components/PricingDiscounts.jsx'
+import { toast } from 'sonner'
 
 const DRAFT_KEY = 'new_member_draft'
 
