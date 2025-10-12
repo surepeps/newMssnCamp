@@ -223,7 +223,7 @@ export default function HomePage() {
     <div>
       <HeroSlider />
       <div className="mx-auto w-full max-w-6xl px-6">
-        <div className="-mt-20 lg:-mt-26">
+        <div className="-mt-20 lg:-mt-24">
           <QuickActionsBar />
         </div>
       </div>
