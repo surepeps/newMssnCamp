@@ -84,13 +84,12 @@ export default function PwaInstallPrompt() {
     setVisible(false)
   }
 
-  const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
   return (
     <div className="fixed bottom-6 left-1/2 z-[1200] w-[min(880px,calc(100%-48px))] -translate-x-1/2 rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3 shadow-soft">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-mssn-green/20">
-            <img src={logoUrl} alt="MSSN Lagos" className="h-full w-full object-cover" />
+            <img src="https://camp.mssnlagos.net/assets/thumbnail_large.png" alt="MSSN Lagos" className="h-full w-full object-cover" />
           </div>
           <div>
             <div className="text-sm font-semibold text-mssn-slate">Install MSSN Camp Portal</div>
