@@ -515,32 +515,74 @@ export default function HomePage() {
       {showDonateModal ? (
         <div className="fixed inset-0 z-[1201] grid place-items-center" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowDonateModal(false)} />
-          <div className="relative z-10 mx-4 w-full max-w-xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
-            <h3 id="donate-modal-title" className="text-lg font-semibold text-mssn-slate">Complete donation</h3>
-            <p className="mt-2 text-sm text-mssn-slate/70">Provide your details to initiate the payment. We will redirect you to the payment provider once the donation is created.</p>
-
-            <div className="mt-4 grid gap-3">
-              <label className="text-sm text-mssn-slate">Full name (optional)</label>
-              <input type="text" value={donorName} onChange={(e) => setDonorName(e.target.value)} placeholder="e.g. Hassan Tijani" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
-
-              <label className="mt-2 text-sm text-mssn-slate">Email (required)</label>
-              <input type="email" value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
-
-              <label className="mt-2 text-sm text-mssn-slate">Phone (optional)</label>
-              <input type="tel" value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} placeholder="+2348123456789" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
-
-              <label className="mt-2 text-sm text-mssn-slate">Message (optional)</label>
-              <textarea value={donorMessage} onChange={(e) => setDonorMessage(e.target.value)} placeholder="Keep up the great work!" className="w-full rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" rows={3} />
-
-              <label className="flex items-center gap-2 text-sm mt-2">
-                <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} />
-                <span className="text-sm text-mssn-slate">Donate anonymously</span>
-              </label>
-
-              <div className="mt-4 flex items-center justify-end gap-3">
-                <button type="button" onClick={() => setShowDonateModal(false)} className="rounded-full border border-mssn-slate/10 px-4 py-2 text-sm font-semibold text-mssn-slate">Cancel</button>
-                <button type="button" onClick={submitDonation} className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white">Donate &amp; Pay</button>
+          <div className="relative z-10 mx-4 w-full max-w-3xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 id="donate-modal-title" className="text-lg font-semibold text-mssn-slate">Complete donation</h3>
+                <p className="mt-1 text-sm text-mssn-slate/70">Confirm your donation details and proceed to payment. We will redirect you to the payment provider after creating the donation.</p>
               </div>
+              <div>
+                <button type="button" onClick={() => setShowDonateModal(false)} className="text-sm text-mssn-slate/70">✕</button>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-6 sm:grid-cols-2">
+              <div>
+                <label className="flex items-center gap-3 text-sm">
+                  <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} className="h-4 w-4" />
+                  <div>
+                    <div className="font-semibold text-mssn-slate">Donate anonymously</div>
+                    <div className="text-xs text-mssn-slate/70">If enabled, your name will not be shared publicly.</div>
+                  </div>
+                </label>
+
+                <div className="mt-4">
+                  <label className="text-sm text-mssn-slate">Full name {isAnonymous ? <span className="text-xs text-mssn-slate/50">(optional when anonymous)</span> : <span className="text-xs text-mssn-green">(can be MSSN ID)</span>}</label>
+                  <input type="text" value={donorName} onChange={(e) => setDonorName(e.target.value)} placeholder="e.g. Hassan Tijani" disabled={isAnonymous} className={`w-full mt-2 rounded-xl border px-4 py-2 text-sm ${isAnonymous ? 'border-mssn-slate/20 bg-mssn-mist text-mssn-slate/50' : 'border-mssn-slate/10 bg-white'}`} />
+                </div>
+
+                <div className="mt-3">
+                  <label className="text-sm text-mssn-slate">Email (required)</label>
+                  <input type="email" value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} placeholder="you@example.com" className="w-full mt-2 rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-sm text-mssn-slate">Phone (optional)</label>
+                    <input type="tel" value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} placeholder="+2348123456789" className="w-full mt-2 rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-sm text-mssn-slate">Message (optional)</label>
+                    <input type="text" value={donorMessage} onChange={(e) => setDonorMessage(e.target.value)} placeholder="Keep up the great work!" className="w-full mt-2 rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm" />
+                  </div>
+                </div>
+
+              </div>
+
+              <div>
+                <div className="rounded-2xl border border-mssn-slate/10 bg-mssn-mist p-4">
+                  <div className="text-sm font-semibold text-mssn-slate">Donation summary</div>
+                  <div className="mt-3 text-sm text-mssn-slate/70">Amount</div>
+                  <div className="mt-1 text-2xl font-semibold text-mssn-night">{(selectedAmount || customAmount) ? formatNGN(selectedAmount || customAmount) : '—'}</div>
+
+                  <div className="mt-4 text-sm text-mssn-slate/70">Type</div>
+                  <div className="mt-1 text-sm font-medium text-mssn-slate">{frequency === 'monthly' ? 'Monthly' : 'One‑time'}</div>
+
+                  <div className="mt-4 text-sm text-mssn-slate/70">Donor</div>
+                  <div className="mt-1 text-sm font-medium text-mssn-slate">{isAnonymous ? 'Anonymous' : (donorName || 'Provided at checkout')}</div>
+
+                  <div className="mt-6 flex flex-col gap-3">
+                    <button type="button" onClick={submitDonation} disabled={donating} className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-white ${donating ? 'bg-mssn-slate/50 cursor-not-allowed' : 'bg-mssn-green hover:bg-mssn-greenDark'}`}>
+                      {donating ? 'Processing…' : 'Donate & Pay'}
+                    </button>
+
+                    <button type="button" onClick={() => setShowDonateModal(false)} className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold border border-mssn-slate/10 text-mssn-slate bg-white">Cancel</button>
+
+                    <div className="mt-2 text-xs text-mssn-slate/70">By donating you agree to our terms. We will redirect you to a secure payment provider.</div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
