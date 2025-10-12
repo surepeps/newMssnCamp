@@ -257,6 +257,30 @@ function QuickActionsBar() {
 
 
 export default function HomePage() {
+  const [showAdModal, setShowAdModal] = React.useState(false)
+  const [activeAdSlot, setActiveAdSlot] = React.useState(null)
+
+  const [selectedAmount, setSelectedAmount] = React.useState(null)
+  const [customAmount, setCustomAmount] = React.useState('')
+
+  const openAdModal = (slot) => {
+    setActiveAdSlot(slot)
+    setShowAdModal(true)
+  }
+
+  const handleDonate = () => {
+    const amt = selectedAmount || Number(customAmount || 0)
+    if (!amt || Number.isNaN(Number(amt)) || Number(amt) <= 0) {
+      toast.error('Please enter or select a valid donation amount')
+      return
+    }
+    // In a real app we'd call the payments API here
+    toast.success(`Thank you for your donation of ₦${Number(amt).toLocaleString()}`)
+    console.log('Donate:', amt)
+    setSelectedAmount(null)
+    setCustomAmount('')
+  }
+
   return (
     <div>
       <HeroSlider />
@@ -271,16 +295,87 @@ export default function HomePage() {
       <section id="ads-placeholder" className="mx-auto mt-10 w-full max-w-6xl px-6">
         <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
           <h2 className="text-lg font-semibold text-mssn-slate">Place your ads here</h2>
-          <p className="mt-2 text-sm text-mssn-slate/70">Available ad slots — contact our partnerships team to reserve a slot.</p>
+          <p className="mt-2 text-sm text-mssn-slate/70">Available ad slots — tap a slot for instructions on how to place ads.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-mssn-slate/20 bg-mssn-mist text-center text-mssn-slate/60">
+            {[1,2,3,4].map((slot) => (
+              <button
+                key={slot}
+                type="button"
+                onClick={() => openAdModal(slot)}
+                className="group flex h-40 w-full items-center justify-center rounded-2xl border border-dashed border-mssn-slate/20 bg-mssn-mist text-center text-mssn-slate/60 hover:border-mssn-green/40"
+              >
                 <div>
-                  <div className="text-sm font-semibold">Ad slot</div>
+                  <div className="text-sm font-semibold">Ad slot {slot}</div>
                   <div className="mt-1 text-xs">Place your ad here</div>
+                  <div className="mt-2 text-xxs text-mssn-slate/50">Tap for instructions</div>
                 </div>
-              </div>
+              </button>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {showAdModal ? (
+        <div className="fixed inset-0 z-[1200] grid place-items-center bg-black/40">
+          <div className="mx-4 w-full max-w-2xl rounded-3xl border border-mssn-slate/10 bg-white p-6 shadow-glow">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-mssn-slate">How to place an ad (Slot {activeAdSlot})</h3>
+                <p className="mt-2 text-sm text-mssn-slate/70">To reserve this ad slot, please contact our partnerships team at <a className="text-mssn-green underline" href="mailto:partners@mssnlagos.org">partners@mssnlagos.org</a> or call <span className="font-mono">+234 813 000 1122</span>. Provide the slot number, desired dates, and creative specifications (image: 1200×600px, max 200KB, format PNG/JPG).</p>
+                <ul className="mt-3 list-inside list-disc text-sm text-mssn-slate/70">
+                  <li>Include target dates and any campaign notes.</li>
+                  <li>We accept bank transfers and online payment links.</li>
+                  <li>Creative must be provided at least 48 hours before start date.</li>
+                </ul>
+              </div>
+              <div className="flex-shrink-0">
+                <button type="button" onClick={() => setShowAdModal(false)} className="rounded-full border border-mssn-slate/20 px-3 py-2 text-sm font-semibold text-mssn-slate">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <section id="donate" className="mx-auto mt-8 w-full max-w-6xl px-6">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white p-6">
+          <h2 className="text-lg font-semibold text-mssn-slate">Support our cause — Donate</h2>
+          <p className="mt-2 text-sm text-mssn-slate/70">Your donations help us run events, provide materials, and support students. Choose an amount or enter a custom amount.</p>
+
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-3">
+              {[5000, 10000, 20000].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setSelectedAmount(amt)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${selectedAmount === amt ? 'bg-mssn-green text-white' : 'border border-mssn-slate/10 text-mssn-slate bg-white'}`}
+                >
+                  ₦{amt.toLocaleString()}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div>
+                <label htmlFor="custom-amount" className="sr-only">Custom amount</label>
+                <input
+                  id="custom-amount"
+                  type="number"
+                  min="0"
+                  value={customAmount}
+                  onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null) }}
+                  placeholder="Custom amount (NGN)"
+                  className="w-40 rounded-xl border border-mssn-slate/10 px-4 py-2 text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleDonate}
+                className="inline-flex items-center gap-2 rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
+              >
+                Donate
+              </button>
+            </div>
           </div>
         </div>
       </section>
