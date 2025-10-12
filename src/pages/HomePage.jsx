@@ -163,10 +163,10 @@ function QuickActionsBar() {
   return (
     <section
       id="quick-actions"
-      className="relative z-20 mx-auto mt-6 w-full max-w-6xl px-6"
+      className="relative z-20 mx-auto mt-6 w-full max-w-6xl px-4 sm:px-6"
       aria-label="Quick actions"
     >
-      <div className="rounded-4xl bg-white/95 p-6 ring-1 ring-mssn-slate/10">
+      <div className="-mx-4 rounded-4xl bg-white/95 p-6 ring-1 ring-mssn-slate/10 sm:mx-0">
         <div className="grid gap-6 lg:grid-cols-3">
           {resumeDetails ? (
             <div className="flex flex-col gap-4 rounded-3xl border border-mssn-green/30 bg-mssn-green/10 p-6 lg:col-span-3">
@@ -225,7 +225,7 @@ export default function HomePage() {
     <div>
       <HeroSlider />
       <div className="mx-auto w-full max-w-6xl px-6">
-        <div className="-mt-10 lg:-mt-14">
+        <div className="-mt-16 lg:-mt-14">
           <QuickActionsBar />
         </div>
       </div>
