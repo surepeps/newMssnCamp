@@ -4,7 +4,8 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import FullPageLoader from './FullPageLoader.jsx'
 import PwaInstallPrompt from './PwaInstallPrompt.jsx'
 import WhatsAppWidget from './WhatsAppWidget.jsx'
-import Logo from './Logo.jsx'
+
+const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
 function Header({ isNavOpen, onToggleNav, onCloseNav }) {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
@@ -101,8 +102,16 @@ function Header({ isNavOpen, onToggleNav, onCloseNav }) {
           href="/"
           className="flex items-center gap-3 rounded-3xl bg-gradient-to-r from-white/90 to-white/80 px-4 py-2 text-sm font-semibold text-mssn-slate shadow-soft ring-1 ring-mssn-green/10 transition hover:shadow-glow"
           onClick={createRouteHandler('/')}
-        >
-          <Logo size={56} />
+>
+          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white">
+            <img src={logoUrl} alt="MSSN Lagos" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute -bottom-2 -right-2 h-6 w-6 rounded-full bg-mssn-green/80 ring-2 ring-white/70" />
+          </div>
+          <span className="flex flex-col text-left">
+            <span className="text-xs uppercase tracking-[0.18em] text-mssn-greenDark">MSSN Lagos</span>
+            <span className="text-base font-semibold">Camp Experience</span>
+            <span className="text-xs text-mssn-slate/60">Portal</span>
+          </span>
         </a>
         <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex">
           <a href="/" onClick={createRouteHandler('/')} className="rounded-full px-3 py-2 text-mssn-slate transition hover:bg-mssn-green/10 hover:text-mssn-greenDark">Home</a>
@@ -214,7 +223,7 @@ function Footer() {
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="grid gap-8 md:grid-cols-3">
           <div className="space-y-4">
-            <Logo size={48} compact className="h-12 w-12" />
+            <img src={logoUrl} alt="MSSN Lagos" className="h-12 w-12 rounded-3xl object-cover" />
             <p className="text-sm font-semibold">Muslim Students’ Society of Nigeria, Lagos State Area Unit</p>
           </div>
 
