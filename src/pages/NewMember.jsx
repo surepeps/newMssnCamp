@@ -452,9 +452,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
   const { settings } = useSettings()
   const camp = settings?.current_camp
-  const priceOriginal = category === 'undergraduate' ? camp?.prices?.undergraduate : category === 'secondary' ? camp?.prices?.secondary : category === 'others' ? camp?.prices?.others : null
-  const priceDiscounted = category === 'undergraduate' ? camp?.discounts?.price_und : category === 'secondary' ? camp?.discounts?.price_sec : category === 'others' ? camp?.discounts?.price_oth : null
-  const finalPrice = (priceDiscounted != null && priceOriginal != null && Number(priceDiscounted) < Number(priceOriginal)) ? priceDiscounted : priceOriginal
+  const categoryKeyForPrice = category === 'undergraduate' ? 'undergraduate' : category === 'secondary' ? 'secondary' : 'others'
+  const priceInfo = getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: categoryKeyForPrice }) || {}
+  const finalPrice = priceInfo?.final
 
   const [qualifications, setQualifications] = useState([])
   const qualificationAudience = isUG ? 'Undergraduate' : (isOthers ? 'Others' : '')
