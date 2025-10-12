@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 import { fetchJSON } from '../services/api.js'
 
 const SettingsContext = React.createContext({ settings: null, loading: true, error: null, refresh: () => {} })
