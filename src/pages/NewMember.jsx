@@ -619,7 +619,9 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             </div>
             <div className="flex items-center gap-3">
               {finalPrice != null ? (
-                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">Amount: ₦{Number(finalPrice).toFixed(2)}</span>
+                <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">
+                  Amount: ₦{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
+                </span>
               ) : null}
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
                 Change category
