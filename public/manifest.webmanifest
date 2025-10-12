@@ -1,6 +1,6 @@
 {
   "name": "MSSN Camp Experience Portal",
-  "short_name": "MSSN Camp",
+  "short_name": "MSSN CEP",
   "description": "Registration portal for MSSN Lagos State Camp Experience",
   "start_url": "/",
   "display": "standalone",
@@ -11,5 +11,5 @@
     { "src": "https://cdn.builder.io/api/v1/image/assets%2F9b65378ce6fc4cb89c41a2a7662eba98%2Fc345152eb01d40d0ac8693ca29f774f3?format=webp&width=512", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "scope": "/",
-  "id": "/",
+  "id": "/"
 }

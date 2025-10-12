@@ -313,14 +313,6 @@ export default function ExistingMemberForm() {
     return () => observer.disconnect()
   }, [])
 
-  const qualificationOptions = useMemo(() => {
-    if (!qualifications.length) return []
-    if (!qualificationAudience) return qualifications.map((item) => item.label)
-    const normalizedAudience = qualificationAudience.toLowerCase()
-    const filtered = qualifications.filter((item) => String(item.who || '').trim().toLowerCase() === normalizedAudience)
-    const source = filtered.length ? filtered : qualifications
-    return source.map((item) => item.label)
-  }, [qualificationAudience, qualifications])
 
   useEffect(() => {
     if (!delegate?.details) return
@@ -418,7 +410,7 @@ export default function ExistingMemberForm() {
                   showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
-                onSubmit={async (values, helpers) => {
+                onSubmit={ async (values, helpers) => {
                   const normalize = (input) => {
                     if (Array.isArray(input)) return input.filter(Boolean)
                     if (typeof input === 'string') {
