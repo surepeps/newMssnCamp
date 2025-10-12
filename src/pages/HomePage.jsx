@@ -37,7 +37,6 @@ function HeroSlider() {
   const { settings } = useSettings()
   const camp = settings?.current_camp
   const campTitle = camp?.camp_title || 'Camp MSSN Lagos'
-  const bgImage = 'https://images.unsplash.com/photo-1486506574466-9ef0ef9c0968?auto=format&fit=crop&w=1600&q=80'
 
   return (
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
