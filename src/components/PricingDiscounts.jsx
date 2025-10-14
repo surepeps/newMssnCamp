@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { isValidDate, getCategoryInfo } from '../utils/registration.js'
 
@@ -40,13 +41,56 @@ function PriceCard({ label, info }) {
   )
 }
 
-
 export default function PricingDiscounts() {
   const { settings } = useSettings()
-  const camp = settings?.current_camp
-  if (!camp) return null
+  const camp = settings?.current_camp || null
 
-  const deadline = isValidDate(camp.discounts?.deadline) ? new Date(camp.discounts.deadline) : null
+  const categories = React.useMemo(() => ['tfl', 'secondary', 'undergraduate', 'others'], [])
+  const priceInfos = React.useMemo(() => (
+    categories.map((key) => ({ key, info: getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: key }) }))
+  ), [camp, settings?.discounts, categories])
+
+  const hasDiscount = React.useMemo(() => priceInfos.some((p) => {
+    const i = p.info
+    if (!i || i.original == null || i.discounted == null) return false
+    const orig = Number(i.original)
+    const disc = Number(i.discounted)
+    return i.discountActive && Number.isFinite(orig) && Number.isFinite(disc) && disc < orig
+  }), [priceInfos])
+
+  const deadline = React.useMemo(() => {
+    const d = camp?.discounts?.deadline
+    return isValidDate(d) ? new Date(d) : null
+  }, [camp])
+
+  const [nowTs, setNowTs] = React.useState(() => Date.now())
+  React.useEffect(() => {
+    if (!hasDiscount || !deadline) return
+    const id = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [hasDiscount, deadline])
+
+  const remainingMs = React.useMemo(() => deadline ? (deadline.getTime() - nowTs) : 0, [deadline, nowTs])
+  const showCountdown = hasDiscount && deadline && remainingMs > 0
+  const timeLeft = React.useMemo(() => {
+    const ms = Math.max(0, remainingMs)
+    const totalSeconds = Math.floor(ms / 1000)
+    const days = Math.floor(totalSeconds / (24 * 3600))
+    const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    return { days, hours, minutes, seconds }
+  }, [remainingMs])
+
+  const quotaSummary = React.useMemo(() => {
+    const labelMap = { tfl: 'TFL', secondary: 'Secondary', undergraduate: 'Undergraduate', others: 'Others' }
+    const parts = priceInfos
+      .filter((p) => typeof p.info?.quota === 'number')
+      .map((p) => `${labelMap[p.key]} ${p.info.used}/${p.info.quota} • ${p.info.remaining} remaining`)
+    return parts
+  }, [priceInfos])
+
+  if (!camp) return null
 
   return (
     <section className="mx-auto mt-10 w-full max-w-6xl px-6" aria-labelledby="discounts-heading">
@@ -60,6 +104,25 @@ export default function PricingDiscounts() {
             <p className="text-sm text-mssn-slate/70">Discount deadline: {deadline.toLocaleDateString('en-NG')}</p>
           )}
         </div>
+
+        {/* Countdown banner moved here with more prominent notifying style */}
+        {showCountdown ? (
+          <div className="mt-3 sm:mt-0 flex items-center gap-3">
+            <div className="rounded-2xl bg-amber-600/95 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-amber-500/30">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white font-bold">⚡</div>
+                <div className="text-left">
+                  <div className="text-xs">Discount ends in</div>
+                  <div className="mt-0.5 text-sm font-bold">{timeLeft.days}d {String(timeLeft.hours).padStart(2,'0')}h {String(timeLeft.minutes).padStart(2,'0')}m {String(timeLeft.seconds).padStart(2,'0')}s</div>
+                </div>
+              </div>
+            </div>
+            {quotaSummary.length ? (
+              <div className="rounded-2xl bg-white/6 px-3 py-2 text-xs font-medium text-mssn-slate">{quotaSummary.join(' • ')}</div>
+            ) : null}
+          </div>
+        ) : null}
+
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <PriceCard label="TFL" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'tfl' })} />

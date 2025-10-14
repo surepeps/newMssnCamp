@@ -100,7 +100,7 @@ export default function ExistingMemberValidate() {
             <a
               href="/check-mssn-id"
               onClick={goToCheckMssnId}
-              className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green"
+              className="inline-flex items-center text-sm font-semibold text-mssn-greenDark underline underline-offset-2 decoration-mssn-green/60 transition hover:text-mssn-green hover:decoration-mssn-greenDark cursor-pointer"
             >
               Don’t know your MSSN ID?
             </a>

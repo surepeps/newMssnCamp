@@ -380,7 +380,7 @@ export default function ExistingMemberForm() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       {(showUpgradeModal || showRegisteredModal || loadError) ? null : (
-        <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white overflow-visible">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="bg-radial-glow/40 rounded-3xl">
             <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
@@ -468,12 +468,23 @@ export default function ExistingMemberForm() {
                     const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
+                    const PENDING_PAYMENT_KEY = 'pending_payment'
                     if (data.redirect_url) {
+                      try {
+                        const pending = {
+                          redirect_url: data.redirect_url,
+                          paymentRef: data.payment_reference || data.paymentRef || null,
+                          mssnId: payload?.mssn_id || null,
+                          savedAt: Date.now(),
+                        }
+                        localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+                      } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         window.location.href = data.redirect_url
                       }, 700)
                     } else {
+                      try { localStorage.removeItem('pending_payment') } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         navigate('/registration')

@@ -11,20 +11,29 @@ function isStandalone() {
 }
 
 export default function PwaInstallPrompt() {
+  const OPT_OUT_KEY = 'pwa_install_optout'
+  const INSTALLED_KEY = 'pwa_install_installed'
   const [deferredPrompt, setDeferredPrompt] = React.useState(null)
   const [visible, setVisible] = React.useState(false)
-  const [installed, setInstalled] = React.useState(false)
+  const [installed, setInstalled] = React.useState(() => isStandalone())
   const [showIosHelp, setShowIosHelp] = React.useState(false)
   const [updateAvailable, setUpdateAvailable] = React.useState(false)
   const [swRegistration, setSwRegistration] = React.useState(null)
 
   React.useEffect(() => {
+    const optedOut = (() => {
+      try { return localStorage.getItem(OPT_OUT_KEY) === '1' } catch { return false }
+    })()
+
     const handler = (e) => {
+      // Always prevent default mini-infobar
       e.preventDefault()
+      if (optedOut || isStandalone()) return
       setDeferredPrompt(e)
       setVisible(true)
     }
     const onInstalled = () => {
+      try { localStorage.setItem(INSTALLED_KEY, '1') } catch {}
       setInstalled(true)
       setVisible(false)
       setDeferredPrompt(null)
@@ -40,7 +49,7 @@ export default function PwaInstallPrompt() {
     window.addEventListener('swUpdated', onSwUpdated)
 
     // Show Apple install hint when not already installed (iOS/iPadOS/macOS Safari)
-    if (isAppleDevice() && !isStandalone()) {
+    if (!optedOut && isAppleDevice() && !isStandalone()) {
       setShowIosHelp(true)
       setVisible(true)
     }
@@ -65,7 +74,11 @@ export default function PwaInstallPrompt() {
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt()
-        await deferredPrompt.userChoice
+        const choice = await deferredPrompt.userChoice
+        if (choice && choice.outcome === 'accepted') {
+          try { localStorage.setItem(INSTALLED_KEY, '1') } catch {}
+          try { localStorage.setItem(OPT_OUT_KEY, '1') } catch {}
+        }
         setVisible(false)
         setDeferredPrompt(null)
       } catch {
@@ -103,7 +116,7 @@ export default function PwaInstallPrompt() {
           <button onClick={onInstallClick} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-mssn-greenDark">
             {updateAvailable ? 'Update MSSN Portal' : 'Install MSSN Portal'}
           </button>
-          <button onClick={() => setVisible(false)} className="inline-flex items-center justify-center rounded-full border border-mssn-slate/10 px-3 py-2 text-sm font-semibold text-mssn-slate">Not now</button>
+          <button onClick={() => { if (!updateAvailable) { try { localStorage.setItem(OPT_OUT_KEY, '1') } catch {} } setVisible(false) }} className="inline-flex items-center justify-center rounded-full border border-mssn-slate/10 px-3 py-2 text-sm font-semibold text-mssn-slate">Not now</button>
         </div>
       </div>
 
