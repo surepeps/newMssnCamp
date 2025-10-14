@@ -1,13 +1,33 @@
 import * as React from 'react'
 
+function safeWindow() {
+  try { return typeof window !== 'undefined' ? window : null } catch { return null }
+}
+function safeNavigator() {
+  try { return typeof navigator !== 'undefined' ? navigator : null } catch { return null }
+}
+
 function isAppleDevice() {
-  const ua = navigator.userAgent || navigator.vendor || ''
-  const isiOS = /iphone|ipad|ipod/i.test(ua)
-  const isMacTouch = /mac/i.test(ua) && (navigator.maxTouchPoints || 0) > 1
-  return isiOS || isMacTouch
+  const nav = safeNavigator()
+  if (!nav) return false
+  try {
+    const ua = nav.userAgent || nav.vendor || ''
+    const isiOS = /iphone|ipad|ipod/i.test(ua)
+    const isMacTouch = /mac/i.test(ua) && (nav.maxTouchPoints || 0) > 1
+    return isiOS || isMacTouch
+  } catch { return false }
 }
 function isStandalone() {
-  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true)
+  const win = safeWindow()
+  const nav = safeNavigator()
+  if (!win && !nav) return false
+  try {
+    const hasMatchMedia = !!(win && typeof win.matchMedia === 'function')
+    const mm = hasMatchMedia ? win.matchMedia('(display-mode: standalone)') : null
+    const mmMatches = !!(mm && typeof mm.matches === 'boolean' && mm.matches)
+    const safariStandalone = !!(nav && nav.standalone === true)
+    return mmMatches || safariStandalone
+  } catch { return false }
 }
 
 export default function PwaInstallPrompt() {
@@ -15,7 +35,7 @@ export default function PwaInstallPrompt() {
   const INSTALLED_KEY = 'pwa_install_installed'
   const [deferredPrompt, setDeferredPrompt] = React.useState(null)
   const [visible, setVisible] = React.useState(false)
-  const [installed, setInstalled] = React.useState(() => isStandalone())
+  const [installed, setInstalled] = React.useState(false)
   const [showIosHelp, setShowIosHelp] = React.useState(false)
   const [updateAvailable, setUpdateAvailable] = React.useState(false)
   const [swRegistration, setSwRegistration] = React.useState(null)
