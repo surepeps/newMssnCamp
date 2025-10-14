@@ -99,9 +99,11 @@ export default function PaymentValidation() {
         const data = res?.data || {}
         const del = data.delegate || null
         const tx = data.transaction || null
-        if (res?.success && (del || (tx && (tx.status === 'Success' || tx.status === 'SUCCESS')))) {
+        const success = Boolean(res?.success && (del || (tx && (tx.status === 'Success' || tx.status === 'SUCCESS'))))
+        if (success) {
           setDelegate(del)
           setTransaction(tx)
+          try { localStorage.removeItem('pending_payment') } catch {}
         } else if (del || tx) {
           setDelegate(del)
           setTransaction(tx)
