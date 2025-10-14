@@ -25,7 +25,7 @@ const http = axios.create({ baseURL: BASE_URL, timeout: 15000 })
 
 async function fetchJSON(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase()
-  const headers = { ...(options.headers || {}) }
+  const headers = { Accept: 'application/json', ...(options.headers || {}) }
   let data = undefined
 
   if (options.body !== undefined) {
@@ -40,7 +40,62 @@ async function fetchJSON(path, options = {}) {
   }
 
   try {
-    const res = await http.request({ url: path, method, headers, data })
+    const res = await http.request({ url: path, method, headers, data, validateStatus: () => true })
+
+    const contentType = String(res.headers?.['content-type'] || res.headers?.['Content-Type'] || '')
+    const responseURL = res?.request?.responseURL || ''
+    const expectedBase = BASE_URL
+
+    // Heuristic: if final URL is not our API base or content-type is HTML, treat as redirect (likely 302 followed by auto-follow)
+    const isHtml = contentType.toLowerCase().includes('text/html')
+    const dataIsHtmlString = typeof res.data === 'string' && /<\s*html/i.test(res.data)
+    const redirectedAway = Boolean(responseURL && !responseURL.startsWith(expectedBase))
+
+    if (isHtml || dataIsHtmlString || redirectedAway) {
+      const message = 'Unexpected redirect from API (possible 302).'
+      const error = new Error(message)
+      error.status = res.status || 302
+      error.statusText = res.statusText || 'Found'
+      error.data = res.data
+      error.errors = null
+      try { error.body = typeof res.data === 'string' ? res.data : JSON.stringify(res.data) } catch { error.body = '' }
+      toast.error(message)
+      throw error
+    }
+
+    if (res.status < 200 || res.status >= 300) {
+      // Non-2xx: normalize into error (so callers can handle e.status 422 etc.)
+      let message = ''
+      const bodyData = res.data
+      if (bodyData && typeof bodyData === 'object' && !Array.isArray(bodyData)) {
+        const provided = [bodyData.message, bodyData.error]
+          .map((v) => (typeof v === 'string' ? v.trim() : ''))
+          .find((v) => v)
+        if (provided) message = provided
+      }
+      if (!message && typeof bodyData === 'string' && bodyData.trim()) message = bodyData.trim()
+      const normalizedErrors = bodyData && typeof bodyData === 'object' ? normalizeErrorMap(bodyData.errors) : null
+      if (!message && normalizedErrors) {
+        const first = Object.values(normalizedErrors).flat().find((t) => typeof t === 'string' && t.trim())
+        if (first) message = first
+      }
+      if (!message) {
+        if (res.status === 404) message = 'Record not found.'
+        else if (res.status === 400 || res.status === 422) message = 'Invalid request.'
+        else if (res.status === 429) message = 'Too many attempts. Please try again later.'
+        else if (res.status >= 500) message = 'Server error. Please try again shortly.'
+        else message = `Request failed with status ${res.status}`
+      }
+      const error = new Error(message)
+      error.status = res.status
+      error.statusText = res.statusText
+      error.data = bodyData
+      error.errors = normalizedErrors
+      try { error.body = typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData) } catch { error.body = '' }
+      toast.error(message)
+      throw error
+    }
+
     const payload = res?.data
     return payload == null ? {} : payload
   } catch (err) {
