@@ -64,9 +64,13 @@ async function fetchJSON(path, options = {}) {
     }
 
     if (res.status < 200 || res.status >= 300) {
-      // Non-2xx: normalize into error (so callers can handle e.status 422 etc.)
-      let message = ''
       const bodyData = res.data
+      const normalizedErrors =
+        bodyData && typeof bodyData === 'object'
+          ? normalizeErrorMap(bodyData.errors)
+          : null
+
+      let message = ''
       if (bodyData && typeof bodyData === 'object' && !Array.isArray(bodyData)) {
         const provided = [bodyData.message, bodyData.error]
           .map((v) => (typeof v === 'string' ? v.trim() : ''))
@@ -74,27 +78,51 @@ async function fetchJSON(path, options = {}) {
         if (provided) message = provided
       }
       if (!message && typeof bodyData === 'string' && bodyData.trim()) message = bodyData.trim()
-      const normalizedErrors = bodyData && typeof bodyData === 'object' ? normalizeErrorMap(bodyData.errors) : null
-      if (!message && normalizedErrors) {
-        const first = Object.values(normalizedErrors).flat().find((t) => typeof t === 'string' && t.trim())
-        if (first) message = first
+
+      // 👇 prioritize errors when status = 422
+      if (res.status === 422 && normalizedErrors) {
+        const error = new Error('Validation failed')
+        error.status = 422
+        error.statusText = res.statusText
+        error.data = bodyData
+        error.errors = normalizedErrors
+        try {
+          error.body =
+            typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData)
+        } catch {
+          error.body = ''
+        }
+        // Instead of showing a toast for every field, show a general one
+        const firstError = Object.values(normalizedErrors).flat()[0]
+        toast.error(firstError || 'Validation failed')
+        throw error
       }
+
       if (!message) {
         if (res.status === 404) message = 'Record not found.'
-        else if (res.status === 400 || res.status === 422) message = 'Invalid request.'
-        else if (res.status === 429) message = 'Too many attempts. Please try again later.'
+        else if (res.status === 400 || res.status === 422)
+          message = 'Invalid request.'
+        else if (res.status === 429)
+          message = 'Too many attempts. Please try again later.'
         else if (res.status >= 500) message = 'Server error. Please try again shortly.'
         else message = `Request failed with status ${res.status}`
       }
+
       const error = new Error(message)
       error.status = res.status
       error.statusText = res.statusText
       error.data = bodyData
       error.errors = normalizedErrors
-      try { error.body = typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData) } catch { error.body = '' }
+      try {
+        error.body =
+          typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData)
+      } catch {
+        error.body = ''
+      }
       toast.error(message)
       throw error
     }
+
 
     const payload = res?.data
     return payload == null ? {} : payload

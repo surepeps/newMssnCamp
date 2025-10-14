@@ -500,6 +500,8 @@ export default function ExistingMemberForm() {
                       body: JSON.stringify(payload),
                     })
                     const data = res?.data || {}
+
+                    console.log(data, "response Data")
                     if (res?.success === false) {
                       const error = new Error(res?.message || data?.message || 'Invalid request.')
                       error.data = res
@@ -530,6 +532,7 @@ export default function ExistingMemberForm() {
                       // Stay on page; no redirect without a payment link
                     }
                   } catch (e) {
+                    console.log(e, "all errors");
                     try { applyServerErrorsToFormik(helpers, e?.errors || e?.data || e) } catch {}
                   } finally {
                     helpers.setSubmitting(false)
