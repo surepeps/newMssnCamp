@@ -468,12 +468,23 @@ export default function ExistingMemberForm() {
                     const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
+                    const PENDING_PAYMENT_KEY = 'pending_payment'
                     if (data.redirect_url) {
+                      try {
+                        const pending = {
+                          redirect_url: data.redirect_url,
+                          paymentRef: data.payment_reference || data.paymentRef || null,
+                          mssnId: payload?.mssn_id || null,
+                          savedAt: Date.now(),
+                        }
+                        localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+                      } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         window.location.href = data.redirect_url
                       }, 700)
                     } else {
+                      try { localStorage.removeItem('pending_payment') } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         navigate('/registration')
