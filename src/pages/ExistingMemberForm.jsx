@@ -156,8 +156,20 @@ function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, sh
     date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
     area_council: Yup.string().required('Required'),
     branch: Yup.string().required('Required'),
-    email: optionalString.nullable().email('Enter a valid email'),
-    tel_no: optionalString.nullable(),
+    camp_mode: Yup.string().oneOf(['Physical', 'Virtual']).required('Required'),
+    email: optionalString
+      .nullable()
+      .email('Enter a valid email')
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Email is required for virtual mode'),
+      }),
+    tel_no: optionalString
+      .nullable()
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Phone number is required for virtual mode'),
+      }),
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
@@ -381,6 +393,7 @@ export default function ExistingMemberForm() {
       date_of_birth: d.date_of_birth || '',
       area_council: d.area_council || '',
       branch: d.branch || '',
+      camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'Virtual' : 'Physical',
       email: d.email || '',
       tel_no: d.tel_no || '',
       resident_address: d.resident_address || '',
@@ -466,6 +479,7 @@ export default function ExistingMemberForm() {
                     date_of_birth: String(values.date_of_birth).trim(),
                     area_council: values.area_council,
                     branch: values.branch,
+                    camp_mode: normalize(values.camp_mode) || 'Physical',
                     email: normalize(values.email),
                     tel_no: normalize(values.tel_no),
                     resident_address: normalize(values.resident_address),
