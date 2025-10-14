@@ -156,8 +156,20 @@ function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, sh
     date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
     area_council: Yup.string().required('Required'),
     branch: Yup.string().required('Required'),
-    email: optionalString.nullable().email('Enter a valid email'),
-    tel_no: optionalString.nullable(),
+    camp_mode: Yup.string().oneOf(['Physical', 'Virtual']).required('Required'),
+    email: optionalString
+      .nullable()
+      .email('Enter a valid email')
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Email is required for virtual mode'),
+      }),
+    tel_no: optionalString
+      .nullable()
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Phone number is required for virtual mode'),
+      }),
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
@@ -381,6 +393,7 @@ export default function ExistingMemberForm() {
       date_of_birth: d.date_of_birth || '',
       area_council: d.area_council || '',
       branch: d.branch || '',
+      camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'Virtual' : 'Physical',
       email: d.email || '',
       tel_no: d.tel_no || '',
       resident_address: d.resident_address || '',
@@ -466,6 +479,7 @@ export default function ExistingMemberForm() {
                     date_of_birth: String(values.date_of_birth).trim(),
                     area_council: values.area_council,
                     branch: values.branch,
+                    camp_mode: normalize(values.camp_mode) || 'Physical',
                     email: normalize(values.email),
                     tel_no: normalize(values.tel_no),
                     resident_address: normalize(values.resident_address),
@@ -527,8 +541,10 @@ export default function ExistingMemberForm() {
                   }
                 }}
               >
-                {(formik) => (
-                  <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
+                {(formik) => {
+                  const isVirtual = formik.values.camp_mode === 'Virtual'
+                  return (
+                    <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
                     <input type="hidden" name="pin_category" value={categoryKey} />
 
                     <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
@@ -542,8 +558,13 @@ export default function ExistingMemberForm() {
                     <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
                       <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
                       <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
-                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
-                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                      <SelectFieldEM formik={formik} name="camp_mode" label="Camp Mode" required options={['Physical','Virtual']} placeholder="Select mode" />
+                      <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
+                        Selecting Virtual mode makes email and phone number compulsory.
+                        {isVirtual ? ' Please provide both to continue.' : ''}
+                      </p>
+                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" required={isVirtual} />
+                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" required={isVirtual} />
                       <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
                       <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
                       <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
@@ -602,8 +623,9 @@ export default function ExistingMemberForm() {
                         )}
                       </div>
                     </div>
-                  </FormikForm>
-                )}
+                    </FormikForm>
+                  )
+                }}
               </Formik>
             </div>
           </div>
