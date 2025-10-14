@@ -41,13 +41,16 @@ export default function PwaInstallPrompt() {
   const [swRegistration, setSwRegistration] = React.useState(null)
 
   React.useEffect(() => {
+    const win = safeWindow()
     const optedOut = (() => {
       try { return localStorage.getItem(OPT_OUT_KEY) === '1' } catch { return false }
     })()
 
+    // Set initial installed state safely
+    setInstalled(isStandalone())
+
     const handler = (e) => {
-      // Always prevent default mini-infobar
-      e.preventDefault()
+      try { e.preventDefault() } catch {}
       if (optedOut || isStandalone()) return
       setDeferredPrompt(e)
       setVisible(true)
@@ -58,15 +61,15 @@ export default function PwaInstallPrompt() {
       setVisible(false)
       setDeferredPrompt(null)
     }
-    window.addEventListener('beforeinstallprompt', handler)
-    window.addEventListener('appinstalled', onInstalled)
+    win?.addEventListener?.('beforeinstallprompt', handler)
+    win?.addEventListener?.('appinstalled', onInstalled)
 
     const onSwUpdated = (e) => {
       setUpdateAvailable(true)
       setSwRegistration(e.detail?.registration || null)
       setVisible(true)
     }
-    window.addEventListener('swUpdated', onSwUpdated)
+    win?.addEventListener?.('swUpdated', onSwUpdated)
 
     // Show Apple install hint when not already installed (iOS/iPadOS/macOS Safari)
     if (!optedOut && isAppleDevice() && !isStandalone()) {
@@ -75,9 +78,9 @@ export default function PwaInstallPrompt() {
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler)
-      window.removeEventListener('appinstalled', onInstalled)
-      window.removeEventListener('swUpdated', onSwUpdated)
+      win?.removeEventListener?.('beforeinstallprompt', handler)
+      win?.removeEventListener?.('appinstalled', onInstalled)
+      win?.removeEventListener?.('swUpdated', onSwUpdated)
     }
   }, [])
 
