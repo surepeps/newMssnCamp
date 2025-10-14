@@ -5,7 +5,6 @@ import PricingDiscounts from '../components/PricingDiscounts.jsx'
 import { toast } from 'sonner'
 import { fetchJSON } from '../services/api.js'
 import ProcessingModal from '../components/ProcessingModal.jsx'
-import { getCategoryInfo, isValidDate } from '../utils/registration.js'
 
 const DRAFT_KEY = 'new_member_draft'
 
@@ -42,47 +41,6 @@ function HeroSlider() {
   const camp = settings?.current_camp
   const campTitle = camp?.camp_title || 'Camp MSSN Lagos'
 
-  // Discount countdown and quota summary
-  const categories = React.useMemo(() => ['tfl', 'secondary', 'undergraduate', 'others'], [])
-  const priceInfos = React.useMemo(() => (
-    categories.map((key) => ({ key, info: getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: key }) }))
-  ), [camp, settings?.discounts, categories])
-  const hasDiscount = React.useMemo(() => priceInfos.some((p) => {
-    const i = p.info
-    if (!i || i.original == null || i.discounted == null) return false
-    const orig = Number(i.original)
-    const disc = Number(i.discounted)
-    return i.discountActive && Number.isFinite(orig) && Number.isFinite(disc) && disc < orig
-  }), [priceInfos])
-  const deadline = React.useMemo(() => {
-    const d = camp?.discounts?.deadline
-    return isValidDate(d) ? new Date(d) : null
-  }, [camp])
-  const [nowTs, setNowTs] = React.useState(() => Date.now())
-  React.useEffect(() => {
-    if (!hasDiscount || !deadline) return
-    const id = setInterval(() => setNowTs(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [hasDiscount, deadline])
-  const remainingMs = React.useMemo(() => deadline ? (deadline.getTime() - nowTs) : 0, [deadline, nowTs])
-  const showCountdown = hasDiscount && deadline && remainingMs > 0
-  const timeLeft = React.useMemo(() => {
-    const ms = Math.max(0, remainingMs)
-    const totalSeconds = Math.floor(ms / 1000)
-    const days = Math.floor(totalSeconds / (24 * 3600))
-    const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = totalSeconds % 60
-    return { days, hours, minutes, seconds }
-  }, [remainingMs])
-  const quotaSummary = React.useMemo(() => {
-    const labelMap = { tfl: 'TFL', secondary: 'Secondary', undergraduate: 'Undergraduate', others: 'Others' }
-    const parts = priceInfos
-      .filter((p) => typeof p.info?.quota === 'number')
-      .map((p) => `${labelMap[p.key]} ${p.info.used}/${p.info.quota} • ${p.info.remaining} remaining`)
-    return parts
-  }, [priceInfos])
-
   return (
     <section id="home" className="relative overflow-hidden bg-mssn-night text-white">
       <div className="absolute inset-0">
@@ -113,19 +71,6 @@ function HeroSlider() {
             {camp?.camp_theme && (
               <p className="mt-4 max-w-2xl text-lg text-white/95 lg:text-xl drop-shadow-lg">{camp.camp_theme}</p>
             )}
-
-            {showCountdown ? (
-              <div className="mt-4 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
-                <div className="text-sm font-semibold text-white">
-                  Discount ends in {timeLeft.days}d {String(timeLeft.hours).padStart(2,'0')}h {String(timeLeft.minutes).padStart(2,'0')}m {String(timeLeft.seconds).padStart(2,'0')}s
-                </div>
-                {quotaSummary.length ? (
-                  <div className="mt-1 text-xs text-white/85">
-                    Quota: {quotaSummary.join(' • ')}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
 
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new') }} className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-mssn-night shadow-soft transition hover:shadow-glow">Register</a>
