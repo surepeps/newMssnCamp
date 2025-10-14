@@ -90,6 +90,8 @@ export default function PricingDiscounts() {
     return parts
   }, [priceInfos])
 
+  if (!camp) return null
+
   return (
     <section className="mx-auto mt-10 w-full max-w-6xl px-6" aria-labelledby="discounts-heading">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
