@@ -65,7 +65,6 @@ export default function PwaInstallPrompt() {
 
   const onInstallClick = async () => {
     if (updateAvailable && swRegistration?.waiting) {
-      // Tell SW to skip waiting
       swRegistration.waiting.postMessage('SKIP_WAITING')
       setVisible(false)
       return
@@ -89,7 +88,6 @@ export default function PwaInstallPrompt() {
     }
 
     if (isAppleDevice()) {
-      // show iOS/macOS Safari install hint (manual)
       setShowIosHelp(true)
       return
     }
@@ -98,31 +96,26 @@ export default function PwaInstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-[1200] w-[min(880px,calc(100%-48px))] -translate-x-1/2 rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3 shadow-soft">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-mssn-green/20">
-            <img src="https://camp.mssnlagos.net/assets/thumbnail_large.png" alt="MSSN Lagos" className="h-full w-full object-cover" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-mssn-slate">Install MSSN Camp Portal</div>
-            <div className="mt-0.5 text-xs text-mssn-slate/70">Install the MSSN Lagos Camp Portal for faster access, offline support, and full‑screen use.</div>
-            {updateAvailable ? (
-              <div className="mt-1 text-xs text-amber-600">A new version is available — install to update now.</div>
-            ) : null}
-          </div>
+    <div className="fixed bottom-8 right-6 z-[1200] w-[min(420px,calc(100%-32px))] rounded-2xl bg-white/95 backdrop-blur-sm shadow-md ring-1 ring-mssn-slate/8">
+      <div className="flex items-center gap-3 p-3">
+        <div className="flex-shrink-0 rounded-lg bg-gradient-to-tr from-mssn-green to-mssn-greenDark p-2">
+          <img src="/assets/thumbnail_large.png" alt="App" className="h-10 w-10 object-contain" onError={(e)=>{e.currentTarget.src='https://camp.mssnlagos.net/assets/thumbnail_large.png'}} />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-semibold text-mssn-slate">Add to Home screen</div>
+          <div className="mt-1 text-xs text-mssn-slate/70">Install the app for faster access, offline support, and a better experience.</div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={onInstallClick} className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-mssn-greenDark">
-            {updateAvailable ? 'Update MSSN Portal' : 'Install MSSN Portal'}
+            {updateAvailable ? 'Update' : 'Install'}
           </button>
-          <button onClick={() => { if (!updateAvailable) { try { localStorage.setItem(OPT_OUT_KEY, '1') } catch {} } setVisible(false) }} className="inline-flex items-center justify-center rounded-full border border-mssn-slate/10 px-3 py-2 text-sm font-semibold text-mssn-slate">Not now</button>
+          <button onClick={() => { try { localStorage.setItem(OPT_OUT_KEY, '1') } catch {} setVisible(false) }} aria-label="Dismiss install prompt" className="text-sm text-mssn-slate/60 px-2">✕</button>
         </div>
       </div>
 
       {showIosHelp && (
-        <div className="mt-3 text-xs text-mssn-slate/70">
-          On iOS: open in Safari, tap Share, then “Add to Home Screen” to add the MSSN Camp Portal.
+        <div className="px-3 pb-3 text-xs text-mssn-slate/70">
+          On iOS: open in Safari, tap Share, then “Add to Home Screen” to add the app.
         </div>
       )}
     </div>
