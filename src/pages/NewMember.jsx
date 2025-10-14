@@ -515,9 +515,40 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
+  const [pending, setPending] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pending_payment')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
+  const hasPendingForThis = useMemo(() => {
+    return Boolean(pending?.redirect_url && pending?.category === category)
+  }, [pending, category])
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (!e || e.key !== 'pending_payment') return
+      try {
+        const raw = localStorage.getItem('pending_payment')
+        setPending(raw ? JSON.parse(raw) : null)
+      } catch {
+        setPending(null)
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   const handleSubmit = async (values, helpers) => {
     if (typeof onSubmitOverride === 'function') {
       onSubmitOverride(values, helpers, { category })
+      return
+    }
+    if (hasPendingForThis && pending?.redirect_url) {
+      setRedirecting(true)
+      helpers.setSubmitting(false)
+      setTimeout(() => { window.location.href = pending.redirect_url }, 400)
       return
     }
     const normalize = (input) => {
@@ -785,21 +816,49 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                   />
                 </SectionCard>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="submit"
-                    disabled={!formik.isValid || formik.isSubmitting}
-                    className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
-                  >
-                    {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
-                  </button>
-                  <a
-                    href="/"
-                    onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
-                    className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
-                  >
-                    Cancel
-                  </a>
+                <div className="flex flex-col gap-3">
+                  {hasPendingForThis ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                      You already have a pending payment link for this registration. Continue to pay or delete the link to create a new one.
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-3">
+                    {hasPendingForThis ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => { if (pending?.redirect_url) window.location.href = pending.redirect_url }}
+                          className="inline-flex items-center justify-center rounded-2xl bg-mssn-green px-8 py-3 text-sm font-semibold text-white hover:bg-mssn-greenDark"
+                        >
+                          Continue to Pay
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { try { localStorage.removeItem('pending_payment') } catch {} setPending(null) }}
+                          className="inline-flex items-center justify-center rounded-2xl border border-rose-200 px-8 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+                        >
+                          Delete link
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="submit"
+                          disabled={!formik.isValid || formik.isSubmitting}
+                          className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                        >
+                          {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
+                        </button>
+                        <a
+                          href="/"
+                          onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
+                          className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                        >
+                          Cancel
+                        </a>
+                      </>
+                    )}
+                  </div>
                 </div>
                 {enableDraft !== false ? <DraftSaver formik={formik} category={category} /> : null}
               </Form>
