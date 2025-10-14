@@ -18,6 +18,7 @@ import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
+import { applyServerErrorsToFormik } from '../utils/forms.js'
 
 function useQuery() {
   return useMemo(() => new URLSearchParams(window.location.search), [])
@@ -499,6 +500,12 @@ export default function ExistingMemberForm() {
                       body: JSON.stringify(payload),
                     })
                     const data = res?.data || {}
+                    if (res?.success === false) {
+                      const error = new Error(res?.message || data?.message || 'Invalid request.')
+                      error.data = res
+                      error.errors = res?.errors || data?.errors || null
+                      throw error
+                    }
                     const message = data.message || res?.message || 'Registered successfully'
                     const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
@@ -520,13 +527,10 @@ export default function ExistingMemberForm() {
                       }, 700)
                     } else {
                       try { localStorage.removeItem('pending_payment') } catch {}
-                      setRedirecting(true)
-                      setTimeout(() => {
-                        navigate('/registration')
-                      }, 700)
+                      // Stay on page; no redirect without a payment link
                     }
                   } catch (e) {
-                    console.log(e)
+                    try { applyServerErrorsToFormik(helpers, e?.errors || e?.data || e) } catch {}
                   } finally {
                     helpers.setSubmitting(false)
                     setProcessing(false)

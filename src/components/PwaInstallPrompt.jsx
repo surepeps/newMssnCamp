@@ -1,13 +1,33 @@
 import * as React from 'react'
 
+function safeWindow() {
+  try { return typeof window !== 'undefined' ? window : null } catch { return null }
+}
+function safeNavigator() {
+  try { return typeof navigator !== 'undefined' ? navigator : null } catch { return null }
+}
+
 function isAppleDevice() {
-  const ua = navigator.userAgent || navigator.vendor || ''
-  const isiOS = /iphone|ipad|ipod/i.test(ua)
-  const isMacTouch = /mac/i.test(ua) && (navigator.maxTouchPoints || 0) > 1
-  return isiOS || isMacTouch
+  const nav = safeNavigator()
+  if (!nav) return false
+  try {
+    const ua = nav.userAgent || nav.vendor || ''
+    const isiOS = /iphone|ipad|ipod/i.test(ua)
+    const isMacTouch = /mac/i.test(ua) && (nav.maxTouchPoints || 0) > 1
+    return isiOS || isMacTouch
+  } catch { return false }
 }
 function isStandalone() {
-  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true)
+  const win = safeWindow()
+  const nav = safeNavigator()
+  if (!win && !nav) return false
+  try {
+    const hasMatchMedia = !!(win && typeof win.matchMedia === 'function')
+    const mm = hasMatchMedia ? win.matchMedia('(display-mode: standalone)') : null
+    const mmMatches = !!(mm && typeof mm.matches === 'boolean' && mm.matches)
+    const safariStandalone = !!(nav && nav.standalone === true)
+    return mmMatches || safariStandalone
+  } catch { return false }
 }
 
 export default function PwaInstallPrompt() {
@@ -15,19 +35,22 @@ export default function PwaInstallPrompt() {
   const INSTALLED_KEY = 'pwa_install_installed'
   const [deferredPrompt, setDeferredPrompt] = React.useState(null)
   const [visible, setVisible] = React.useState(false)
-  const [installed, setInstalled] = React.useState(() => isStandalone())
+  const [installed, setInstalled] = React.useState(false)
   const [showIosHelp, setShowIosHelp] = React.useState(false)
   const [updateAvailable, setUpdateAvailable] = React.useState(false)
   const [swRegistration, setSwRegistration] = React.useState(null)
 
   React.useEffect(() => {
+    const win = safeWindow()
     const optedOut = (() => {
       try { return localStorage.getItem(OPT_OUT_KEY) === '1' } catch { return false }
     })()
 
+    // Set initial installed state safely
+    setInstalled(isStandalone())
+
     const handler = (e) => {
-      // Always prevent default mini-infobar
-      e.preventDefault()
+      try { e.preventDefault() } catch {}
       if (optedOut || isStandalone()) return
       setDeferredPrompt(e)
       setVisible(true)
@@ -38,15 +61,15 @@ export default function PwaInstallPrompt() {
       setVisible(false)
       setDeferredPrompt(null)
     }
-    window.addEventListener('beforeinstallprompt', handler)
-    window.addEventListener('appinstalled', onInstalled)
+    win?.addEventListener?.('beforeinstallprompt', handler)
+    win?.addEventListener?.('appinstalled', onInstalled)
 
     const onSwUpdated = (e) => {
       setUpdateAvailable(true)
       setSwRegistration(e.detail?.registration || null)
       setVisible(true)
     }
-    window.addEventListener('swUpdated', onSwUpdated)
+    win?.addEventListener?.('swUpdated', onSwUpdated)
 
     // Show Apple install hint when not already installed (iOS/iPadOS/macOS Safari)
     if (!optedOut && isAppleDevice() && !isStandalone()) {
@@ -55,9 +78,9 @@ export default function PwaInstallPrompt() {
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler)
-      window.removeEventListener('appinstalled', onInstalled)
-      window.removeEventListener('swUpdated', onSwUpdated)
+      win?.removeEventListener?.('beforeinstallprompt', handler)
+      win?.removeEventListener?.('appinstalled', onInstalled)
+      win?.removeEventListener?.('swUpdated', onSwUpdated)
     }
   }, [])
 

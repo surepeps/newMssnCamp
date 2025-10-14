@@ -4,6 +4,7 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import FullPageLoader from './FullPageLoader.jsx'
 import PwaInstallPrompt from './PwaInstallPrompt.jsx'
 import WhatsAppWidget from './WhatsAppWidget.jsx'
+import ErrorBoundary from './ErrorBoundary.jsx'
 
 const logoUrl = 'https://camp.mssnlagos.net/assets/thumbnail_large.png'
 
@@ -270,8 +271,12 @@ function Layout({ children }) {
       <main className="flex-1">{children}</main>
       <Footer />
       {loading && <FullPageLoader />}
-      <PwaInstallPrompt />
-      <WhatsAppWidget />
+      <ErrorBoundary>
+        <PwaInstallPrompt />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <WhatsAppWidget />
+      </ErrorBoundary>
     </div>
   )
 }
