@@ -380,7 +380,7 @@ export default function ExistingMemberForm() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       {(showUpgradeModal || showRegisteredModal || loadError) ? null : (
-        <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white overflow-visible">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="bg-radial-glow/40 rounded-3xl">
             <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
