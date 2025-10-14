@@ -370,8 +370,20 @@ function buildValidationSchema(config, extras = {}) {
     date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
     area_council: Yup.string().required('Required'),
     branch: Yup.string().required('Required'),
-    email: optionalString.nullable().email('Enter a valid email'),
-    tel_no: optionalString.nullable(),
+    camp_mode: Yup.string().oneOf(['Physical', 'Virtual']).required('Required'),
+    email: optionalString
+      .nullable()
+      .email('Enter a valid email')
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Email is required for virtual mode'),
+      }),
+    tel_no: optionalString
+      .nullable()
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Phone number is required for virtual mode'),
+      }),
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
@@ -482,6 +494,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       date_of_birth: '',
       area_council: '',
       branch: '',
+      camp_mode: 'Physical',
       email: '',
       tel_no: '',
       resident_address: '',
@@ -570,6 +583,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       date_of_birth: String(values.date_of_birth).trim(),
       area_council: values.area_council,
       branch: values.branch,
+      camp_mode: normalize(values.camp_mode) || 'Physical',
       email: normalize(values.email),
       tel_no: normalize(values.tel_no),
       resident_address: normalize(values.resident_address),
@@ -680,189 +694,204 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             enableReinitialize
             validateOnMount
           >
-            {(formik) => (
-              <Form className="mt-10 space-y-10 px-6 pb-10 sm:px-10">
-                <input type="hidden" name="pin_category" value={category} />
+            {(formik) => {
+              const isVirtual = formik.values.camp_mode === 'Virtual'
+              return (
+                <Form className="mt-10 space-y-10 px-6 pb-10 sm:px-10">
+                  <input type="hidden" name="pin_category" value={category} />
 
-                <SectionCard title="Personal details" description="Tell us a little about who you are.">
-                  <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
-                  <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                  <SelectField
-                    formik={formik}
-                    name="sex"
-                    label="Gender"
-                    required
-                    options={['Male', 'Female']}
-                    placeholder="Select gender"
-                  />
-                  <TextField
-                    formik={formik}
-                    name="date_of_birth"
-                    label="Age"
-                    type="number"
-                    required
-                    placeholder="Enter age"
-                  />
-                  <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
-                </SectionCard>
-
-                <SectionCard title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
-                  <FormikAsyncSelect
-                    formik={formik}
-                    name="area_council"
-                    label="Area Council"
-                    required
-                    placeholder="Select council..."
-                    fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
-                  />
-                  <TextField
-                    formik={formik}
-                    name="branch"
-                    label="Branch"
-                    required
-                    placeholder="Enter branch name"
-                  />
-                  <TextField formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
-                  <TextField formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
-                  <TextField
-                    formik={formik}
-                    name="resident_address"
-                    label="Resident Address"
-                    as="textarea"
-                    rows={3}
-                    placeholder="Enter residential address"
-                    className="sm:col-span-2"
-                  />
-                  <SelectField
-                    formik={formik}
-                    name="marital_status"
-                    label="Marital Status"
-                    options={maritalOptions}
-                    placeholder="Select status"
-                  />
-                  <FormikAsyncSelect
-                    formik={formik}
-                    name="state_of_origin"
-                    label="State of Origin"
-                    placeholder="Select state..."
-                    fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
-                  />
-                </SectionCard>
-
-                {(config.showSchool || config.showClassLevel || showCourse || showDiscipline || showWorkplace) ? (
-                  <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
-                    {config.showSchool ? (
-                      <FormikAsyncSelect
-                        formik={formik}
-                        name="school"
-                        label="School"
-                        placeholder={config.schoolPlaceholder}
-                        fetchPage={({ page, search }) => querySchools({ identifier: config.schoolIdentifier, page, limit: 20, search })}
-                      />
-                    ) : null}
-                    {config.showClassLevel ? (
-                      <FormikAsyncSelect
-                        formik={formik}
-                        name="class_level"
-                        label="Class Level"
-                        placeholder={config.classPlaceholder}
-                        fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
-                      />
-                    ) : null}
-                    {showCourse ? (
-                      <FormikAsyncSelect
-                        formik={formik}
-                        name="course"
-                        label="Course"
-                        placeholder="Select course..."
-                        fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
-                      />
-                    ) : null}
-                    {showHighestQualification ? (
-                      <FormikAsyncSelect
-                        formik={formik}
-                        name="highest_qualification"
-                        label="Highest Qualification"
-                        required
-                        placeholder="Select qualification..."
-                        fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search })}
-                      />
-                    ) : null}
-                    {showDiscipline ? (
-                      <TextField formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
-                    ) : null}
-                    {showWorkplace ? (
-                      <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
-                    ) : null}
+                  <SectionCard title="Personal details" description="Tell us a little about who you are.">
+                    <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
+                    <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
+                    <SelectField
+                      formik={formik}
+                      name="sex"
+                      label="Gender"
+                      required
+                      options={['Male', 'Female']}
+                      placeholder="Select gender"
+                    />
+                    <TextField
+                      formik={formik}
+                      name="date_of_birth"
+                      label="Age"
+                      type="number"
+                      required
+                      placeholder="Enter age"
+                    />
+                    <TextField formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                   </SectionCard>
-                ) : null}
 
-                {showEmergency ? (
-                  <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
-                    <TextField formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
-                    <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
+                  <SectionCard title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
+                    <FormikAsyncSelect
+                      formik={formik}
+                      name="area_council"
+                      label="Area Council"
+                      required
+                      placeholder="Select council..."
+                      fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })}
+                    />
+                    <TextField
+                      formik={formik}
+                      name="branch"
+                      label="Branch"
+                      required
+                      placeholder="Enter branch name"
+                    />
+                    <SelectField
+                      formik={formik}
+                      name="camp_mode"
+                      label="Camp Mode"
+                      required
+                      options={['Physical', 'Virtual']}
+                      placeholder="Select mode"
+                    />
+                    <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
+                      Selecting Virtual mode makes email and phone number compulsory.
+                      {isVirtual ? ' Please provide both to continue.' : ''}
+                    </p>
+                    <TextField formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" required={isVirtual} />
+                    <TextField formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" required={isVirtual} />
+                    <TextField
+                      formik={formik}
+                      name="resident_address"
+                      label="Resident Address"
+                      as="textarea"
+                      rows={3}
+                      placeholder="Enter residential address"
+                      className="sm:col-span-2"
+                    />
+                    <SelectField
+                      formik={formik}
+                      name="marital_status"
+                      label="Marital Status"
+                      options={maritalOptions}
+                      placeholder="Select status"
+                    />
+                    <FormikAsyncSelect
+                      formik={formik}
+                      name="state_of_origin"
+                      label="State of Origin"
+                      placeholder="Select state..."
+                      fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })}
+                    />
                   </SectionCard>
-                ) : null}
 
-                <SectionCard title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
-                  <FormikAsyncSelect
-                    formik={formik}
-                    name="ailments"
-                    label="Ailments"
-                    multiple
-                    placeholder="Select ailments..."
-                    fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
-                    className="sm:col-span-2"
-                  />
-                </SectionCard>
-
-                <div className="flex flex-col gap-3">
-                  {hasPendingForThis ? (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                      You already have a pending payment link for this registration. Continue to pay or delete the link to create a new one.
-                    </div>
+                  {(config.showSchool || config.showClassLevel || showCourse || showDiscipline || showWorkplace) ? (
+                    <SectionCard title="Education & Occupation" description="Share your institution and occupation details.">
+                      {config.showSchool ? (
+                        <FormikAsyncSelect
+                          formik={formik}
+                          name="school"
+                          label="School"
+                          placeholder={config.schoolPlaceholder}
+                          fetchPage={({ page, search }) => querySchools({ identifier: config.schoolIdentifier, page, limit: 20, search })}
+                        />
+                      ) : null}
+                      {config.showClassLevel ? (
+                        <FormikAsyncSelect
+                          formik={formik}
+                          name="class_level"
+                          label="Class Level"
+                          placeholder={config.classPlaceholder}
+                          fetchPage={({ page, search }) => queryClassLevels({ identifier: config.classIdentifier, page, limit: 20, search })}
+                        />
+                      ) : null}
+                      {showCourse ? (
+                        <FormikAsyncSelect
+                          formik={formik}
+                          name="course"
+                          label="Course"
+                          placeholder="Select course..."
+                          fetchPage={({ page, search }) => queryCourses({ page, limit: 20, search })}
+                        />
+                      ) : null}
+                      {showHighestQualification ? (
+                        <FormikAsyncSelect
+                          formik={formik}
+                          name="highest_qualification"
+                          label="Highest Qualification"
+                          required
+                          placeholder="Select qualification..."
+                          fetchPage={({ page, search }) => queryQualifications({ page, limit: 20, search })}
+                        />
+                      ) : null}
+                      {showDiscipline ? (
+                        <TextField formik={formik} name="discipline" label="Discipline / Occupation" placeholder="Enter discipline or occupation" />
+                      ) : null}
+                      {showWorkplace ? (
+                        <TextField formik={formik} name="workplace" label="Workplace" placeholder="Enter workplace (optional)" className="sm:col-span-2" />
+                      ) : null}
+                    </SectionCard>
                   ) : null}
-                  <div className="flex flex-wrap items-center gap-3">
+
+                  {showEmergency ? (
+                    <SectionCard title="Emergency Contact" description="Who should we contact in case of emergency?" columns="sm:grid-cols-2">
+                      <TextField formik={formik} name="next_of_kin" label="Next of Kin" placeholder="Enter next of kin" />
+                      <TextField formik={formik} name="next_of_kin_tel" label="Next of Kin Phone" placeholder="Enter phone number" />
+                    </SectionCard>
+                  ) : null}
+
+                  <SectionCard title="Health" description="Let us know of any ailments so we can support you." columns="sm:grid-cols-2">
+                    <FormikAsyncSelect
+                      formik={formik}
+                      name="ailments"
+                      label="Ailments"
+                      multiple
+                      placeholder="Select ailments..."
+                      fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })}
+                      className="sm:col-span-2"
+                    />
+                  </SectionCard>
+
+                  <div className="flex flex-col gap-3">
                     {hasPendingForThis ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => { if (pending?.redirect_url) window.location.href = pending.redirect_url }}
-                          className="inline-flex items-center justify-center rounded-2xl bg-mssn-green px-8 py-3 text-sm font-semibold text-white hover:bg-mssn-greenDark"
-                        >
-                          Continue to Pay
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { try { localStorage.removeItem('pending_payment') } catch {} setPending(null) }}
-                          className="inline-flex items-center justify-center rounded-2xl border border-rose-200 px-8 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
-                        >
-                          Delete link
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="submit"
-                          disabled={!formik.isValid || formik.isSubmitting}
-                          className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
-                        >
-                          {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
-                        </button>
-                        <a
-                          href="/"
-                          onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
-                          className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
-                        >
-                          Cancel
-                        </a>
-                      </>
-                    )}
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                        You already have a pending payment link for this registration. Continue to pay or delete the link to create a new one.
+                      </div>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-3">
+                      {hasPendingForThis ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => { if (pending?.redirect_url) window.location.href = pending.redirect_url }}
+                            className="inline-flex items-center justify-center rounded-2xl bg-mssn-green px-8 py-3 text-sm font-semibold text-white hover:bg-mssn-greenDark"
+                          >
+                            Continue to Pay
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { try { localStorage.removeItem('pending_payment') } catch {} setPending(null) }}
+                            className="inline-flex items-center justify-center rounded-2xl border border-rose-200 px-8 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+                          >
+                            Delete link
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="submit"
+                            disabled={!formik.isValid || formik.isSubmitting}
+                            className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green cursor-pointer text-white hover:from-mssn-greenDark hover:to-mssn-greenDark cursor-pointer' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}
+                          >
+                            {formik.isSubmitting ? 'Submitting…' : (submitLabel || 'Continue to Payment')}
+                          </button>
+                          <a
+                            href="/"
+                            onClick={(e) => { e.preventDefault(); try { localStorage.removeItem(DRAFT_KEY) } catch {} formik.resetForm(); navigate('/new') }}
+                            className="inline-flex items-center justify-center rounded-2xl border border-mssn-slate/20 px-8 py-3 text-sm font-semibold text-mssn-slate transition hover:border-mssn-green/40 hover:text-mssn-greenDark"
+                          >
+                            Cancel
+                          </a>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-                {enableDraft !== false ? <DraftSaver formik={formik} category={category} /> : null}
-              </Form>
-            )}
+                  {enableDraft !== false ? <DraftSaver formik={formik} category={category} /> : null}
+                </Form>
+              )
+            }}
           </Formik>
       <ProcessingModal visible={processing} title="Processing payment…" subtitle="Please wait while we submit your registration and prepare payment." />
       <ProcessingModal visible={redirecting} title="Redirecting to payment…" subtitle="Please hold on while we redirect you to the payment page." />
