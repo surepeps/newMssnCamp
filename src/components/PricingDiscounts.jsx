@@ -43,8 +43,7 @@ function PriceCard({ label, info }) {
 
 export default function PricingDiscounts() {
   const { settings } = useSettings()
-  const camp = settings?.current_camp
-  if (!camp) return null
+  const camp = settings?.current_camp || null
 
   const categories = React.useMemo(() => ['tfl', 'secondary', 'undergraduate', 'others'], [])
   const priceInfos = React.useMemo(() => (
