@@ -446,9 +446,6 @@ export default function ExistingMemberForm() {
                   showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
-<<<<<<< HEAD
-                onSubmit={ async (values, helpers) => {
-=======
                 onSubmit={async (values, helpers) => {
                   if (hasPendingForThis && pending?.redirect_url) {
                     setRedirecting(true)
@@ -456,7 +453,6 @@ export default function ExistingMemberForm() {
                     setTimeout(() => { window.location.href = pending.redirect_url }, 400)
                     return
                   }
->>>>>>> 8de3979ce53c27bce26992381776611dae785e84
                   const normalize = (input) => {
                     if (Array.isArray(input)) return input.filter(Boolean)
                     if (typeof input === 'string') {

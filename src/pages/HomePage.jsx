@@ -75,7 +75,7 @@ function HeroSlider() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new') }} className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-mssn-night shadow-soft transition hover:shadow-glow">Register</a>
-              <a href="/existing/validate" onClick={(e) => { e.preventDefault(); navigate('/existing/validate') }} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/5">Check MSSN ID</a>
+              <a href="/check-mssn-id" onClick={(e) => { e.preventDefault(); navigate('/existing/validate') }} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/5">Check MSSN ID</a>
             </div>
 
             <p className="mt-6 text-sm text-white/80 max-w-xl">Join other students for an engaging and transformative camp experience. Use the quick actions below to get started.</p>
