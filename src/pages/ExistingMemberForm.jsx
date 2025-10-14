@@ -199,6 +199,12 @@ export default function ExistingMemberForm() {
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [pending, setPending] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pending_payment')
+      return raw ? JSON.parse(raw) : null
+    } catch { return null }
+  })
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
