@@ -18,6 +18,7 @@ import { Formik, Form as FormikForm } from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
+import { applyServerErrorsToFormik } from '../utils/forms.js'
 
 function useQuery() {
   return useMemo(() => new URLSearchParams(window.location.search), [])
@@ -526,7 +527,7 @@ export default function ExistingMemberForm() {
                       }, 700)
                     }
                   } catch (e) {
-                    console.log(e)
+                    try { applyServerErrorsToFormik(helpers, e?.errors || e?.data || e) } catch {}
                   } finally {
                     helpers.setSubmitting(false)
                     setProcessing(false)
