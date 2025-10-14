@@ -7,6 +7,7 @@ import { fetchJSON } from '../services/api.js'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 
 const DRAFT_KEY = 'new_member_draft'
+const PENDING_PAYMENT_KEY = 'pending_payment'
 
 const quickActions = [
   {
@@ -104,6 +105,7 @@ function HeroSlider() {
 
 function QuickActionsBar() {
   const [draft, setDraft] = React.useState(null)
+  const [pending, setPending] = React.useState(null)
 
   React.useEffect(() => {
     if (typeof window === 'undefined') {
@@ -113,23 +115,38 @@ function QuickActionsBar() {
     const loadDraftFromStorage = () => {
       try {
         const raw = window.localStorage.getItem(DRAFT_KEY)
-        if (!raw) {
-          setDraft(null)
-          return
-        }
-        const data = JSON.parse(raw)
-        if (data && typeof data === 'object') {
-          setDraft(data)
+        if (raw) {
+          const data = JSON.parse(raw)
+          if (data && typeof data === 'object') {
+            setDraft(data)
+          } else {
+            setDraft(null)
+          }
         } else {
           setDraft(null)
         }
       } catch {
         setDraft(null)
       }
+      try {
+        const pRaw = window.localStorage.getItem(PENDING_PAYMENT_KEY)
+        if (pRaw) {
+          const pData = JSON.parse(pRaw)
+          if (pData && typeof pData === 'object') {
+            setPending(pData)
+          } else {
+            setPending(null)
+          }
+        } else {
+          setPending(null)
+        }
+      } catch {
+        setPending(null)
+      }
     }
 
     const handleStorage = (event) => {
-      if (event?.key && event.key !== DRAFT_KEY) {
+      if (event?.key && event.key !== DRAFT_KEY && event.key !== PENDING_PAYMENT_KEY) {
         return
       }
       loadDraftFromStorage()
@@ -173,6 +190,32 @@ function QuickActionsBar() {
     return parts.join(' • ')
   }, [resumeDetails])
 
+  const pendingDetails = React.useMemo(() => {
+    if (!pending || typeof pending !== 'object') return null
+    const category = typeof pending.category === 'string' ? pending.category : null
+    const categoryLabel = category ? CATEGORY_LABELS[category] || category : null
+    const mssnId = typeof pending.mssnId === 'string' ? pending.mssnId : null
+    const paymentRef = typeof pending.paymentRef === 'string' ? pending.paymentRef : null
+    let savedAtLabel = null
+    if (typeof pending.savedAt === 'number') {
+      const date = new Date(pending.savedAt)
+      if (!Number.isNaN(date.getTime())) {
+        savedAtLabel = date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+      }
+    }
+    return { categoryLabel, mssnId, paymentRef, savedAtLabel }
+  }, [pending])
+
+  const pendingMeta = React.useMemo(() => {
+    if (!pendingDetails) return ''
+    const parts = []
+    if (pendingDetails.mssnId) parts.push(`MSSN ID: ${pendingDetails.mssnId}`)
+    if (pendingDetails.categoryLabel) parts.push(pendingDetails.categoryLabel)
+    if (pendingDetails.paymentRef) parts.push(`Ref: ${pendingDetails.paymentRef}`)
+    if (pendingDetails.savedAtLabel) parts.push(`Saved ${pendingDetails.savedAtLabel}`)
+    return parts.join(' • ')
+  }, [pendingDetails])
+
   const handleResumeDraft = () => {
     const targetCategory = resumeDetails?.category
     navigate(targetCategory ? `/new/${targetCategory}` : '/new')
@@ -185,6 +228,18 @@ function QuickActionsBar() {
       } catch {}
     }
     setDraft(null)
+  }
+
+  const handleResumePending = () => {
+    const url = pending?.redirect_url
+    if (url) window.location.href = url
+  }
+
+  const handleDeletePending = () => {
+    try {
+      window.localStorage.removeItem(PENDING_PAYMENT_KEY)
+    } catch {}
+    setPending(null)
   }
 
   const handleActionClick = (href) => (event) => {
@@ -206,6 +261,32 @@ function QuickActionsBar() {
     >
       <div className="-mx-4 rounded-4xl bg-white/95 p-6 ring-1 ring-mssn-slate/10 sm:mx-0">
         <div className="grid gap-6 lg:grid-cols-3">
+          {pendingDetails ? (
+            <div className="flex flex-col gap-4 rounded-3xl border border-mssn-green/30 bg-mssn-green/10 p-6 lg:col-span-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-mssn-green">Pending payment</h2>
+                  {pendingMeta ? <p className="mt-1 text-xs text-mssn-slate/60">{pendingMeta}</p> : null}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResumePending}
+                    className="inline-flex items-center justify-center rounded-full bg-mssn-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-mssn-greenDark"
+                  >
+                    Pay now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeletePending}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {resumeDetails ? (
             <div className="flex flex-col gap-4 rounded-3xl border border-mssn-green/30 bg-mssn-green/10 p-6 lg:col-span-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

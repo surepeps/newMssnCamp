@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { isValidDate, getCategoryInfo } from '../utils/registration.js'
 
@@ -40,13 +41,49 @@ function PriceCard({ label, info }) {
   )
 }
 
-
 export default function PricingDiscounts() {
   const { settings } = useSettings()
-  const camp = settings?.current_camp
-  if (!camp) return null
+  const camp = settings?.current_camp || null
 
-  const deadline = isValidDate(camp.discounts?.deadline) ? new Date(camp.discounts.deadline) : null
+  const categories = React.useMemo(() => ['tfl', 'secondary', 'undergraduate', 'others'], [])
+  const priceInfos = React.useMemo(() => (
+    categories.map((key) => ({ key, info: getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: key }) }))
+  ), [camp, settings?.discounts, categories])
+
+  const hasDiscount = React.useMemo(() => priceInfos.some((p) => {
+    const i = p.info
+    if (!i || i.original == null || i.discounted == null) return false
+    const orig = Number(i.original)
+    const disc = Number(i.discounted)
+    return i.discountActive && Number.isFinite(orig) && Number.isFinite(disc) && disc < orig
+  }), [priceInfos])
+
+  const deadline = React.useMemo(() => {
+    const d = camp?.discounts?.deadline
+    return isValidDate(d) ? new Date(d) : null
+  }, [camp])
+
+  const [nowTs, setNowTs] = React.useState(() => Date.now())
+  React.useEffect(() => {
+    if (!hasDiscount || !deadline) return
+    const id = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [hasDiscount, deadline])
+
+  const remainingMs = React.useMemo(() => deadline ? (deadline.getTime() - nowTs) : 0, [deadline, nowTs])
+  const showCountdown = hasDiscount && deadline && remainingMs > 0
+  const timeLeft = React.useMemo(() => {
+    const ms = Math.max(0, remainingMs)
+    const totalSeconds = Math.floor(ms / 1000)
+    const days = Math.floor(totalSeconds / (24 * 3600))
+    const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    return { days, hours, minutes, seconds }
+  }, [remainingMs])
+
+
+  if (!camp) return null
 
   return (
     <section className="mx-auto mt-10 w-full max-w-6xl px-6" aria-labelledby="discounts-heading">
@@ -60,6 +97,35 @@ export default function PricingDiscounts() {
             <p className="text-sm text-mssn-slate/70">Discount deadline: {deadline.toLocaleDateString('en-NG')}</p>
           )}
         </div>
+
+        {showCountdown ? (
+          <div className="mt-3 sm:mt-0">
+            <div className="rounded-3xl bg-amber-600/95 p-3 text-white shadow-sm ring-1 ring-amber-500/30">
+              <div className="flex items-center gap-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90">Discount ends in</div>
+                <div className="flex items-center gap-2">
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{timeLeft.days}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Days</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.hours).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Hours</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.minutes).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Mins</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.seconds).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Secs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <PriceCard label="TFL" info={getCategoryInfo({ camp, discountsMap: settings?.discounts, categoryKey: 'tfl' })} />

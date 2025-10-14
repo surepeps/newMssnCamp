@@ -156,8 +156,20 @@ function buildValidationSchemaEM({ showEmergency, showCourse, showDiscipline, sh
     date_of_birth: Yup.number().typeError('Enter a valid age').min(1, 'Must be greater than 0').required('Required'),
     area_council: Yup.string().required('Required'),
     branch: Yup.string().required('Required'),
-    email: optionalString.nullable().email('Enter a valid email'),
-    tel_no: optionalString.nullable(),
+    camp_mode: Yup.string().oneOf(['Physical', 'Virtual']).required('Required'),
+    email: optionalString
+      .nullable()
+      .email('Enter a valid email')
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Email is required for virtual mode'),
+      }),
+    tel_no: optionalString
+      .nullable()
+      .when('camp_mode', {
+        is: (mode) => String(mode || '').trim().toLowerCase() === 'virtual',
+        then: (schema) => schema.required('Phone number is required for virtual mode'),
+      }),
     resident_address: optionalString.nullable(),
     marital_status: optionalString.nullable(),
     state_of_origin: optionalString.nullable(),
@@ -199,6 +211,12 @@ export default function ExistingMemberForm() {
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [pending, setPending] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pending_payment')
+      return raw ? JSON.parse(raw) : null
+    } catch { return null }
+  })
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
@@ -224,6 +242,11 @@ export default function ExistingMemberForm() {
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
+  const hasPendingForThis = useMemo(() => {
+    const id = (mssnId || '').trim()
+    const pId = typeof pending?.mssnId === 'string' ? pending.mssnId.trim() : ''
+    return Boolean(id && pId && id === pId && pending?.redirect_url)
+  }, [mssnId, pending])
 
   const mapCategory = (pin) => {
     const p = String(pin || '').toUpperCase()
@@ -233,6 +256,18 @@ export default function ExistingMemberForm() {
     if (p === 'OTHERS' || p === 'OTH') return 'Others'
     return ''
   }
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (!e || e.key !== 'pending_payment') return
+      try {
+        const raw = localStorage.getItem('pending_payment')
+        setPending(raw ? JSON.parse(raw) : null)
+      } catch { setPending(null) }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   useEffect(() => {
     ;(async () => {
@@ -350,6 +385,7 @@ export default function ExistingMemberForm() {
       date_of_birth: d.date_of_birth || '',
       area_council: d.area_council || '',
       branch: d.branch || '',
+      camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'Virtual' : 'Physical',
       email: d.email || '',
       tel_no: d.tel_no || '',
       resident_address: d.resident_address || '',
@@ -372,7 +408,7 @@ export default function ExistingMemberForm() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
       {(showUpgradeModal || showRegisteredModal || loadError) ? null : (
-        <div className="overflow-hidden rounded-3xl border border-mssn-slate/10 bg-white">
+        <div className="rounded-3xl border border-mssn-slate/10 bg-white overflow-visible">
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="bg-radial-glow/40 rounded-3xl">
             <div className="flex flex-col gap-2 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
@@ -410,7 +446,17 @@ export default function ExistingMemberForm() {
                   showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
+<<<<<<< HEAD
                 onSubmit={ async (values, helpers) => {
+=======
+                onSubmit={async (values, helpers) => {
+                  if (hasPendingForThis && pending?.redirect_url) {
+                    setRedirecting(true)
+                    helpers.setSubmitting(false)
+                    setTimeout(() => { window.location.href = pending.redirect_url }, 400)
+                    return
+                  }
+>>>>>>> 8de3979ce53c27bce26992381776611dae785e84
                   const normalize = (input) => {
                     if (Array.isArray(input)) return input.filter(Boolean)
                     if (typeof input === 'string') {
@@ -429,6 +475,7 @@ export default function ExistingMemberForm() {
                     date_of_birth: String(values.date_of_birth).trim(),
                     area_council: values.area_council,
                     branch: values.branch,
+                    camp_mode: normalize(values.camp_mode) || 'Physical',
                     email: normalize(values.email),
                     tel_no: normalize(values.tel_no),
                     resident_address: normalize(values.resident_address),
@@ -460,12 +507,23 @@ export default function ExistingMemberForm() {
                     const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
                     const discount = data.discount_applied ? ' • discount applied' : ''
                     toast.success(`${message}${priceInfo}${discount}`)
+                    const PENDING_PAYMENT_KEY = 'pending_payment'
                     if (data.redirect_url) {
+                      try {
+                        const pending = {
+                          redirect_url: data.redirect_url,
+                          paymentRef: data.payment_reference || data.paymentRef || null,
+                          mssnId: payload?.mssn_id || null,
+                          savedAt: Date.now(),
+                        }
+                        localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+                      } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         window.location.href = data.redirect_url
                       }, 700)
                     } else {
+                      try { localStorage.removeItem('pending_payment') } catch {}
                       setRedirecting(true)
                       setTimeout(() => {
                         navigate('/registration')
@@ -479,8 +537,10 @@ export default function ExistingMemberForm() {
                   }
                 }}
               >
-                {(formik) => (
-                  <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
+                {(formik) => {
+                  const isVirtual = formik.values.camp_mode === 'Virtual'
+                  return (
+                    <FormikForm className="mt-10 space-y-10 px-0 pb-0 sm:px-0">
                     <input type="hidden" name="pin_category" value={categoryKey} />
 
                     <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
@@ -494,8 +554,13 @@ export default function ExistingMemberForm() {
                     <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
                       <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
                       <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
-                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" />
-                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" />
+                      <SelectFieldEM formik={formik} name="camp_mode" label="Camp Mode" required options={['Physical','Virtual']} placeholder="Select mode" />
+                      <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
+                        Selecting Virtual mode makes email and phone number compulsory.
+                        {isVirtual ? ' Please provide both to continue.' : ''}
+                      </p>
+                      <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" required={isVirtual} />
+                      <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" required={isVirtual} />
                       <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
                       <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
                       <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
@@ -536,13 +601,27 @@ export default function ExistingMemberForm() {
                       <FormikAsyncSelectEM formik={formik} name="ailments" label="Ailments" multiple placeholder="Select ailments..." fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })} className="sm:col-span-2" />
                     </SectionCardEM>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
-                        {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
-                      </button>
+                    <div className="flex flex-col gap-3">
+                      {hasPendingForThis ? (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                          You already have a pending payment link for this MSSN ID. Continue to pay instead of generating another link.
+                        </div>
+                      ) : null}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {hasPendingForThis ? (
+                          <button type="button" onClick={() => { if (pending?.redirect_url) window.location.href = pending.redirect_url }} className="inline-flex items-center justify-center rounded-2xl bg-mssn-green px-8 py-3 text-sm font-semibold text-white hover:bg-mssn-greenDark">
+                            Continue to Pay
+                          </button>
+                        ) : (
+                          <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                            {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </FormikForm>
-                )}
+                    </FormikForm>
+                  )
+                }}
               </Formik>
             </div>
           </div>
