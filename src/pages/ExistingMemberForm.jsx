@@ -442,6 +442,12 @@ export default function ExistingMemberForm() {
                 })}
                 enableReinitialize
                 onSubmit={async (values, helpers) => {
+                  if (hasPendingForThis && pending?.redirect_url) {
+                    setRedirecting(true)
+                    helpers.setSubmitting(false)
+                    setTimeout(() => { window.location.href = pending.redirect_url }, 400)
+                    return
+                  }
                   const normalize = (input) => {
                     if (Array.isArray(input)) return input.filter(Boolean)
                     if (typeof input === 'string') {
