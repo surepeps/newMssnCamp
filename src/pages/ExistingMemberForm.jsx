@@ -246,6 +246,18 @@ export default function ExistingMemberForm() {
   }
 
   useEffect(() => {
+    const onStorage = (e) => {
+      if (!e || e.key !== 'pending_payment') return
+      try {
+        const raw = localStorage.getItem('pending_payment')
+        setPending(raw ? JSON.parse(raw) : null)
+      } catch { setPending(null) }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
+  useEffect(() => {
     ;(async () => {
       try {
         const qM = (mssnId || '').trim()
