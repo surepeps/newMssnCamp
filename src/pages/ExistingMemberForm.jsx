@@ -393,7 +393,7 @@ export default function ExistingMemberForm() {
       date_of_birth: d.date_of_birth || '',
       area_council: d.area_council || '',
       branch: d.branch || '',
-      camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'virtual' : 'physical',
+      camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'Virtual' : 'Physical',
       email: d.email || '',
       tel_no: d.tel_no || '',
       resident_address: d.resident_address || '',
