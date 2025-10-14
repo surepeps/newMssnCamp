@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { getCategoryInfo } from '../utils/registration.js'
+import { applyServerErrorsToFormik } from '../utils/forms.js'
 
 const CATEGORIES = ['secondary', 'undergraduate', 'others']
 
@@ -656,7 +657,8 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
         }, 700)
       }
     } catch (err) {
-      // Error toast handled globally in fetchJSON
+      try { applyServerErrorsToFormik(helpers, err?.errors || err?.data || err) } catch {}
+      // Additional toast already handled globally in fetchJSON
     } finally {
       helpers.setSubmitting(false)
       setProcessing(false)
