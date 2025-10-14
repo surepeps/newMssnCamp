@@ -588,12 +588,23 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       const discount = data.discount_applied ? ' • discount applied' : ''
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
+      const PENDING_PAYMENT_KEY = 'pending_payment'
       if (data.redirect_url) {
+        try {
+          const pending = {
+            redirect_url: data.redirect_url,
+            paymentRef: data.payment_reference || data.paymentRef || null,
+            category,
+            savedAt: Date.now(),
+          }
+          localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+        } catch {}
         setRedirecting(true)
         setTimeout(() => {
           window.location.href = data.redirect_url
         }, 700)
       } else {
+        try { localStorage.removeItem('pending_payment') } catch {}
         setRedirecting(true)
         setTimeout(() => {
           navigate('/registration')
