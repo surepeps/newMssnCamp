@@ -199,6 +199,12 @@ export default function ExistingMemberForm() {
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [pending, setPending] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pending_payment')
+      return raw ? JSON.parse(raw) : null
+    } catch { return null }
+  })
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
@@ -224,6 +230,11 @@ export default function ExistingMemberForm() {
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
+  const hasPendingForThis = useMemo(() => {
+    const id = (mssnId || '').trim()
+    const pId = typeof pending?.mssnId === 'string' ? pending.mssnId.trim() : ''
+    return Boolean(id && pId && id === pId && pending?.redirect_url)
+  }, [mssnId, pending])
 
   const mapCategory = (pin) => {
     const p = String(pin || '').toUpperCase()
@@ -233,6 +244,18 @@ export default function ExistingMemberForm() {
     if (p === 'OTHERS' || p === 'OTH') return 'Others'
     return ''
   }
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (!e || e.key !== 'pending_payment') return
+      try {
+        const raw = localStorage.getItem('pending_payment')
+        setPending(raw ? JSON.parse(raw) : null)
+      } catch { setPending(null) }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   useEffect(() => {
     ;(async () => {
@@ -419,6 +442,12 @@ export default function ExistingMemberForm() {
                 })}
                 enableReinitialize
                 onSubmit={async (values, helpers) => {
+                  if (hasPendingForThis && pending?.redirect_url) {
+                    setRedirecting(true)
+                    helpers.setSubmitting(false)
+                    setTimeout(() => { window.location.href = pending.redirect_url }, 400)
+                    return
+                  }
                   const normalize = (input) => {
                     if (Array.isArray(input)) return input.filter(Boolean)
                     if (typeof input === 'string') {
@@ -555,10 +584,23 @@ export default function ExistingMemberForm() {
                       <FormikAsyncSelectEM formik={formik} name="ailments" label="Ailments" multiple placeholder="Select ailments..." fetchPage={({ page, search }) => queryAilments({ page, limit: 20, search })} className="sm:col-span-2" />
                     </SectionCardEM>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
-                        {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
-                      </button>
+                    <div className="flex flex-col gap-3">
+                      {hasPendingForThis ? (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                          You already have a pending payment link for this MSSN ID. Continue to pay instead of generating another link.
+                        </div>
+                      ) : null}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {hasPendingForThis ? (
+                          <button type="button" onClick={() => { if (pending?.redirect_url) window.location.href = pending.redirect_url }} className="inline-flex items-center justify-center rounded-2xl bg-mssn-green px-8 py-3 text-sm font-semibold text-white hover:bg-mssn-greenDark">
+                            Continue to Pay
+                          </button>
+                        ) : (
+                          <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                            {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </FormikForm>
                 )}
