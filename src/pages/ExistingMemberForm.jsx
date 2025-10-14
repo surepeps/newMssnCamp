@@ -230,6 +230,11 @@ export default function ExistingMemberForm() {
 
   const mssnId = query.get('mssnId') || ''
   const surname = query.get('surname') || ''
+  const hasPendingForThis = useMemo(() => {
+    const id = (mssnId || '').trim()
+    const pId = typeof pending?.mssnId === 'string' ? pending.mssnId.trim() : ''
+    return Boolean(id && pId && id === pId && pending?.redirect_url)
+  }, [mssnId, pending])
 
   const mapCategory = (pin) => {
     const p = String(pin || '').toUpperCase()
