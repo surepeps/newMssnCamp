@@ -82,13 +82,6 @@ export default function PricingDiscounts() {
     return { days, hours, minutes, seconds }
   }, [remainingMs])
 
-  const quotaSummary = React.useMemo(() => {
-    const labelMap = { tfl: 'TFL', secondary: 'Secondary', undergraduate: 'Undergraduate', others: 'Others' }
-    const parts = priceInfos
-      .filter((p) => typeof p.info?.quota === 'number')
-      .map((p) => `${labelMap[p.key]} ${p.info.used}/${p.info.quota} • ${p.info.remaining} remaining`)
-    return parts
-  }, [priceInfos])
 
   if (!camp) return null
 
@@ -105,21 +98,31 @@ export default function PricingDiscounts() {
           )}
         </div>
 
-        {/* Countdown banner moved here with more prominent notifying style */}
         {showCountdown ? (
-          <div className="mt-3 sm:mt-0 flex items-center gap-3">
-            <div className="rounded-2xl bg-amber-600/95 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-amber-500/30">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white font-bold">⚡</div>
-                <div className="text-left">
-                  <div className="text-xs">Discount ends in</div>
-                  <div className="mt-0.5 text-sm font-bold">{timeLeft.days}d {String(timeLeft.hours).padStart(2,'0')}h {String(timeLeft.minutes).padStart(2,'0')}m {String(timeLeft.seconds).padStart(2,'0')}s</div>
+          <div className="mt-3 sm:mt-0">
+            <div className="rounded-3xl bg-amber-600/95 p-3 text-white shadow-sm ring-1 ring-amber-500/30">
+              <div className="flex items-center gap-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90">Discount ends in</div>
+                <div className="flex items-center gap-2">
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{timeLeft.days}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Days</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.hours).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Hours</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.minutes).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Mins</div>
+                  </div>
+                  <div className="min-w-[56px] rounded-xl bg-white/10 px-3 py-2 text-center">
+                    <div className="text-lg font-bold leading-none">{String(timeLeft.seconds).padStart(2,'0')}</div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-80">Secs</div>
+                  </div>
                 </div>
               </div>
             </div>
-            {quotaSummary.length ? (
-              <div className="rounded-2xl bg-white/6 px-3 py-2 text-xs font-medium text-mssn-slate">{quotaSummary.join(' • ')}</div>
-            ) : null}
           </div>
         ) : null}
 
