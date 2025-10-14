@@ -629,6 +629,12 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
         body: JSON.stringify(payload)
       })
       const data = res?.data || {}
+      if (res?.success === false) {
+        const error = new Error(res?.message || data?.message || 'Invalid request.')
+        error.data = res
+        error.errors = res?.errors || data?.errors || null
+        throw error
+      }
       const message = data.message || res?.message || 'Registered successfully'
       const priceInfo = typeof data.price !== 'undefined' ? ` • ₦${Number(data.price).toFixed(2)}` : ''
       const discount = data.discount_applied ? ' • discount applied' : ''
@@ -651,10 +657,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
         }, 700)
       } else {
         try { localStorage.removeItem('pending_payment') } catch {}
-        setRedirecting(true)
-        setTimeout(() => {
-          navigate('/registration')
-        }, 700)
+        // Stay on page; no redirect without a payment link
       }
     } catch (err) {
       try { applyServerErrorsToFormik(helpers, err?.errors || err?.data || err) } catch {}
