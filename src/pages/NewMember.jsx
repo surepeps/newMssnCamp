@@ -3,7 +3,7 @@ import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, queryQualifications, fetchHighestQualifications } from '../services/dataProvider.js'
-import { fetchJSON } from '../services/api.js'
+import { createNewRegistration, PENDING_PAYMENT_KEY } from '../services/registrationApi.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -623,11 +623,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
     try {
       setProcessing(true)
-      const res = await fetchJSON('/registration/new', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      const res = await createNewRegistration(payload)
       const data = res?.data || {}
       if (res?.success === false) {
         const error = new Error(res?.message || data?.message || 'Invalid request.')
@@ -640,7 +636,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       const discount = data.discount_applied ? ' • discount applied' : ''
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
-      const PENDING_PAYMENT_KEY = 'pending_payment'
+      const PENDING_PAYMENT_KEY = PENDING_PAYMENT_KEY
       if (data.redirect_url) {
         try {
           const pending = {
