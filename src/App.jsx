@@ -14,6 +14,7 @@ import DonationValidation from './pages/DonationValidation.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Toaster } from 'sonner'
+import { cleanupExpiredPendingPayment } from './services/registrationApi.js'
 
 function usePathRoute() {
   const getLocation = () => `${window.location.pathname}${window.location.search}` || '/'
@@ -80,6 +81,7 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => { cleanupExpiredPendingPayment() }, [])
   return (
     <Layout>
       <RegistrationBoundary />

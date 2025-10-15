@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchJSON } from '../services/api.js'
+import { validatePayment, clearPendingPayment } from '../services/registrationApi.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 
@@ -95,7 +95,7 @@ export default function PaymentValidation() {
           setError('Missing payment reference')
           return
         }
-        const res = await fetchJSON(`/payment/opay/callback?reference=${encodeURIComponent(reference)}`)
+        const res = await validatePayment(reference)
         const data = res?.data || {}
         const del = data.delegate || null
         const tx = data.transaction || null
@@ -104,11 +104,11 @@ export default function PaymentValidation() {
         if (success) {
           setDelegate(del)
           setTransaction(tx)
-          try { localStorage.removeItem('pending_payment') } catch {}
+          clearPendingPayment()
         } else if (isFailed) {
           setDelegate(del)
           setTransaction(tx)
-          try { localStorage.removeItem('pending_payment') } catch {}
+          clearPendingPayment()
         } else if (del || tx) {
           setDelegate(del)
           setTransaction(tx)

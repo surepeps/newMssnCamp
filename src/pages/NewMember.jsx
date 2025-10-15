@@ -3,7 +3,7 @@ import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, queryQualifications, fetchHighestQualifications } from '../services/dataProvider.js'
-import { fetchJSON } from '../services/api.js'
+import { createNewRegistration, setPendingPayment, getPendingPayment, clearPendingPayment } from '../services/registrationApi.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -529,26 +529,14 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  const [pending, setPending] = useState(() => {
-    try {
-      const raw = localStorage.getItem('pending_payment')
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
-    }
-  })
+  const [pending, setPending] = useState(() => getPendingPayment())
   const hasPendingForThis = useMemo(() => {
     return Boolean(pending?.redirect_url && pending?.category === category)
   }, [pending, category])
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key !== 'pending_payment') return
-      try {
-        const raw = localStorage.getItem('pending_payment')
-        setPending(raw ? JSON.parse(raw) : null)
-      } catch {
-        setPending(null)
-      }
+      setPending(getPendingPayment())
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -623,11 +611,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
 
     try {
       setProcessing(true)
-      const res = await fetchJSON('/registration/new', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      const res = await createNewRegistration(payload)
       const data = res?.data || {}
       if (res?.success === false) {
         const error = new Error(res?.message || data?.message || 'Invalid request.')
@@ -640,23 +624,20 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       const discount = data.discount_applied ? ' • discount applied' : ''
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
-      const PENDING_PAYMENT_KEY = 'pending_payment'
       if (data.redirect_url) {
         try {
-          const pending = {
+          setPendingPayment({
             redirect_url: data.redirect_url,
             paymentRef: data.payment_reference || data.paymentRef || null,
             category,
-            savedAt: Date.now(),
-          }
-          localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+          })
         } catch {}
         setRedirecting(true)
         setTimeout(() => {
           window.location.href = data.redirect_url
         }, 700)
       } else {
-        try { localStorage.removeItem('pending_payment') } catch {}
+        clearPendingPayment()
         // Stay on page; no redirect without a payment link
       }
     } catch (err) {
@@ -681,7 +662,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             <div className="flex items-center gap-3">
               {finalPrice != null ? (
                 <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">
-                  Amount: ₦{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
+                  Amount: ��{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
                 </span>
               ) : null}
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
@@ -708,13 +689,19 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                   <SectionCard title="Personal details" description="Tell us a little about who you are.">
                     <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
                     <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="sex"
                       label="Gender"
                       required
-                      options={['Male', 'Female']}
                       placeholder="Select gender"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = ['Male', 'Female']
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <TextField
                       formik={formik}
@@ -743,13 +730,19 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       required
                       placeholder="Enter branch name"
                     />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="camp_mode"
                       label="Camp Mode"
                       required
-                      options={['Physical', 'Virtual']}
                       placeholder="Select mode"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = ['Physical', 'Virtual']
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
                       Selecting Virtual mode makes email and phone number compulsory.
@@ -766,12 +759,18 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       placeholder="Enter residential address"
                       className="sm:col-span-2"
                     />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="marital_status"
                       label="Marital Status"
-                      options={maritalOptions}
                       placeholder="Select status"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = maritalOptions
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <FormikAsyncSelect
                       formik={formik}
@@ -867,7 +866,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                           </button>
                           <button
                             type="button"
-                            onClick={() => { try { localStorage.removeItem('pending_payment') } catch {} setPending(null) }}
+                            onClick={() => { clearPendingPayment(); setPending(null) }}
                             className="inline-flex items-center justify-center rounded-2xl border border-rose-200 px-8 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
                           >
                             Delete link

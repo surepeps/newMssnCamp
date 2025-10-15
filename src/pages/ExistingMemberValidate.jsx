@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate, createNavigationHandler } from '../utils/navigation.js'
-import { fetchJSON } from '../services/api.js'
+import { fetchExistingRegistration } from '../services/registrationApi.js'
 import { toast } from 'sonner'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
@@ -44,11 +44,7 @@ export default function ExistingMemberValidate() {
     setError('')
     try {
       const payload = { mssn_id: formatMssn(values.mssnId), surname: formatSurname(values.surname) }
-      const res = await fetchJSON('/registration/fetch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const res = await fetchExistingRegistration(payload)
       if (!res?.success || !res?.delegate?.details) {
         const msg = res?.message || 'Record not found. Check details and try again.'
         setError(msg)
