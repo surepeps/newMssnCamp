@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchJSON } from '../services/api.js'
+import { validatePayment } from '../services/registrationApi.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 
@@ -95,7 +95,7 @@ export default function PaymentValidation() {
           setError('Missing payment reference')
           return
         }
-        const res = await fetchJSON(`/payment/opay/callback?reference=${encodeURIComponent(reference)}`)
+        const res = await validatePayment(reference)
         const data = res?.data || {}
         const del = data.delegate || null
         const tx = data.transaction || null
