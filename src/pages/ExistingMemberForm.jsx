@@ -447,7 +447,25 @@ const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
       if (!s) return []
       return s.toLowerCase() === 'none' ? [] : s.split(',').map((s) => s.trim()).filter(Boolean)
     }
-    const resolvedAge = registrationAge != null ? String(registrationAge) : d.date_of_birth != null ? String(d.date_of_birth) : ''
+    const baseAge = (() => {
+      const upgradeAge = parseAgeValue(toInfo.date_of_birth)
+      if (upgradeAge != null) return upgradeAge
+      const detailAge = parseAgeValue(d.date_of_birth)
+      return detailAge
+    })()
+    const ageWithTenure = (() => {
+      if (baseAge == null && registrationAge == null) return null
+      if (baseAge == null) return registrationAge
+      if (registrationAge == null) return baseAge
+      return baseAge + registrationAge
+    })()
+    const resolvedAge = (() => {
+      if (ageWithTenure != null) return String(Math.max(0, Math.floor(ageWithTenure)))
+      if (baseAge != null) return String(Math.max(0, Math.floor(baseAge)))
+      if (toInfo.date_of_birth != null) return String(toInfo.date_of_birth)
+      if (d.date_of_birth != null) return String(d.date_of_birth)
+      return ''
+    })()
     return {
       surname: d.surname || surname || '',
       firstname: d.firstname || '',
