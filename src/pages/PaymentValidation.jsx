@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { validatePayment } from '../services/registrationApi.js'
+import { validatePayment, clearPendingPayment } from '../services/registrationApi.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 
@@ -104,11 +104,11 @@ export default function PaymentValidation() {
         if (success) {
           setDelegate(del)
           setTransaction(tx)
-          try { localStorage.removeItem('pending_payment') } catch {}
+          clearPendingPayment()
         } else if (isFailed) {
           setDelegate(del)
           setTransaction(tx)
-          try { localStorage.removeItem('pending_payment') } catch {}
+          clearPendingPayment()
         } else if (del || tx) {
           setDelegate(del)
           setTransaction(tx)
