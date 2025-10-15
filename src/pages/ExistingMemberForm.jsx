@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
-import { fetchExistingRegistration, updateExistingRegistration, setPendingPayment, PENDING_PAYMENT_KEY } from '../services/registrationApi.js'
+import { fetchExistingRegistration, updateExistingRegistration, setPendingPayment } from '../services/registrationApi.js'
 import {
   fetchHighestQualifications,
   queryStates,
