@@ -435,6 +435,7 @@ export default function ExistingMemberForm() {
                   showHighestQualification: categoryKey === 'undergraduate' || categoryKey === 'others',
                 })}
                 enableReinitialize
+                validateOnMount
                 onSubmit={async (values, helpers) => {
                   if (hasPendingForThis && pending?.redirect_url) {
                     setRedirecting(true)
