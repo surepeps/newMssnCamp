@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
-import { fetchExistingRegistration, updateExistingRegistration, setPendingPayment } from '../services/registrationApi.js'
+import { fetchExistingRegistration, updateExistingRegistration, setPendingPayment, getPendingPayment, clearPendingPayment } from '../services/registrationApi.js'
 import {
   fetchHighestQualifications,
   queryStates,
@@ -212,12 +212,7 @@ export default function ExistingMemberForm() {
   const [upgradeStarted, setUpgradeStarted] = useState(() => (query.get('upgrade') || '') === '1')
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
-  const [pending, setPending] = useState(() => {
-    try {
-      const raw = localStorage.getItem('pending_payment')
-      return raw ? JSON.parse(raw) : null
-    } catch { return null }
-  })
+  const [pending, setPending] = useState(() => getPendingPayment())
 
   // AsyncSelect controlled values
   const [vCouncil, setVCouncil] = useState('')
@@ -261,10 +256,7 @@ export default function ExistingMemberForm() {
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key !== 'pending_payment') return
-      try {
-        const raw = localStorage.getItem('pending_payment')
-        setPending(raw ? JSON.parse(raw) : null)
-      } catch { setPending(null) }
+      setPending(getPendingPayment())
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -516,7 +508,7 @@ export default function ExistingMemberForm() {
                         window.location.href = data.redirect_url
                       }, 700)
                     } else {
-                      try { localStorage.removeItem('pending_payment') } catch {}
+                      clearPendingPayment()
                       // Stay on page; no redirect without a payment link
                     }
                   } catch (e) {
