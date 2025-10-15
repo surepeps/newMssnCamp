@@ -158,19 +158,29 @@ export default function AsyncSelect({
               {selectedLabels.map((l, i) => (
                 <span key={`${l}-${i}`} className="inline-flex items-center gap-1 rounded-xl bg-mssn-mist px-2 py-0.5 text-xs text-mssn-slate">
                   <span>{l}</span>
-                  <button
-                    type="button"
+                  <span
+                    role="button"
                     aria-label={`Remove ${l}`}
-                    className="rounded-full p-0.5 text-mssn-slate/60 hover:bg-mssn-slate/10 hover:text-mssn-slate"
+                    tabIndex={0}
+                    className="rounded-full p-0.5 text-mssn-slate/60 hover:bg-mssn-slate/10 hover:text-mssn-slate focus:outline-none focus:ring-2 focus:ring-mssn-green/30"
                     onClick={(e) => {
                       e.stopPropagation()
                       const next = normalizedValue.filter((v) => v !== l)
                       onChange(next)
                       onBlur?.()
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const next = normalizedValue.filter((v) => v !== l)
+                        onChange(next)
+                        onBlur?.()
+                      }
+                    }}
                   >
                     ×
-                  </button>
+                  </span>
                 </span>
               ))}
             </span>
