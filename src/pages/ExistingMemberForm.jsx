@@ -529,7 +529,20 @@ export default function ExistingMemberForm() {
                     <SectionCardEM title="Personal details" description="Tell us a little about who you are.">
                       <TextFieldEM formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
                       <TextFieldEM formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                      <SelectFieldEM formik={formik} name="sex" label="Gender" required options={['Male','Female']} placeholder="Select gender" />
+                      <FormikAsyncSelectEM
+                        formik={formik}
+                        name="sex"
+                        label="Gender"
+                        required
+                        placeholder="Select gender"
+                        fetchPage={({ page, search }) => {
+                          const q = (search || '').toLowerCase()
+                          const all = ['Male','Female']
+                            .filter((g) => g.toLowerCase().includes(q))
+                            .map((label, idx) => ({ value: idx + 1, label }))
+                          return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                        }}
+                      />
                       <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" />
                       <TextFieldEM formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                     </SectionCardEM>
@@ -537,7 +550,20 @@ export default function ExistingMemberForm() {
                     <SectionCardEM title="Contact & location" description="How can we reach you and where are you based?" columns="sm:grid-cols-2">
                       <FormikAsyncSelectEM formik={formik} name="area_council" label="Area Council" required placeholder="Select council..." fetchPage={({ page, search }) => queryCouncils({ page, limit: 20, search })} />
                       <TextFieldEM formik={formik} name="branch" label="Branch" required placeholder="Enter branch name" />
-                      <SelectFieldEM formik={formik} name="camp_mode" label="Camp Mode" required options={['Physical','Virtual']} placeholder="Select mode" />
+                      <FormikAsyncSelectEM
+                        formik={formik}
+                        name="camp_mode"
+                        label="Camp Mode"
+                        required
+                        placeholder="Select mode"
+                        fetchPage={({ page, search }) => {
+                          const q = (search || '').toLowerCase()
+                          const all = ['Physical','Virtual']
+                            .filter((g) => g.toLowerCase().includes(q))
+                            .map((label, idx) => ({ value: idx + 1, label }))
+                          return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                        }}
+                      />
                       <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
                         Selecting Virtual mode makes email and phone number compulsory.
                         {isVirtual ? ' Please provide both to continue.' : ''}
@@ -545,7 +571,20 @@ export default function ExistingMemberForm() {
                       <TextFieldEM formik={formik} name="email" label="Email" type="email" placeholder="name@email.com" required={isVirtual} />
                       <TextFieldEM formik={formik} name="tel_no" label="Phone Number" placeholder="Enter phone number" required={isVirtual} />
                       <TextFieldEM formik={formik} name="resident_address" label="Resident Address" as="textarea" rows={3} placeholder="Enter residential address" className="sm:col-span-2" />
-                      <SelectFieldEM formik={formik} name="marital_status" label="Marital Status" options={categoryKey==='secondary'?['Single']:MARITAL_OPTIONS} placeholder="Select status" />
+                      <FormikAsyncSelectEM
+                        formik={formik}
+                        name="marital_status"
+                        label="Marital Status"
+                        placeholder="Select status"
+                        fetchPage={({ page, search }) => {
+                          const q = (search || '').toLowerCase()
+                          const source = (categoryKey==='secondary'?['Single']:MARITAL_OPTIONS)
+                          const all = source
+                            .filter((g) => g.toLowerCase().includes(q))
+                            .map((label, idx) => ({ value: idx + 1, label }))
+                          return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                        }}
+                      />
                       <FormikAsyncSelectEM formik={formik} name="state_of_origin" label="State of Origin" placeholder="Select state..." fetchPage={({ page, search }) => queryStates({ page, limit: 20, search })} />
                     </SectionCardEM>
 
@@ -638,19 +677,33 @@ export default function ExistingMemberForm() {
           <div className="h-1 w-full bg-gradient-to-r from-mssn-green to-mssn-greenDark" />
           <div className="p-6">
             <div className="flex items-start gap-4">
-              <div className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark">���</div>
+              <div className="mt-1 inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-mssn-green/10 text-mssn-greenDark text-xl">✓</div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-mssn-slate">You’re already registered</h3>
+                <h3 className="text-xl font-semibold text-mssn-slate">You’re already registered</h3>
                 <p className="mt-1 text-sm text-mssn-slate/70">We found an existing registration for this MSSN ID. You can re‑print your slip now.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                  <div className="rounded-2xl border border-mssn-slate/10 bg-mssn-mist/60 px-4 py-3">
                     <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">MSSN ID</div>
                     <div className="mt-1 text-sm font-semibold text-mssn-slate">{mssnId}</div>
                   </div>
-                  <div className="rounded-2xl bg-mssn-mist/70 px-4 py-3">
+                  <div className="rounded-2xl border border-mssn-slate/10 bg-mssn-mist/60 px-4 py-3">
                     <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Name</div>
                     <div className="mt-1 text-sm font-semibold text-mssn-slate">{[details.surname, details.firstname, details.othername].filter(Boolean).join(' ') || '—'}</div>
                   </div>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {delegate?.details?.payment_reference ? (
+                    <div className="rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3">
+                      <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Payment reference</div>
+                      <div className="mt-1 text-sm font-semibold text-mssn-slate">{delegate.details.payment_reference}</div>
+                    </div>
+                  ) : null}
+                  {delegate?.details?.pin_category ? (
+                    <div className="rounded-2xl border border-mssn-slate/10 bg-white px-4 py-3">
+                      <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-mssn-slate/60">Category</div>
+                      <div className="mt-1 text-sm font-semibold text-mssn-slate">{delegate.details.pin_category}</div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
