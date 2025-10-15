@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
 import { navigate } from '../utils/navigation.js'
-import { fetchJSON } from '../services/api.js'
+import { fetchExistingRegistration, updateExistingRegistration, setPendingPayment, PENDING_PAYMENT_KEY } from '../services/registrationApi.js'
 import {
   fetchHighestQualifications,
   queryStates,
@@ -277,11 +277,7 @@ export default function ExistingMemberForm() {
         const qS = (surname || '').trim()
         if (qM && qS) {
           setLoading(true)
-          const res = await fetchJSON('/registration/fetch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mssn_id: qM, surname: qS }),
-          })
+          const res = await fetchExistingRegistration({ mssn_id: qM, surname: qS })
           if (res?.success && res?.delegate?.details) {
             setDelegate(res.delegate)
             const cat = mapCategory(res.delegate?.details?.pin_category || res.delegate?.details?.pin_cat)
@@ -494,11 +490,7 @@ export default function ExistingMemberForm() {
                   Object.keys(payload).forEach((key) => { if (payload[key] === undefined) delete payload[key] })
                   try { 
                     setProcessing(true)
-                    const res = await fetchJSON('/registration/existing', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(payload),
-                    })
+                    const res = await updateExistingRegistration(payload)
                     const data = res?.data || {}
 
                     console.log(data, "response Data")
@@ -514,15 +506,11 @@ export default function ExistingMemberForm() {
                     toast.success(`${message}${priceInfo}${discount}`)
                     const PENDING_PAYMENT_KEY = 'pending_payment'
                     if (data.redirect_url) {
-                      try {
-                        const pending = {
-                          redirect_url: data.redirect_url,
-                          paymentRef: data.payment_reference || data.paymentRef || null,
-                          mssnId: payload?.mssn_id || null,
-                          savedAt: Date.now(),
-                        }
-                        localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
-                      } catch {}
+                      setPendingPayment({
+                        redirect_url: data.redirect_url,
+                        paymentRef: data.payment_reference || data.paymentRef || null,
+                        mssnId: payload?.mssn_id || null,
+                      })
                       setRedirecting(true)
                       setTimeout(() => {
                         window.location.href = data.redirect_url
