@@ -636,11 +636,14 @@ export default function ExistingMemberForm() {
                             Continue to Pay
                           </button>
                         ) : (
-                          <button type="submit" disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
+                          <button type="submit" disabled={!formik.isValid || formik.isSubmitting} aria-disabled={!formik.isValid || formik.isSubmitting} className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-semibold transition ${formik.isValid ? 'bg-mssn-green text-white hover:from-mssn-greenDark hover:to-mssn-greenDark' : 'cursor-not-allowed border border-mssn-slate/20 bg-mssn-mist text-mssn-slate/60'}`}>
                             {formik.isSubmitting ? 'Submitting…' : 'Register & Pay'}
                           </button>
                         )}
                       </div>
+                      {!hasPendingForThis && !formik.isValid && !formik.isSubmitting ? (
+                        <p className="mt-1 text-xs text-rose-600" role="alert" aria-live="polite">Some required fields are missing or invalid. Please complete the highlighted fields above.</p>
+                      ) : null}
                     </div>
                     </FormikForm>
                   )
