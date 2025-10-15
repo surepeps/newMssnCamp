@@ -20,6 +20,43 @@ import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { applyServerErrorsToFormik } from '../utils/forms.js'
 
+function parseFlexibleDate(value) {
+  if (!value) return null
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  const tryParse = (input) => {
+    const timestamp = Date.parse(input)
+    return Number.isNaN(timestamp) ? null : new Date(timestamp)
+  }
+
+  let parsed = tryParse(raw)
+  if (parsed) return parsed
+
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+    parsed = tryParse(raw.replace(' ', 'T'))
+    if (parsed) return parsed
+  }
+
+  const normalized = raw.replace(/,\s+/g, ' ').replace(/\s{2,}/g, ' ')
+  parsed = tryParse(normalized)
+  if (parsed) return parsed
+
+  return null
+}
+
+function calculateAgeFromRegisteredDate(value, referenceDate = new Date()) {
+  const registeredDate = parseFlexibleDate(value)
+  if (!registeredDate) return null
+  const ref = referenceDate instanceof Date ? referenceDate : new Date(referenceDate)
+  let years = ref.getFullYear() - registeredDate.getFullYear()
+  const monthDifference = ref.getMonth() - registeredDate.getMonth()
+  if (monthDifference < 0 || (monthDifference === 0 && ref.getDate() < registeredDate.getDate())) {
+    years -= 1
+  }
+  return years < 0 ? 0 : years
+}
+
 function useQuery() {
   return useMemo(() => new URLSearchParams(window.location.search), [])
 }
@@ -40,14 +77,21 @@ function FieldShellEM({ label, required, error, htmlFor, children, className }) 
   )
 }
 
-function TextFieldEM({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className }) {
+function TextFieldEM({ formik, name, label, type = 'text', required = false, placeholder, as, rows = 3, className, readOnly = false }) {
   const error = formik.touched[name] && formik.errors[name]
   const id = `${name}-field`
   const val = formik.values[name]
   const isEmpty = (v) => (v == null ? true : typeof v === 'string' ? v.trim().length === 0 : false)
   const hasError = Boolean(formik.errors?.[name])
   const invalid = (required && isEmpty(val)) || hasError
-  const baseClass = `w-full rounded-xl border ${invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25'} bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2`
+  const baseClass = [
+    'w-full rounded-xl border',
+    invalid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : 'border-mssn-slate/20 focus:border-mssn-green focus:ring-mssn-green/25',
+    'bg-white px-4 py-3 text-sm text-mssn-slate transition focus:outline-none focus:ring-2',
+    readOnly ? 'cursor-not-allowed bg-mssn-mist/70 text-mssn-slate/70 focus:border-mssn-slate/20 focus:ring-0' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <FieldShellEM label={label} required={required} error={error} htmlFor={id} className={className}>
@@ -62,6 +106,8 @@ function TextFieldEM({ formik, name, label, type = 'text', required = false, pla
           placeholder={placeholder}
           className={`${baseClass} resize-none`}
           required={required}
+          readOnly={readOnly}
+          aria-readonly={readOnly || undefined}
         />
       ) : (
         <input
@@ -75,6 +121,8 @@ function TextFieldEM({ formik, name, label, type = 'text', required = false, pla
           className={baseClass}
           min={type === 'number' ? '1' : undefined}
           required={required}
+          readOnly={readOnly}
+          aria-readonly={readOnly || undefined}
         />
       )}
     </FieldShellEM>
@@ -224,7 +272,28 @@ export default function ExistingMemberForm() {
   const [vAilments, setVAilments] = useState([])
 
   const details = delegate?.details || {}
-  const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
+const registrationAge = useMemo(() => {
+  if (!delegate) return null
+  const detailSource = delegate.details || {}
+  const candidates = [
+    detailSource.date_registered,
+    detailSource.dateRegistered,
+    detailSource.registered_at,
+    detailSource.created_at,
+    detailSource.createdAt,
+    delegate.date_registered,
+    delegate.dateRegistered,
+    delegate.registered_at,
+    delegate.created_at,
+    delegate.createdAt,
+  ]
+  for (const candidate of candidates) {
+    const computed = calculateAgeFromRegisteredDate(candidate)
+    if (computed != null) return computed
+  }
+  return null
+}, [delegate])
+const upgradeTarget = delegate?.upgrade_details?.[0]?.to || {}
   const targetPin = String(upgradeTarget?.pin_category || '').toUpperCase()
   const targetCategory = targetPin === 'UNDERGRADUATE' ? 'undergraduate' : targetPin === 'OTHERS' ? 'others' : targetPin === 'SECONDARY' || targetPin === 'TFL' ? 'secondary' : ''
   const currentCategoryLower = category === 'Undergraduate' ? 'undergraduate' : category === 'Secondary' ? 'secondary' : category === 'Others' ? 'others' : ''
@@ -366,12 +435,13 @@ export default function ExistingMemberForm() {
       if (!s) return []
       return s.toLowerCase() === 'none' ? [] : s.split(',').map((s) => s.trim()).filter(Boolean)
     }
+    const resolvedAge = registrationAge != null ? String(registrationAge) : d.date_of_birth != null ? String(d.date_of_birth) : ''
     return {
       surname: d.surname || surname || '',
       firstname: d.firstname || '',
       othername: d.othername || '',
       sex: sx === 'male' ? 'Male' : sx === 'female' ? 'Female' : '',
-      date_of_birth: d.date_of_birth || '',
+      date_of_birth: resolvedAge,
       area_council: d.area_council || '',
       branch: d.branch || '',
       camp_mode: (d.camp_mode || '').toString().trim().toLowerCase() === 'virtual' ? 'Virtual' : 'Physical',
@@ -392,7 +462,7 @@ export default function ExistingMemberForm() {
     }
   }
 
-  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname])
+  const initialValuesEM = useMemo(() => buildPrefill(), [delegate, surname, registrationAge])
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -413,7 +483,7 @@ export default function ExistingMemberForm() {
                 </div>
                 {delegate?.upgraded && delegate.upgrade_details?.length ? (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                    Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'—'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
+                    Upgrade suggested: {delegate.upgrade_details.map((u,i)=>`From ${u.from?.pin_category||'���'} ${u.from?.class_level||''} to ${u.to?.pin_category||'—'} ${u.to?.class_level||''}`).join('; ')}
                   </div>
                 ) : null}
                 {upgradeStarted && (
@@ -544,7 +614,7 @@ export default function ExistingMemberForm() {
                           return Promise.resolve({ items: all, page: 1, totalPages: 1 })
                         }}
                       />
-                      <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" />
+                      <TextFieldEM formik={formik} name="date_of_birth" label="Age" type="number" required placeholder="Enter age" readOnly />
                       <TextFieldEM formik={formik} name="othername" label="Othername" placeholder="Enter other names" className="sm:col-span-2" />
                     </SectionCardEM>
 
