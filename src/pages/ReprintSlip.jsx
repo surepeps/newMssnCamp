@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { fetchJSON } from '../services/api.js'
+import { reprintSlip } from '../services/registrationApi.js'
 import { navigate } from '../utils/navigation.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { Formik, Form } from 'formik'
@@ -99,11 +99,7 @@ export default function ReprintSlip() {
           setError('')
           try {
             const payload = { mssn_id: formattedM, payment_ref: formattedR }
-            const response = await fetchJSON('/slip/reprint', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            })
+            const response = await reprintSlip(payload)
             if (!response?.success || !response?.delegate) {
               const message = response?.message || 'Registration slip not found. Check the details and try again.'
               setError(message)
@@ -148,11 +144,7 @@ export default function ReprintSlip() {
     setDisplayPaymentRef(formattedRef)
     try {
       const payload = { mssn_id: formattedMssn, payment_ref: formattedRef }
-      const response = await fetchJSON('/slip/reprint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const response = await reprintSlip(payload)
       if (!response?.success || !response?.delegate) {
         const message = response?.message || 'Registration slip not found. Check the details and try again.'
         setError(message)
