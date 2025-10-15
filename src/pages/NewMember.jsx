@@ -3,7 +3,7 @@ import { navigate } from '../utils/navigation.js'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { queryStates, queryAilments, queryCouncils, querySchools, queryClassLevels, queryCourses, queryQualifications, fetchHighestQualifications } from '../services/dataProvider.js'
-import { createNewRegistration, PENDING_PAYMENT_KEY } from '../services/registrationApi.js'
+import { createNewRegistration, setPendingPayment, getPendingPayment, clearPendingPayment } from '../services/registrationApi.js'
 import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -529,26 +529,14 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
   const [processing, setProcessing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  const [pending, setPending] = useState(() => {
-    try {
-      const raw = localStorage.getItem('pending_payment')
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
-    }
-  })
+  const [pending, setPending] = useState(() => getPendingPayment())
   const hasPendingForThis = useMemo(() => {
     return Boolean(pending?.redirect_url && pending?.category === category)
   }, [pending, category])
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key !== 'pending_payment') return
-      try {
-        const raw = localStorage.getItem('pending_payment')
-        setPending(raw ? JSON.parse(raw) : null)
-      } catch {
-        setPending(null)
-      }
+      setPending(getPendingPayment())
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -638,13 +626,11 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
       if (data.redirect_url) {
         try {
-          const pending = {
+          setPendingPayment({
             redirect_url: data.redirect_url,
             paymentRef: data.payment_reference || data.paymentRef || null,
             category,
-            savedAt: Date.now(),
-          }
-          localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pending))
+          })
         } catch {}
         setRedirecting(true)
         setTimeout(() => {
@@ -862,7 +848,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                           </button>
                           <button
                             type="button"
-                            onClick={() => { try { localStorage.removeItem('pending_payment') } catch {} setPending(null) }}
+                            onClick={() => { clearPendingPayment(); setPending(null) }}
                             className="inline-flex items-center justify-center rounded-2xl border border-rose-200 px-8 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
                           >
                             Delete link

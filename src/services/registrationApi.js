@@ -1,6 +1,7 @@
 import { fetchJSON } from './api.js'
 
 export const PENDING_PAYMENT_KEY = 'pending_payment'
+export const PENDING_PAYMENT_TTL_MS = 3 * 24 * 60 * 60 * 1000
 
 export function formatMssnId(value) {
   return typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase() : value
@@ -21,6 +22,31 @@ export function setPendingPayment(payload) {
   try { localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify({ ...payload, savedAt: Date.now() })) } catch {}
 }
 export function clearPendingPayment() { try { localStorage.removeItem(PENDING_PAYMENT_KEY) } catch {} }
+export function getPendingPayment({ maxAgeMs = PENDING_PAYMENT_TTL_MS } = {}) {
+  try {
+    const raw = localStorage.getItem(PENDING_PAYMENT_KEY)
+    if (!raw) return null
+    const val = JSON.parse(raw)
+    const savedAt = Number(val?.savedAt)
+    const hasUrl = typeof val?.redirect_url === 'string' && val.redirect_url.trim().length > 0
+    if (!savedAt || !Number.isFinite(savedAt) || !hasUrl) {
+      clearPendingPayment()
+      return null
+    }
+    const age = Date.now() - savedAt
+    if (age > maxAgeMs) {
+      clearPendingPayment()
+      return null
+    }
+    return val
+  } catch {
+    return null
+  }
+}
+export function cleanupExpiredPendingPayment({ maxAgeMs = PENDING_PAYMENT_TTL_MS } = {}) {
+  const pending = getPendingPayment({ maxAgeMs })
+  return pending === null
+}
 
 export async function createNewRegistration(payload, { notifySuccess = false } = {}) {
   const res = await fetchJSON('/registration/new', {
