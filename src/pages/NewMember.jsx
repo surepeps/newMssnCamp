@@ -636,7 +636,6 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
       const discount = data.discount_applied ? ' • discount applied' : ''
       toast.success(`${message}${priceInfo}${discount}`)
       try { localStorage.removeItem(DRAFT_KEY) } catch {}
-      const PENDING_PAYMENT_KEY = PENDING_PAYMENT_KEY
       if (data.redirect_url) {
         try {
           const pending = {
