@@ -20,6 +20,18 @@ import { toast } from 'sonner'
 import ProcessingModal from '../components/ProcessingModal.jsx'
 import { applyServerErrorsToFormik } from '../utils/forms.js'
 
+function parseAgeValue(value) {
+  if (value === null || value === undefined) return null
+  const raw = String(value).trim()
+  if (!raw) return null
+  const direct = Number(raw)
+  if (Number.isFinite(direct)) return direct
+  const match = raw.match(/-?\d+(\.\d+)?/)
+  if (!match) return null
+  const parsed = Number(match[0])
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 function parseFlexibleDate(value) {
   if (!value) return null
   const raw = String(value).trim()
