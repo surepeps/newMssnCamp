@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { navigate, createNavigationHandler } from '../utils/navigation.js'
-import { fetchExistingRegistration, formatMssnId, formatSurname } from '../services/registrationApi.js'
+import { fetchExistingRegistration } from '../services/registrationApi.js'
 import { toast } from 'sonner'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
