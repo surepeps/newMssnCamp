@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AsyncSelect from '../components/AsyncSelect.jsx'
-import { fetchJSON } from '../services/api.js'
+import { searchMembers } from '../services/registrationApi.js'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { navigate } from '../utils/navigation.js'
 import { queryCouncils, queryClassLevels } from '../services/dataProvider.js'
@@ -111,7 +111,15 @@ export default function CheckMssnId() {
       params.set('page', String(nextPage))
       params.set('limit', String(nextLimit))
 
-      const res = await fetchJSON(`/search?${params.toString()}`)
+      const res = await searchMembers({
+        search: debouncedSearch.trim(),
+        gender: gender ? gender.toLowerCase() : undefined,
+        class_level: classLevel || undefined,
+        area_council: areaCouncil || undefined,
+        pin_category: category ? String(category).toUpperCase() : undefined,
+        page: String(nextPage),
+        limit: String(nextLimit),
+      })
       const data = Array.isArray(res?.data) ? res.data : []
       const p = res?.pagination || { total: data.length, page: nextPage, totalPages: nextPage, limit: nextLimit }
       const nextPg = { total: Number(p.total || 0), totalPages: Number(p.totalPages || 1), page: Number(p.page || nextPage), limit: Number(p.limit || nextLimit) }
