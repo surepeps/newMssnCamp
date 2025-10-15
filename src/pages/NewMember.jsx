@@ -662,7 +662,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
             <div className="flex items-center gap-3">
               {finalPrice != null ? (
                 <span className="inline-flex items-center rounded-full bg-mssn-green/10 px-3 py-1 text-xs font-semibold text-mssn-greenDark">
-                  Amount: ₦{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
+                  Amount: ��{Number(finalPrice).toFixed(2)}{typeof priceInfo?.quota === 'number' ? ` • ${priceInfo.used}/${priceInfo.quota} registered • ${priceInfo.remaining} remaining` : ''}
                 </span>
               ) : null}
               <a href="/new" onClick={(e) => { e.preventDefault(); navigate('/new'); }} className="inline-flex items-center text-sm font-semibold text-mssn-greenDark transition hover:text-mssn-green">
@@ -689,13 +689,19 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                   <SectionCard title="Personal details" description="Tell us a little about who you are.">
                     <TextField formik={formik} name="surname" label="Surname" required placeholder="Enter surname" />
                     <TextField formik={formik} name="firstname" label="Firstname" required placeholder="Enter firstname" />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="sex"
                       label="Gender"
                       required
-                      options={['Male', 'Female']}
                       placeholder="Select gender"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = ['Male', 'Female']
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <TextField
                       formik={formik}
@@ -724,13 +730,19 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       required
                       placeholder="Enter branch name"
                     />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="camp_mode"
                       label="Camp Mode"
                       required
-                      options={['Physical', 'Virtual']}
                       placeholder="Select mode"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = ['Physical', 'Virtual']
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <p className={`sm:col-span-2 text-xs ${isVirtual ? 'text-rose-600' : 'text-mssn-slate/70'}`}>
                       Selecting Virtual mode makes email and phone number compulsory.
@@ -747,12 +759,18 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
                       placeholder="Enter residential address"
                       className="sm:col-span-2"
                     />
-                    <SelectField
+                    <FormikAsyncSelect
                       formik={formik}
                       name="marital_status"
                       label="Marital Status"
-                      options={maritalOptions}
                       placeholder="Select status"
+                      fetchPage={({ page, search }) => {
+                        const q = (search || '').toLowerCase()
+                        const all = maritalOptions
+                          .filter((g) => g.toLowerCase().includes(q))
+                          .map((label, idx) => ({ value: idx + 1, label }))
+                        return Promise.resolve({ items: all, page: 1, totalPages: 1 })
+                      }}
                     />
                     <FormikAsyncSelect
                       formik={formik}
