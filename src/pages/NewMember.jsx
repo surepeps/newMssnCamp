@@ -637,7 +637,7 @@ export function RegistrationForm({ category, prefillValues, submitLabel, enableD
           window.location.href = data.redirect_url
         }, 700)
       } else {
-        try { localStorage.removeItem('pending_payment') } catch {}
+        clearPendingPayment()
         // Stay on page; no redirect without a payment link
       }
     } catch (err) {
